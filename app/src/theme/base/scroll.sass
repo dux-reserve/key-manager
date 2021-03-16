@@ -1,0 +1,53 @@
+$scroll-color-thumb: lighten($prussian-blue, 4.291%)
+
+// TODO: https://github.com/felipeerias/scrollbar-gutter-explainer
+body, .is-scrollable
+	// scrollbar-gutter: always both force
+	&.scroll-y-auto
+		overflow-y: auto !important
+	&.scroll-y-hidden
+		overflow-y: hidden !important
+	&.scroll-x-auto
+		overflow-x: auto !important
+	&.scroll-x-hidden
+		overflow-x: hidden !important
+	&.scroll-all-auto
+		overflow: auto !important
+	&.scroll-all-hidden
+		overflow: hidden !important
+	&::-webkit-scrollbar
+		width: 16px
+		background-color: $light-theme-background
+		&.has-smaller-scrollbar
+			width: 12px
+		&.has-scrollbar-with-nobackground
+			background-color: transparent
+		&.has-invisible-scrollbar
+			visibility: hidden
+	&::-webkit-scrollbar-track
+		border: 4px solid transparent
+		border-radius: $radius-large
+		background-clip: padding-box
+		// visibility: hidden
+	&::-webkit-scrollbar-thumb
+		min-height: 40px
+		border: 4px solid transparent
+		border-radius: $radius-large
+		background: $scroll-color-thumb
+		background-clip: padding-box
+		// visibility: hidden
+		&.lighter-scrollbar-humb
+			background: #4b4b4b
+	&::-webkit-scrollbar-corner
+		background-color: transparent
+	// &:hover::-webkit-scrollbar-track, &:hover::-webkit-scrollbar-thumb,
+	// 	visibility: visible
+
+.disable-scroll
+	overflow: hidden !important
+	overflow-x: hidden !important
+	overflow-y: hidden !important
+	&::-webkit-scrollbar
+		display: none !important
+		visibility: hidden !important
+		width: 0 !important

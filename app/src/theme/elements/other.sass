@@ -1,0 +1,49 @@
+.block
+  @extend %block
+
+.delete
+  @extend %delete
+
+.heading
+  display: block
+  margin-bottom: 5px
+  font-size: 11px
+  text-transform: uppercase
+  letter-spacing: 1px
+
+.highlight
+  @extend %block
+  overflow: hidden
+  max-width: 100%
+  padding: 0
+  font-weight: $weight-normal
+  pre
+    overflow: auto
+    max-width: 100%
+
+.loader
+  @extend %loader
+
+.number
+  display: inline-flex
+  vertical-align: top
+  justify-content: center
+  align-items: center
+  min-width: 2.5em
+  height: 2em
+  padding: 0.25rem 0.5rem
+  border-radius: $radius-rounded
+  margin-right: 1.5rem
+  background-color: $background
+  font-size: $size-medium
+  text-align: center
+
+.exposant
+  position: relative
+  top: -11px
+  left: 4px
+  font-size: 0.72rem
+  font-weight: 400
+  &.logo
+    top: -21px
+    left: 5px

@@ -1,0 +1,11 @@
+$footer-background-color: $light-theme-background !default
+$footer-color: $text-strong !default
+$footer-padding: 0 !default
+
+.footer
+  padding: $footer-padding
+  background-color: $footer-background-color
+  @if $footer-color
+    color: $footer-color
+    .is-link
+      color: $footer-color

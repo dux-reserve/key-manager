@@ -1,0 +1,87 @@
+$select-colors: $form-colors !default
+
+.select
+  position: relative
+  display: inline-block
+  vertical-align: top
+  max-width: 100%
+  &:not(.is-multiple)
+    height: $input-height
+  &:not(.is-multiple):not(.is-loading)
+    &::after
+      @extend %arrow
+      z-index: 4
+      border-color: $input-arrow
+      +ltr-position(1.125em)
+  &.is-rounded
+    select
+      border-radius: $radius-rounded
+      +ltr-property("padding", 1em, false)
+  select
+    @extend %input
+    display: block
+    max-width: 100%
+    outline: none
+    font-size: 1em
+    cursor: pointer
+    &::-ms-expand
+      display: none
+    &[disabled]:hover,
+    fieldset[disabled] &:hover
+      border-color: $input-disabled-border-color
+    &:not([multiple])
+      +ltr-property("padding", 2.5em)
+    &[multiple]
+      height: auto
+      padding: 0
+      option
+        padding: 0.5em 1em
+  // States
+  &:not(.is-multiple):not(.is-loading):hover
+    &::after
+      border-color: $input-hover-color
+  // Colors
+  @each $name, $pair in $select-colors
+    $color: nth($pair, 1)
+    &.is-#{$name}
+      &:not(:hover)::after
+        border-color: $color
+      select
+        border-color: $color
+        &:hover,
+        &.is-hovered
+          border-color: bulmaDarken($color, 5%)
+        &:focus,
+        &.is-focused,
+        &:active,
+        &.is-active
+          box-shadow: $input-focus-box-shadow-size bulmaRgba($color, 0.25)
+  // Sizes
+  &.is-small
+    +control-small
+  &.is-medium
+    +control-medium
+  &.is-large
+    +control-large
+  // Modifiers
+  &.is-disabled
+    &::after
+      border-color: $input-disabled-color
+  &.is-fullwidth
+    width: 100%
+    select
+      width: 100%
+  &.is-loading
+    &::after
+      @extend %loader
+      position: absolute
+      top: 0.625em
+      margin-top: 0
+      +ltr-position(0.625em)
+      transform: none
+    &.is-small::after
+      font-size: $size-small
+    &.is-medium::after
+      font-size: $size-medium
+    &.is-large::after
+      font-size: $size-large

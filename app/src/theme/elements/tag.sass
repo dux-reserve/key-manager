@@ -1,0 +1,138 @@
+$tag-background-color: $background !default
+$tag-color: $text !default
+$tag-radius: $radius !default
+$tag-delete-margin: 1px !default
+
+$tag-colors: $colors !default
+
+.tags
+  display: flex
+  flex-wrap: wrap
+  justify-content: flex-start
+  align-items: center
+  .tag
+    margin-bottom: 0.5rem
+    &:not(:last-child)
+      +ltr-property("margin", 0.5rem)
+  &:last-child
+    margin-bottom: -0.5rem
+  &:not(:last-child)
+    margin-bottom: 1rem
+  // Sizes
+  &.are-medium
+    .tag:not(.is-normal):not(.is-large)
+      font-size: $size-normal
+  &.are-large
+    .tag:not(.is-normal):not(.is-medium)
+      font-size: $size-medium
+  &.is-centered
+    justify-content: center
+    .tag
+      margin-right: 0.25rem
+      margin-left: 0.25rem
+  &.is-right
+    justify-content: flex-end
+    .tag
+      &:not(:first-child)
+        margin-left: 0.5rem
+      &:not(:last-child)
+        margin-right: 0
+  &.has-addons
+    .tag
+      +ltr-property("margin", 0)
+      &:not(:first-child)
+        +ltr-property("margin", 0, false)
+        +ltr
+          border-top-left-radius: 0
+          border-bottom-left-radius: 0
+        +rtl
+          border-top-right-radius: 0
+          border-bottom-right-radius: 0
+      &:not(:last-child)
+        +ltr
+          border-top-right-radius: 0
+          border-bottom-right-radius: 0
+        +rtl
+          border-top-left-radius: 0
+          border-bottom-left-radius: 0
+
+.tag:not(body)
+  display: inline-flex
+  justify-content: center
+  align-items: center
+  height: 2em
+  padding-right: 0.75em
+  padding-left: 0.75em
+  border-radius: $tag-radius
+  background-color: $tag-background-color
+  color: $tag-color
+  font-size: $size-small
+  line-height: 1.5
+  white-space: nowrap
+  .delete
+    +ltr-property("margin", 0.25rem, false)
+    +ltr-property("margin", -0.375rem)
+  // Colors
+  @each $name, $pair in $tag-colors
+    $color: nth($pair, 1)
+    $color-invert: nth($pair, 2)
+    &.is-#{$name}
+      background-color: $color
+      color: $color-invert
+      // If a light and dark colors are provided
+      @if length($pair) > 3
+        $color-light: nth($pair, 3)
+        $color-dark: nth($pair, 4)
+        &.is-light
+          background-color: $color-light
+          color: $color-dark
+  // Sizes
+  &.is-normal
+    font-size: $size-small
+  &.is-medium
+    font-size: $size-normal
+  &.is-large
+    font-size: $size-medium
+  .icon
+    &:first-child:not(:last-child)
+      +ltr-property("margin", -0.375em, false)
+      +ltr-property("margin", 0.1875em)
+    &:last-child:not(:first-child)
+      +ltr-property("margin", 0.1875em, false)
+      +ltr-property("margin", -0.375em)
+    &:first-child:last-child
+      +ltr-property("margin", -0.375em, false)
+      +ltr-property("margin", -0.375em)
+  // Modifiers
+  &.is-delete
+    +ltr-property("margin", $tag-delete-margin, false)
+    position: relative
+    width: 2em
+    padding: 0
+    &::before,
+    &::after
+      content: ''
+      position: absolute
+      top: 50%
+      left: 50%
+      display: block
+      background-color: currentColor
+      transform: translateX(-50%) translateY(-50%) rotate(45deg)
+      transform-origin: center center
+    &::before
+      width: 50%
+      height: 1px
+    &::after
+      width: 1px
+      height: 50%
+    &:hover,
+    &:focus
+      background-color: darken($tag-background-color, 5%)
+    &:active
+      background-color: darken($tag-background-color, 10%)
+  &.is-rounded
+    border-radius: $radius-rounded
+
+a.tag
+  &:hover
+    text-decoration: underline

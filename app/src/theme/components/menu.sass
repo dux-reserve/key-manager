@@ -1,0 +1,103 @@
+$menu-background-color: $light-theme-forground !default
+
+$menu-item-color: $prussian-blue !default
+$menu-item-radius: $radius-small !default
+$menu-item-hover-color: darken($prussian-blue, 2.1%) !default
+$menu-item-hover-background-color: $background !default
+$menu-item-active-color: $link-invert !default
+$menu-item-active-background-color: $link !default
+
+$menu-list-border-left: 1px solid $border !default
+$menu-list-line-height: 1.25 !default
+$menu-list-link-padding: 0.575em 0.75em !default
+$menu-nested-list-margin: 0.75em !default
+$menu-nested-list-padding-left: 0.75em !default
+
+$menu-label-color: $text-light !default
+$menu-label-font-size: 0.75em !default
+$menu-label-letter-spacing: 0.1em !default
+$menu-label-spacing: 1em !default
+
+.menu
+  background-color: $menu-background-color
+  font-size: 1rem
+  &.is-small
+    font-size: $size-small
+  &.is-medium
+    font-size: $size-medium
+  &.is-large
+    font-size: $size-large
+
+.menu-list
+  line-height: $menu-list-line-height
+  a,
+  button
+    display: block
+    vertical-align: middle
+    padding: $menu-list-link-padding
+    border: none
+    border-color: transparent
+    outline-width: initial
+    outline-style: none
+    outline-color: initial
+    background-color: transparent
+    color: $menu-item-color
+    font-size: 1rem
+    font-weight: $weight-normal
+    text-align: left
+
+    span.icon
+      position: relative
+      top: 0.2875rem
+      margin-right: 0.65rem
+    &.is-active:not(.sub-menu-list)
+      outline-width: initial !important
+      outline-style: none !important
+      outline-color: initial !important
+      color: $primary
+    &.has-no-hover:hover
+      cursor: alias !important
+    &:not(.has-text-weight-normal).is-active
+      font-weight: $weight-bold !important
+    &:not(.has-no-hover):not(.is-disabled):hover
+      margin-left: 1px
+      font-weight: $weight-semibold
+    &:not(.is-disabled):not(.is-active):not(.is-primary):hover
+      color: $menu-item-hover-color !important
+
+    &:focus:not(:hover):not(.sub-menu-list)
+      outline: $primary auto 1px
+  li
+    ul
+      +ltr-property("border", $menu-list-border-left, false)
+      margin: $menu-nested-list-margin
+      +ltr-property("padding", $menu-nested-list-padding-left, false)
+
+.sub-menu-list
+  display: block
+  vertical-align: middle
+  &.is-active
+    outline-width: initial !important
+    outline-style: none !important
+    outline-color: initial !important
+    color: darken($primary, 1.21%)
+  &.is-primary
+    color: $primary !important
+  &.move-on-hover:not(.is-disabled):hover
+    position: relative
+    left: 1px
+    font-weight: $weight-semibold !important
+  &:not(.is-disabled):not(.is-active):not(.is-primary):hover
+    color: $menu-item-hover-color !important
+  &:focus:not(:hover)
+    outline: $primary auto 1px
+
+.menu-label
+  color: $menu-label-color
+  font-size: $menu-label-font-size
+  text-transform: uppercase
+  letter-spacing: $menu-label-letter-spacing
+  &:not(:first-child)
+    margin-top: $menu-label-spacing
+  &:not(:last-child)
+    margin-bottom: $menu-label-spacing

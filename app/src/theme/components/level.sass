@@ -1,0 +1,77 @@
+$level-item-spacing: ($block-spacing / 2) !default
+
+.level
+  @extend %block
+  justify-content: space-between
+  align-items: center
+  code
+    border-radius: $radius
+  img
+    display: inline-block
+    vertical-align: top
+  // Modifiers
+  &.is-mobile
+    display: flex
+    .level-left,
+    .level-right
+      display: flex
+    .level-left + .level-right
+      margin-top: 0
+    .level-item
+      &:not(:last-child)
+        margin-bottom: 0
+        +ltr-property("margin", $level-item-spacing)
+      &:not(.is-narrow)
+        flex-grow: 1
+  // Responsiveness
+  +tablet
+    display: flex
+    & > .level-item
+      &:not(.is-narrow)
+        flex-grow: 1
+
+.level-item
+  display: flex
+  flex-grow: 0
+  flex-shrink: 0
+  flex-basis: auto
+  justify-content: center
+  align-items: center
+  .title,
+  .subtitle
+    margin-bottom: 0
+  // Responsiveness
+  +mobile
+    &:not(:last-child)
+      margin-bottom: $level-item-spacing
+
+.level-left,
+.level-right
+  flex-grow: 0
+  flex-shrink: 0
+  flex-basis: auto
+  .level-item
+    // Modifiers
+    &.is-flexible
+      flex-grow: 1
+    // Responsiveness
+    +tablet
+      &:not(:last-child)
+        +ltr-property("margin", $level-item-spacing)
+
+.level-left
+  justify-content: flex-start
+  align-items: center
+  // Responsiveness
+  +mobile
+    & + .level-right
+      margin-top: 1.5rem
+  +tablet
+    display: flex
+
+.level-right
+  justify-content: flex-end
+  align-items: center
+  // Responsiveness
+  +tablet
+    display: flex

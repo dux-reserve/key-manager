@@ -1,0 +1,139 @@
+@keyframes spinAround
+  from
+    transform: rotate(0deg)
+  to
+    transform: rotate(359deg)
+
+.loading
+  display: flex
+  justify-content: center
+  align-items: center
+  width: 100%
+  margin-top: 5px
+  margin-bottom: 9px
+
+  .loading-container
+    position: relative
+    display: flex
+    flex-direction: row-reverse
+
+.dot
+  position: relative
+  width: 9px
+  height: 9px
+  border-radius: 50%
+  margin-right: 9px
+  background: #213345b9
+  animation: dot-animation 1s cubic-bezier(0.42, 0, 0.58, 1) infinite
+  &.dark
+    background: #dfdddec9
+
+  &:nth-of-type(1)
+    margin-right: 0
+
+  &:nth-of-type(2)
+    animation-delay: 0.125s
+
+  &:nth-of-type(3)
+    animation-delay: 0.3s
+
+@keyframes dot-animation
+  0%
+    opacity: 0
+    transform: translate3d(-721%, 0, 0)
+  20%
+    opacity: 1
+    transform: translate3d(0, 0, 0)
+  80%
+    opacity: 1
+    transform: translate3d(0, 0, 0)
+  100%
+    opacity: 0
+    transform: translate3d(721%, 0, 0)
+
+.is-shaking
+  animation: shake-animation 141ms 4 ease-out
+
+@keyframes shake-animation
+  0%
+    transform: translate(7px, 0)
+  25%
+    transform: translate(0, 0)
+  50%
+    transform: translate(-7px, 0)
+  100%
+    transform: translate(0, 0)
+
+.skeleton
+  border-radius: 1px
+  // background: linear-gradient(90deg, #f0f0f032, #ededed14, #f0f0f032)
+  background: linear-gradient(90deg, #21334521, lighten(#21334514, 42%), #21334521)
+  background-size: 200% 100%
+  color: transparent !important
+  animation-name: skeleton-load-animation
+  animation-duration: 1.5s
+  animation-timing-function: linear
+  animation-iteration-count: infinite
+  animation-direction: forwards
+
+  &.skeleton-block
+    width: 100%
+    height: 1.25rem
+
+    &.skeleton-smaller
+      width: 16%
+
+    &.skeleton-small
+      width: 29%
+
+    &.skeleton-medium
+      width: 42%
+
+    &.skeleton-large
+      width: 75%
+
+    &.skeleton-title
+      height: 2rem
+
+  &.skeleton-circle
+    width: 100%
+    height: 100%
+    border-radius: 50%
+
+.skeleton-group
+  display: flex
+  flex-direction: column
+  > .skeleton-block
+    margin-top: 1rem
+
+@keyframes skeleton-load-animation
+  from
+    background-position: 100% 0%
+  to
+    background-position: -100% 0%
+
+.arrow-down-animated
+  display: block
+  animation: 1s arrow-down-animation infinite alternate
+
+@keyframes arrow-down-animation
+  0%
+    transform: translateY(0px)
+  100%
+    transform: translateY(12px)
+
+.is-rotating
+  animation: 1s rotate-animation infinite alternate
+
+.is-rotation-one-time
+  animation: rotate-animation 1s linear
+
+@keyframes rotate-animation
+  0%
+    transform: rotate(0deg)
+
+  50%
+    transform: rotate(180deg)
+
+  100%
+    transform: rotate(360deg)

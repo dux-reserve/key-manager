@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+
+  <title>Dux Reserve Key Manager — Initializing...</title>
+
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <style>
+    body {
+      display: flex;
+      overflow: hidden;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      height: 364px;
+      padding: 0;
+      padding-top: 19.5px;
+      margin: 0;
+      background-color: #181b20;
+      font-family: 'Open Sans', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+      user-select: none;
+    }
+
+    img {
+      width: auto;
+      height: 64px;
+      margin-bottom: 21px;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 9px;
+    }
+
+    .loading .container {
+      position: relative;
+      display: flex;
+      flex-direction: row-reverse;
+    }
+
+    .dot {
+      position: relative;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background: #dfdddec9;
+      animation: dot-animation 1s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+    }
+
+    .dot:nth-of-type(1) {
+      margin-right: 0;
+    }
+
+    .dot:nth-of-type(2) {
+      animation-delay: 0.125s;
+    }
+
+    .dot:nth-of-type(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes dot-animation {
+      0% {
+        opacity: 0;
+        transform: translate3d(-621%, 0, 0);
+      }
+
+      20% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+
+      80% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate3d(621%, 0, 0);
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <img src="img/logos/dux-logo-with-text-white.svg">
+
+  <div class="loading">
+    <div class="container">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</body>
+
+</html>

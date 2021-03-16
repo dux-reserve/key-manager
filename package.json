@@ -1,0 +1,137 @@
+{
+  "name": "dux-reserve-key-manager",
+  "version": "0.3.0",
+  "description": "Create watch-only wallets and multisig vaults. Have full control of your hardware devices. Easy and secure. Free and open-source. All your bitcoin in one place.",
+  "homepage": "https://duxreserve.com",
+  "repository": "https://github.com/dux-reserve",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Dux Reserve",
+    "email": "github@duxreserve.com",
+    "url": "https://twitter.com/duxreserve"
+  },
+  "main": "./app/electron/main.js",
+  "scripts": {
+    "start": "sirv public",
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
+    "pack": "electron-builder --dir",
+    "validate-svelte": "svelte-check",
+    "inject-env": "[ -f .env ] && export $(cat .env | xargs)",
+    "electron": "electron .",
+    "start-electron": "concurrently \"yarn:start\" \"yarn:electron\"",
+    "dev-electron": "concurrently \"yarn:dev\" \"yarn:electron\"",
+    "build-electron": "yarn run build && yarn run dist-all",
+    "dist": "electron-builder",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux",
+    "dist-windows": "electron-builder --windows",
+    "dist-all": "electron-builder --mac --linux --windows",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "productName": "Dux Reserve Beta",
+    "appId": "com.duxreserve.desktop-key-manager",
+    "mac": {
+      "category": "public.app-category.finance",
+      "icon": "./public/img/icons/app/icon.icns",
+      "target": [
+        "dmg"
+      ],
+      "files": [
+        "./app/electron/**/*",
+        "./public/**/*",
+        "./HWI/HWI_MAC"
+      ]
+    },
+    "linux": {
+      "category": "Finance",
+      "packageCategory": "wallet",
+      "icon": "./public/img/icons/app/icon.icns",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "files": [
+        "./app/electron/**/*",
+        "./public/**/*",
+        "./HWI/HWI_LINUX"
+      ]
+    },
+    "win": {
+      "icon": "./public/img/icons/app/icon.ico",
+      "files": [
+        "./app/electron/**/*",
+        "./public/**/*",
+        "./HWI/hwi.exe"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "@rollup/plugin-typescript": "^8.2.0",
+    "@tsconfig/svelte": "^1.0.10",
+    "babel-eslint": "^10.1.0",
+    "concurrently": "^6.0.0",
+    "dotenv": "^8.2.0",
+    "electron": "^12.0.1",
+    "electron-builder": "^22.10.5",
+    "eslint": "^7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-html": "^6.1.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-only-warn": "^1.0.2",
+    "eslint-plugin-prettier": "^3.3.1",
+    "node-sass": "^5.0.0",
+    "postcss": "^8.2.8",
+    "prettier": "^2.2.1",
+    "prettier-eslint": "^12.0.0",
+    "prettier-eslint-cli": "^5.0.1",
+    "prettier-plugin-svelte": "^2.2.0",
+    "prettier-stylelint": "^0.4.2",
+    "rollup": "^2.41.4",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-inject-process-env": "^1.3.1",
+    "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-svelte": "^7.1.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "stylelint": "^13.12.0",
+    "stylelint-declaration-strict-value": "^1.7.9",
+    "stylelint-order": "^4.1.0",
+    "stylelint-scss": "^3.19.0",
+    "stylelint-selector-bem-pattern": "^2.1.0",
+    "svelte": "^3.35.0",
+    "svelte-check": "^1.2.5",
+    "svelte-preprocess": "^4.6.9",
+    "tslib": "^2.1.0",
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bignumber.js": "^9.0.1",
+    "bip39": "^3.0.3",
+    "bitcoinjs-lib": "^5.2.0",
+    "bs58check": "^2.1.2",
+    "coinselect": "^3.1.12",
+    "crypto-js": "^4.0.0",
+    "dayjs": "^1.10.4",
+    "electron-reload": "^1.5.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "secure-electron-store": "^1.3.3",
+    "sirv-cli": "^1.0.11",
+    "svelte-chartjs": "^1.0.1",
+    "svelte-qrcode": "^0.0.2",
+    "svelte-scrollto": "^0.2.0",
+    "svelte-spa-router": "^3.1.0",
+    "unchained-bitcoin": "^0.1.4",
+    "uuid": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=15.11.0",
+    "npm": ">=7.6.0",
+    "yarn": ">=1.22.5"
+  }
+}

@@ -1,0 +1,150 @@
+$pagination-color: $text-strong !default
+$pagination-border-color: $border !default
+$pagination-margin: -0.25rem !default
+$pagination-min-width: $control-height !default
+
+$pagination-item-font-size: 1em !default
+$pagination-item-margin: 0.25rem !default
+$pagination-item-padding-left: 0.5em !default
+$pagination-item-padding-right: 0.5em !default
+
+$pagination-hover-color: $link-hover !default
+$pagination-hover-border-color: $link-hover-border !default
+
+$pagination-focus-color: $link-focus !default
+$pagination-focus-border-color: $link-focus-border !default
+
+$pagination-active-color: $link-active !default
+$pagination-active-border-color: $link-active-border !default
+
+$pagination-disabled-color: $text-light !default
+$pagination-disabled-background-color: $border !default
+$pagination-disabled-border-color: $border !default
+
+$pagination-current-color: $link-invert !default
+$pagination-current-background-color: $link !default
+$pagination-current-border-color: $link !default
+
+$pagination-ellipsis-color: $grey-light !default
+
+$pagination-shadow-inset: inset 0 1px 2px rgba($scheme-invert, 0.2)
+
+.pagination
+  @extend %block
+  margin: $pagination-margin
+  font-size: $size-normal
+  // Sizes
+  &.is-small
+    font-size: $size-small
+  &.is-medium
+    font-size: $size-medium
+  &.is-large
+    font-size: $size-large
+  &.is-rounded
+    .pagination-previous,
+    .pagination-next
+      padding-right: 1em
+      padding-left: 1em
+      border-radius: $radius-rounded
+    .pagination-link
+      border-radius: $radius-rounded
+
+.pagination,
+.pagination-list
+  display: flex
+  justify-content: center
+  align-items: center
+  text-align: center
+
+.pagination-previous,
+.pagination-next,
+.pagination-link,
+.pagination-ellipsis
+  @extend %control
+  @extend %unselectable
+  justify-content: center
+  padding-right: $pagination-item-padding-right
+  padding-left: $pagination-item-padding-left
+  margin: $pagination-item-margin
+  font-size: $pagination-item-font-size
+  text-align: center
+
+.pagination-previous,
+.pagination-next,
+.pagination-link
+  min-width: $pagination-min-width
+  border-color: $pagination-border-color
+  color: $pagination-color
+  &:hover
+    border-color: $pagination-hover-border-color
+    color: $pagination-hover-color
+  &:focus
+    border-color: $pagination-focus-border-color
+  &:active
+    box-shadow: $pagination-shadow-inset
+  &[disabled]
+    opacity: 0.5
+    border-color: $pagination-disabled-border-color
+    box-shadow: none
+    background-color: $pagination-disabled-background-color
+    color: $pagination-disabled-color
+
+.pagination-previous,
+.pagination-next
+  padding-right: 0.75em
+  padding-left: 0.75em
+  white-space: nowrap
+
+.pagination-link
+  &.is-current
+    border-color: $pagination-current-border-color
+    background-color: $pagination-current-background-color
+    color: $pagination-current-color
+
+.pagination-ellipsis
+  color: $pagination-ellipsis-color
+  pointer-events: none
+
+.pagination-list
+  flex-wrap: wrap
+
++mobile
+  .pagination
+    flex-wrap: wrap
+  .pagination-previous,
+  .pagination-next
+    flex-grow: 1
+    flex-shrink: 1
+  .pagination-list
+    li
+      flex-grow: 1
+      flex-shrink: 1
+
++tablet
+  .pagination-list
+    flex-grow: 1
+    flex-shrink: 1
+    justify-content: flex-start
+    order: 1
+  .pagination-previous
+    order: 2
+  .pagination-next
+    order: 3
+  .pagination
+    justify-content: space-between
+    &.is-centered
+      .pagination-previous
+        order: 1
+      .pagination-list
+        justify-content: center
+        order: 2
+      .pagination-next
+        order: 3
+    &.is-right
+      .pagination-previous
+        order: 1
+      .pagination-next
+        order: 2
+      .pagination-list
+        justify-content: flex-end
+        order: 3

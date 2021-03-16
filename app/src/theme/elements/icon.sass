@@ -1,0 +1,75 @@
+$icon-dimensions: 1.5rem !default
+$icon-dimensions-smallest: 0.25rem !default
+$icon-dimensions-smaller: 0.5rem !default
+$icon-dimensions-small: 1rem !default
+$icon-dimensions-normal: 1.375rem !default
+$icon-dimensions-medium: 2rem !default
+$icon-dimensions-large: 3rem !default
+
+.icon
+  display: inline-flex
+  justify-content: center
+  align-items: center
+  // Sizes
+  img
+    width: 100%
+    height: auto
+  &.is-normal
+    width: $icon-dimensions-normal !important
+    height: $icon-dimensions-normal !important
+  &.is-smallest
+    width: $icon-dimensions-smallest !important
+    height: $icon-dimensions-smallest !important
+  &.is-smaller
+    width: $icon-dimensions-smaller !important
+    height: $icon-dimensions-smaller !important
+  &.is-small
+    width: $icon-dimensions-small !important
+    height: $icon-dimensions-small !important
+  &.is-medium
+    width: $icon-dimensions-medium !important
+    height: $icon-dimensions-medium !important
+  &.is-large
+    width: $icon-dimensions-large !important
+    height: $icon-dimensions-large !important
+  // Colors
+  &.is-light
+    img
+      filter: invert(65%) sepia(12%) saturate(546%) hue-rotate(182deg) brightness(86%) contrast(87%)
+  &.is-white
+    img
+      filter: invert(100%) sepia(0%) saturate(1826%) hue-rotate(329deg) brightness(100%) contrast(100%)
+  &.is-white-ter
+    img
+      filter: invert(100%) sepia(0%) saturate(1826%) hue-rotate(329deg) brightness(92%) contrast(100%)
+  &.is-grey
+    img
+      filter: invert(84%) sepia(0%) saturate(43%) hue-rotate(192deg) brightness(87%) contrast(90%)
+  &.is-prussian-blue
+    img
+      filter: invert(17%) sepia(50%) saturate(416%) hue-rotate(169deg) brightness(95%) contrast(97%)
+  &.is-withdraw
+    img
+      filter: invert(17%) sepia(67%) saturate(7463%) hue-rotate(2deg) brightness(91%) contrast(110%)
+  &.is-success
+    img
+      filter: invert(67%) sepia(28%) saturate(1147%) hue-rotate(66deg) brightness(88%) contrast(84%)
+  &.is-danger
+    img
+      filter: invert(9%) sepia(90%) saturate(6981%) hue-rotate(9deg) brightness(93%) contrast(115%)
+  &.is-warning
+    img
+      filter: invert(36%) sepia(38%) saturate(6142%) hue-rotate(355deg) brightness(100%) contrast(104%)
+  &.is-bitcoin
+    img
+      filter: invert(75%) sepia(34%) saturate(6661%) hue-rotate(358deg) brightness(101%) contrast(107%)
+  &.is-primary,
+  &.is-active
+    img
+      filter: invert(26%) sepia(100%) saturate(1669%) hue-rotate(331deg) brightness(78%) contrast(99%)
+  &:not(.has-no-size)
+    width: $icon-dimensions
+    height: $icon-dimensions
+  &:not(.has-no-hover):hover
+    filter: brightness(72%)
+    cursor: pointer

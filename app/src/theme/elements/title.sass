@@ -1,0 +1,80 @@
+$title-color: $text-strong !default
+$title-size: $size-3 !default
+$title-weight: $weight-medium !default
+$title-line-height: 1.125 !default
+$title-strong-color: $text !default
+$title-strong-weight: inherit !default
+$title-sub-size: 0.75em !default
+$title-sup-size: 0.75em !default
+
+$subtitle-color: $text-strong !default
+$subtitle-size: $size-4 !default
+$subtitle-weight: $weight-light !default
+$subtitle-line-height: 1.25 !default
+$subtitle-strong-color: $text !default
+$subtitle-strong-weight: $weight-normal !default
+$subtitle-margin: 1.25rem !default
+
+.title,
+.subtitle
+  @extend %block
+  word-break: break-word
+  em,
+  span
+    font-weight: inherit
+  sub
+    font-size: $title-sub-size
+  sup
+    font-size: $title-sup-size
+  .tag
+    vertical-align: middle
+  &.is-primary
+    color: $primary !important
+  &.is-success
+    color: $success !important
+  &.is-danger
+    color: $danger !important
+  &.is-bold
+    font-weight: $weight-bold
+  &.is-dark
+    color: $title-strong-color
+
+.title
+  color: $title-color
+  letter-spacing: 0.5px
+  font-size: $title-size
+  font-weight: $title-weight
+  line-height: $title-line-height
+  strong
+    color: $title-strong-color
+    font-weight: $title-strong-weight
+  & + .highlight
+    margin-top: -0.75rem
+  &.has-subtitle-margin
+    margin-bottom: $subtitle-margin
+  &.has-smaller-margin
+    margin-bottom: 0.75rem
+  // Sizes
+  @each $size in $sizes
+    $i: index($sizes, $size)
+    &.is-#{$i}
+      font-size: $size
+  &.is-biggest
+    font-size: 3.5rem
+
+.subtitle
+  color: $subtitle-color
+  letter-spacing: 0.5px
+  font-size: $subtitle-size
+  font-weight: $subtitle-weight
+  line-height: $subtitle-line-height
+  strong
+    color: $subtitle-strong-color
+    font-weight: $subtitle-strong-weight
+  &.has-smaller-margin
+    margin-bottom: 0.75rem
+  // Sizes
+  @each $size in $sizes
+    $i: index($sizes, $size)
+    &.is-#{$i}
+      font-size: $size

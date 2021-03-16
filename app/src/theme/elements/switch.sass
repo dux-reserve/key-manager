@@ -1,0 +1,178 @@
+$switch-background: rgba($prussian-blue, 0.6) !default
+$switch-border: 0.1rem solid transparent !default
+$switch-background-active: $primary !default
+$switch-radius: $radius !default
+$switch-paddle-background: $white !default
+$switch-paddle-background-active: $primary !default
+$switch-paddle-offset: 0.25rem !default
+$switch-paddle-transition: all 151ms ease-out !default
+$switch-focus: none !default
+
+=switch-size($size)
+	$switch-height: $size * 1.75
+	$switch-width: $switch-height * 2
+	$paddle-height: $switch-height - ($switch-paddle-offset * 2)
+	$paddle-width: $switch-height - ($switch-paddle-offset * 2)
+	$paddle-active-offest: $switch-width - $paddle-width - ($switch-paddle-offset * 1.5)
+
+	+ label
+		position: relative
+		display: inline-flex
+		align-items: center
+		justify-content: flex-start
+		font-size: 1rem
+		height: $control-height
+		line-height: $control-line-height
+		padding-left: $switch-width + 1.625
+		cursor: pointer
+
+		&::before
+			position: absolute
+			display: block
+			top: calc( 50% - #{$switch-height} / 2 )
+			left: 0
+			width: $switch-width
+			height: $switch-height
+			border: $switch-border
+			border-radius: $switch-radius
+			background: $switch-background
+			content: ''
+
+		&::after
+			display: block
+			position: absolute
+			top: calc( 50% - #{$paddle-height} / 2 )
+			left: $switch-paddle-offset
+			width: $paddle-width
+			height: $paddle-height
+			transform: translate3d(0, 0, 0)
+			border-radius: $switch-radius
+			background: $switch-paddle-background
+			transition: $switch-paddle-transition
+			content: ''
+
+	&.font-is-sized
+		font-size: $size
+
+	&.is-rtl
+		+ label
+			padding-left: 0
+			padding-right: $switch-width + 1.75
+			&::before
+				left: auto
+				right: 0
+			&::after
+				left: auto
+				right: $paddle-active-offest
+
+	&:checked
+		+ label
+			&::before
+				background: $switch-background-active
+			&::after
+				left: $paddle-active-offest
+		&.is-rtl
+			+ label
+				&::after
+					left: auto
+					right: $switch-paddle-offset
+
+	&.is-outlined
+		+ label
+			&::before
+				background-color: transparent
+				border-color: $switch-background
+			&::after
+				background: $switch-background
+		&:checked
+			+ label
+				&::before
+					background-color: transparent
+					border-color: $switch-background-active
+				&::after
+					background: $switch-paddle-background-active
+
+	&.is-thin
+		+ label
+			&::before
+				top: $switch-height / 2.75
+				height: $switch-height / 4
+			&::after
+				box-shadow: 0px 0px 3px $grey
+
+	&.is-rounded
+		+ label
+			&::before
+				border-radius: $radius-large * 4
+			&::after
+				border-radius: 50%
+
+.switch[type='checkbox']
+	position: absolute
+	display: inline-block
+	opacity: 0
+	outline: 0
+	user-select: none
+
+	&:focus
+		+ label
+			&::before,
+			&::after
+				outline: $switch-focus
+
+	&[disabled]
+		cursor: not-allowed
+		+ label
+			opacity: 0.5
+			&::before
+				opacity: 0.5
+			&::after
+				opacity: 0.5
+			&:hover
+				cursor: not-allowed
+
+	+switch-size($size-normal)
+	&.is-small
+		+switch-size($size-small)
+	&.is-medium
+		+switch-size($size-medium)
+	&.is-large
+		+switch-size($size-large)
+
+	@each $name, $pair in $colors
+		$color: nth($pair, 1)
+		$color-invert: nth($pair, 2)
+		&.is-#{$name}
+			&:checked
+				+ label
+					&::before
+						background: $color
+			&.is-outlined
+				&:checked
+					+ label
+						&::before
+							background-color: transparent
+							border-color: $color !important
+						&::after
+							background: $color
+			&.is-thin
+				&.is-outlined
+					+ label
+						&::after
+							box-shadow: none
+		&.is-unchecked-#{$name}
+			+ label
+				&::before
+					background: $color
+			&.is-outlined
+				+ label
+					&::before
+						background-color: transparent
+						border-color: $color !important
+					&::after
+						background: $color
+
+.field-body
+	.switch[type='checkbox']
+	+ label
+		margin-top: 0.375em

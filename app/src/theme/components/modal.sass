@@ -1,0 +1,115 @@
+$modal-z: 40 !default
+
+$modal-background-background-color: bulmaRgba($scheme-invert, 0.86) !default
+
+$modal-content-width: 640px !default
+$modal-content-margin-mobile: 20px !default
+$modal-content-spacing-mobile: 160px !default
+$modal-content-spacing-tablet: 40px !default
+
+$modal-close-dimensions: 40px !default
+$modal-close-right: 20px !default
+$modal-close-top: 20px !default
+
+$modal-card-spacing: 40px !default
+
+$modal-card-head-background-color: $background !default
+$modal-card-head-border-bottom: 1px solid $border !default
+$modal-card-head-padding: 20px !default
+$modal-card-head-radius: $radius-large !default
+
+$modal-card-title-color: $text-strong !default
+$modal-card-title-line-height: 1 !default
+$modal-card-title-size: $size-4 !default
+
+$modal-card-foot-radius: $radius-large !default
+$modal-card-foot-border-top: 1px solid $border !default
+
+$modal-card-body-background-color: $scheme-main !default
+$modal-card-body-padding: 20px !default
+
+$modal-breakpoint: $tablet !default
+
+.modal
+  @extend %overlay
+  position: fixed
+  z-index: $modal-z
+  display: none
+  overflow: hidden
+  flex-direction: column
+  justify-content: center
+  align-items: center
+  // Modifiers
+  &.is-active
+    display: flex
+
+.modal-background
+  @extend %overlay
+  background-color: $modal-background-background-color
+
+.modal-content,
+.modal-card
+  position: relative
+  overflow: auto
+  width: 100%
+  max-height: calc(100vh - #{$modal-content-spacing-mobile})
+  margin: 0 $modal-content-margin-mobile
+  // Responsiveness
+  +from($modal-breakpoint)
+    margin: 0 auto
+    max-height: calc(100vh - #{$modal-content-spacing-tablet})
+    width: $modal-content-width
+
+.modal-close
+  @extend %delete
+  position: fixed
+  top: $modal-close-top
+  width: $modal-close-dimensions
+  height: $modal-close-dimensions
+  background: none
+  +ltr-position($modal-close-right)
+
+.modal-card
+  display: flex
+  overflow: hidden
+  -ms-overflow-y: visible
+  flex-direction: column
+  max-height: calc(100vh - #{$modal-card-spacing})
+
+.modal-card-head,
+.modal-card-foot
+  position: relative
+  display: flex
+  flex-shrink: 0
+  justify-content: flex-start
+  align-items: center
+  padding: $modal-card-head-padding
+  background-color: $modal-card-head-background-color
+
+.modal-card-head
+  border-bottom: $modal-card-head-border-bottom
+  border-top-left-radius: $modal-card-head-radius
+  border-top-right-radius: $modal-card-head-radius
+
+.modal-card-title
+  flex-grow: 1
+  flex-shrink: 0
+  color: $modal-card-title-color
+  font-size: $modal-card-title-size
+  line-height: $modal-card-title-line-height
+
+.modal-card-foot
+  border-top: $modal-card-foot-border-top
+  border-bottom-left-radius: $modal-card-foot-radius
+  border-bottom-right-radius: $modal-card-foot-radius
+  .button
+    &:not(:last-child)
+      +ltr-property("margin", 0.5em)
+
+.modal-card-body
+  +overflow-touch
+  overflow: auto
+  flex-grow: 1
+  flex-shrink: 1
+  padding: $modal-card-body-padding
+  background-color: $modal-card-body-background-color

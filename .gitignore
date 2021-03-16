@@ -1,0 +1,54 @@
+# Projects
+dist/
+logs/
+out/
+/build
+public/build
+node_modules
+.cache
+.DS_Store
+
+# Log files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea/
+.nyc_output/
+.vscode/
+.VSCodeCounter/
+*.map
+*.njsproj
+*.ntvs*
+*.sln
+*.suo
+*.sw?
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# dotenv environment variables file
+.env
+.env.*
+
+# Local todo file
+*.todo
+
+# Local Backup
+*.backup.*
+
+# Dux Reserve config file/folder
+*.dux
+duxreserve-config*.*
+duxreserve-config
+
+## ! Exception ! ##
+# VSCode debugging
+!.vscode/extensions.json
+!.vscode/launch.json

@@ -1,0 +1,98 @@
+$card-color: $text !default
+$card-background-color: $light-theme-forground !default
+$card-shadow: 0 0.42rem 0.92rem 0.21rem rgba($light-theme-shadow, 0.0529), 0 0 0 1px rgba($scheme-main, 0.01492) !default
+$card-radius-default: 10px !default
+$card-radius: 1.875rem !default
+$card-overflow: visible !default
+
+$card-header-background-color: transparent !default
+$card-header-color: $text-strong !default
+$card-header-padding: 0.75rem 1rem !default
+$card-header-shadow: 0 0.125em 0.25em rgba($light-theme-shadow, 0.1) !default
+$card-header-weight: $weight-semibold !default
+
+$card-content-background-color: transparent !default
+$card-content-padding: 3.325rem !default
+$card-content-padding-bigger: 5rem !default
+
+$card-footer-background-color: transparent !default
+$card-footer-border-top: 1px solid $border-light !default
+$card-footer-padding: 0.75rem !default
+
+$card-media-margin: $block-spacing !default
+
+.card
+  position: relative
+  overflow: $card-overflow
+  max-width: 100%
+  border-radius: $card-radius-default
+  box-shadow: $card-shadow
+  background-color: $card-background-color
+  color: $card-color
+  &.is-rounded
+    border-radius: $card-radius
+
+.card-header
+  display: flex
+  align-items: stretch
+  box-shadow: $card-header-shadow
+  background-color: $card-header-background-color
+
+.card-header-title
+  display: flex
+  flex-grow: 1
+  align-items: center
+  padding: $card-header-padding
+  color: $card-header-color
+  font-weight: $card-header-weight
+  &.is-centered
+    justify-content: center
+
+.card-header-icon
+  display: flex
+  justify-content: center
+  align-items: center
+  padding: $card-header-padding
+  cursor: pointer
+
+.card-image
+  position: relative
+  display: block
+
+.card-content
+  padding: $card-content-padding
+  background-color: $card-content-background-color
+  &.has-smaller-padding-bottom
+    padding-bottom: 3rem
+  &.is-fullheight
+    display: flex
+    flex-direction: column
+    justify-content: space-between
+    width: 100%
+    height: 100%
+  &.more-padding
+    padding: $card-content-padding-bigger
+
+.card-footer
+  display: flex
+  align-items: stretch
+  border-top: $card-footer-border-top
+  background-color: $card-footer-background-color
+
+.card-footer-item
+  display: flex
+  flex-grow: 1
+  flex-shrink: 0
+  flex-basis: 0
+  justify-content: center
+  align-items: center
+  padding: $card-footer-padding
+  &:not(:last-child)
+    +ltr-property("border", $card-footer-border-top)
+
+// Combinations
+/* stylelint-disable no-duplicate-selectors */
+.card
+  .media:not(:last-child)
+    margin-bottom: $card-media-margin
+/* stylelint-enable */

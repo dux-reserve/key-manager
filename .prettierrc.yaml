@@ -1,0 +1,14 @@
+tabWidth: 2
+singleQuote: true
+printWidth: 160
+jsxSingleQuote: true
+trailingComma: all
+bracketSpacing: true
+semi: true
+useTabs: true
+parser: babel
+jsxBracketSameLine: false
+arrowParens: avoid
+except-parens: false
+arrow-parens: false
+svelteSortOrder: scripts-markup-styles

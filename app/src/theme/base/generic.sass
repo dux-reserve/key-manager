@@ -1,0 +1,170 @@
+$body-background-color: $background !default
+$body-size: 16px !default
+$body-min-width: 300px !default
+$body-rendering: optimizeLegibility !default
+$body-family: $family-primary !default
+$body-overflow-x: hidden !default
+
+$body-color: $text !default
+$body-font-size: 1em !default
+$body-weight: $weight-light !default
+$body-line-height: 1.5 !default
+
+$title-family: $family-secondary !default
+
+$code-family: $family-code !default
+$code-padding: 0.25em 0.5em 0.25em !default
+$code-weight: normal !default
+$code-size: 0.875em !default
+
+$small-font-size: 0.875em !default
+
+$hr-background-color: $background !default
+$hr-height: 2px !default
+$hr-margin: 1.5rem 0 !default
+
+$strong-color: $text-strong !default
+$strong-weight: $weight-semibold !default
+$body-overflow-y: auto !default
+
+$pre-font-size: 0.875em !default
+$pre-padding: 1.25rem 1.5rem !default
+$pre-code-font-size: 1em !default
+
+html
+  overflow-x: $body-overflow-x
+  overflow-y: $body-overflow-y
+  min-width: $body-min-width
+  background-color: $body-background-color
+  font-size: $body-size
+  user-select: none
+  -moz-osx-font-smoothing: grayscale
+  -webkit-font-smoothing: antialiased
+  text-rendering: $body-rendering
+  text-size-adjust: 100%
+
+article,
+aside,
+figure,
+footer,
+header,
+hgroup,
+section
+  display: block
+
+body,
+button,
+input,
+optgroup,
+select,
+textarea
+  font-family: $body-family
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6
+  font-family: $title-family
+
+code,
+pre
+  font-family: $code-family
+  -moz-osx-font-smoothing: auto
+  -webkit-font-smoothing: auto
+
+body
+  color: $body-color
+  font-size: $body-font-size
+  font-weight: $body-weight
+  line-height: $body-line-height
+
+// Inline
+
+a,
+span.is-link
+  color: $link
+  font-weight: $weight-bold
+  text-decoration: none
+  transition: color 121ms ease
+  cursor: pointer
+  &.is-disabled
+    color: $grey-light !important
+    cursor: default !important
+  strong
+    color: currentColor
+  &:not(.is-disabled):not(.is-primary):hover
+    color: $link-hover !important
+
+code
+  padding: $code-padding
+  background-color: $code-background
+  color: $code
+  font-size: $code-size
+  font-weight: $code-weight
+
+hr
+  display: block
+  height: $hr-height
+  border: none
+  margin: $hr-margin
+  background-color: $hr-background-color
+
+img
+  max-width: 100%
+  height: auto
+
+input[type='checkbox'],
+input[type='radio']
+  vertical-align: baseline
+
+small
+  font-size: $small-font-size
+
+span
+  font-weight: inherit
+  font-style: inherit
+
+strong
+  color: $strong-color
+  font-weight: $strong-weight
+
+// Block
+
+fieldset
+  border: none
+
+pre
+  +overflow-touch
+  overflow-x: auto
+  padding: $pre-padding
+  background-color: $pre-background
+  color: $pre
+  font-size: $pre-font-size
+  white-space: pre
+  word-wrap: normal
+  code
+    padding: 0
+    background-color: transparent
+    color: currentColor
+    font-size: $pre-code-font-size
+
+table
+  td,
+  th
+    vertical-align: top
+    &:not([align])
+      text-align: inherit
+  th
+    color: $text-strong
+
+::selection
+  background: lighten($primary, 1.21%)
+  color: #fdfdfd
+
+button:focus,
+button:focus:hover
+  outline-width: initial
+  outline-style: none
+  outline-color: initial
