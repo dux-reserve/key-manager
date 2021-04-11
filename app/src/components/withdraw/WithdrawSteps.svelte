@@ -1,8 +1,9 @@
 <script>
 	import { createEventDispatcher, onDestroy } from 'svelte';
 	import { replace } from 'svelte-spa-router';
-	import { isObjectEmpty, satoshisToBitcoins, timer } from '../../utils/helpers';
-	import { configSelectedCurrentData } from '../../store';
+	import { _ } from 'svelte-i18n';
+	import { isObjectEmpty, timer } from '../../utils/helpers';
+	import { configSelectedCurrentData, applicationSettings } from '../../store';
 	import Button from '../../components/ui/Button.svelte';
 	import Overlay from '../../components/ui/Overlay.svelte';
 	import TrezorNumberPad from '../../components/hardware/TrezorNumberPad.svelte';
@@ -34,8 +35,6 @@
 
 	const dispatch = createEventDispatcher();
 
-	let cancelSigning = false;
-	let cannotSignWithThisDevice = false;
 	let combinedPsbt = null;
 	let deviceAlreadySigned = false;
 	let deviceNotInitialized = false;
@@ -55,6 +54,8 @@
 	let showRetrySignWithDevice = false;
 	let signedDevices = [];
 	let signedPsbt = [];
+	let signingReady = false;
+	let signingInProgress = false;
 	let signingSucess = false;
 	let trezorError = false;
 	let trezorLockPinKey = false;
@@ -63,12 +64,11 @@
 	let waitBeforeSigning = false;
 	let walletNeedPassphraseSent = false;
 	let walletNeedPinSent = false;
+	let walletType = $configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'multi' : 'single';
 	let withdrawStep = 1;
-	let wrongDeviceDetected = false;
 
 	// *** General ***
 	const handleResetWalletData = () => {
-		cancelSigning = false;
 		deviceAlreadySigned = false;
 		deviceNotInitialized = false;
 		deviceScanning = false;
@@ -81,21 +81,27 @@
 		showCancelConfirmation = false;
 		showMicroSDModel = false;
 		showPinOverlay = false;
+		signingInProgress = false;
 		showRetrySignWithDevice = false;
+		signingReady = false;
 		signingSucess = false;
 		trezorError = false;
 		trezorLockPinKey = false;
 		trezorPinMessage = '';
 		walletNeedPinSent = false;
-		wrongDeviceDetected = false;
 	};
 
 	const enumerate = async () => {
 		try {
 			const response = await window.api.ipcRenderer.invoke('hwi:enumerate');
-			scannedDevices = response.filter(devices => {
-				return devices;
-			});
+			if (response.some(hardware => hardware.type === 'trezor' && hardware.code == -13) && !signingInProgress) {
+				deviceScanning = false;
+				trezorPinMessage = $_('creation.main.trezor_something_went_wrong', { default: 'Something went wrong. Please unplug and re-plug your Trezor & retry' });
+				showPinOverlay = true;
+				trezorError = true;
+			} else {
+				scannedDevices = response;
+			}
 		} catch (error) {
 			deviceScanning = false;
 			console.log('error on enumerate: ', error);
@@ -115,11 +121,11 @@
 	};
 
 	const handleScanningStop = () => {
-		deviceNotInitialized = false;
 		deviceScanning = false;
 	};
 
 	const handleDeviceNotInitialized = () => {
+		deviceScanning = false;
 		deviceNotInitialized = true;
 	};
 
@@ -141,12 +147,14 @@
 			}
 			// }
 		} catch (error) {
+			signingReady = false;
+			signingInProgress = false;
 			console.log('Error for PSBT signature:', error);
 			showRetrySignWithDevice = true;
 		}
 	};
 
-	const signWithMicroSD = async (device, signedPsbtFromMicroSD) => {
+	const signWithMicroSD = async signedPsbtFromMicroSD => {
 		try {
 			showRetrySignWithDevice = false;
 			signingSucess = true;
@@ -165,6 +173,20 @@
 			console.log('Error for PSBT signature:', error);
 			showRetrySignWithDevice = true;
 			extractedFromMicroSD = false;
+		}
+	};
+
+	const verifyIfDeviceIsalreadySigned = () => {
+		if (
+			scannedWalletData.fingerprint &&
+			signedDevices.filter(device => device.fingerprint && device.fingerprint.toLowerCase() === scannedWalletData.fingerprint.toLowerCase()).length > 0
+		) {
+			deviceAlreadySigned = true;
+			retryXpubExtration = true;
+			return true;
+		} else {
+			deviceAlreadySigned = false;
+			return false;
 		}
 	};
 
@@ -193,7 +215,6 @@
 		deviceScanning = true;
 		signingSucess = false;
 		scannedWalletData = {};
-		wrongDeviceDetected = false;
 		for (let i = 0; i <= 30; i++) {
 			if (!deviceScanning) break;
 			await enumerate();
@@ -201,10 +222,10 @@
 			if (scannedDevices.length >= 1) {
 				for (let i = 0; i < scannedDevices.length; i++) {
 					if (scannedDevices[i].type === selectedWalletData.type && scannedDevices[i].model === selectedWalletData.model) {
-						handleScanningStop();
 						scannedWalletData = { ...scannedDevices[i] };
 						walletNeedPinSent = scannedWalletData.needs_pin_sent;
-						wrongDeviceDetected = false;
+						handleScanningStop();
+						verifyIfDeviceIsalreadySigned();
 					}
 				}
 				if (!isObjectEmpty(scannedWalletData)) {
@@ -213,18 +234,11 @@
 						break;
 					} else {
 						withdrawStep = 4;
-						await timer(2000);
-						handleSignTransaction();
+						signingReady = true;
 						break;
 					}
 				}
 			}
-			// if (i > 10 && scannedDevices.length >= 1) {
-			// 	handleScanningStop();
-			// 	scannedWalletData = { ...scannedDevices[scannedDevices.length - 1] };
-			// 	wrongDeviceDetected = true;
-			// 	break;
-			// }
 			if (i === 30) handleScanningStop();
 			await timer(1000);
 		}
@@ -266,7 +280,8 @@
 		walletNeedPinSent = false;
 		waitBeforeSigning = true;
 		// TODO: bad hack
-		await timer(5021);
+		signingInProgress = true;
+		await timer(4210);
 		setTimeout(async () => {
 			waitBeforeSigning = false;
 			await signWithDevice(scannedWalletData);
@@ -274,8 +289,25 @@
 	};
 
 	const handleBacktoTransactionDetails = () => {
-		selectedWalletData = {};
-		withdrawStep = 1;
+		if (signingSucess && signedDevices.length >= 1 && signedPsbt.length >= 1) {
+			showCancelConfirmation = true;
+		} else {
+			selectedWalletData = {};
+			withdrawStep = 1;
+		}
+	};
+
+	const handleContinueConfirmation = () => {
+		showCancelConfirmation = false;
+	};
+
+	const handleCancelConfirmation = () => {
+		if (signingSucess && signedDevices.length >= 1 && signedPsbt.length >= 1) {
+			signedDevices.pop();
+			signedPsbt.pop();
+		}
+		showCancelConfirmation = false;
+		withdrawStep = 2;
 	};
 
 	const handleCancelSigningPsbt = () => {
@@ -316,10 +348,10 @@
 		showRetrySignWithDevice = true;
 		showPinOverlay = false;
 		trezorError = false;
-		trezorPinMessage = 'The PIN layout is displayed on your Trezor';
+		trezorPinMessage = $_('withdraw.steps.trezor_pin_layout', { default: 'The PIN layout is displayed on your Trezor' });
 	};
 
-	const handleTrezorExtraction = async device => {
+	const handleTrezorPromptPin = async device => {
 		showPinOverlay = true;
 		trezorError = false;
 		try {
@@ -327,12 +359,15 @@
 				device: device,
 			});
 		} catch (error) {
-			trezorPinMessage = 'Something went wrong. Please unplug and re-plug your Trezor & retry';
-			trezorError = true;
+			setTimeout(() => {
+				trezorPinMessage = $_('withdraw.steps.trezor_something_went_wrong', { default: 'Something went wrong. Please unplug and re-plug your Trezor & retry' });
+				trezorError = true;
+			}, 2000);
 		}
 	};
 
 	const handleSendPin = async pin => {
+		trezorError = false;
 		lockClosingPinOverlay = true;
 		trezorLockPinKey = true;
 		trezorPinMessage = 'Unlocking device';
@@ -346,7 +381,9 @@
 				showPinOverlay = false;
 				trezorLockPinKey = false;
 				walletNeedPinSent = false;
+				signingInProgress = true;
 				await enumerate();
+				trezorError = false;
 				if (scannedDevices.length >= 1) {
 					for (let i = 0; i < scannedDevices.length; i++) {
 						if (scannedDevices[i].type === selectedWalletData.type && scannedDevices[i].model === selectedWalletData.model) {
@@ -358,21 +395,23 @@
 
 				handleWaitBeforeSigning();
 			} else {
-				trezorPinMessage = 'Incorrect PIN - Please retry';
+				trezorPinMessage = $_('withdraw.steps.trezor_pin_incorrect', { default: 'Incorrect PIN - Please retry' });
 				trezorLockPinKey = false;
-				await handleTrezorExtraction(scannedWalletData);
+				await handleTrezorPromptPin(scannedWalletData);
 			}
 		} catch (error) {
-			trezorPinMessage = 'Something went wrong. Please unplug and re-plug your Trezor & retry';
-			trezorError = true;
+			setTimeout(() => {
+				trezorPinMessage = $_('withdraw.steps.trezor_something_went_wrong', { default: 'Something went wrong. Please unplug and re-plug your Trezor & retry' });
+				trezorError = true;
+			}, 2000);
 		} finally {
 			lockClosingPinOverlay = false;
 		}
 	};
 
 	const handleRetryPromptPin = async () => {
-		trezorPinMessage = 'The PIN layout is displayed on your Trezor';
-		await handleTrezorExtraction(scannedWalletData);
+		trezorPinMessage = $_('withdraw.steps.trezor_pin_layout', { default: 'The PIN layout is displayed on your Trezor' });
+		await handleTrezorPromptPin(scannedWalletData);
 	};
 
 	// Reset the trezor if not unplugged correctly
@@ -383,8 +422,8 @@
 
 	const handleSignTransaction = () => {
 		if (walletNeedPinSent && scannedWalletData.type === 'trezor') {
-			trezorPinMessage = 'The PIN layout is displayed on your Trezor';
-			handleTrezorExtraction(scannedWalletData);
+			trezorPinMessage = $_('withdraw.steps.trezor_pin_layout', { default: 'The PIN layout is displayed on your Trezor' });
+			handleTrezorPromptPin(scannedWalletData);
 		} else {
 			walletNeedPinSent = false;
 			withdrawStep = 4;
@@ -429,7 +468,7 @@
 
 			withdrawStep = 3;
 			showMicroSDModel = false;
-			signWithMicroSD(currentConfigDevices[length - 1], response);
+			signWithMicroSD(response);
 		} catch (error) {
 			console.log(error);
 			if (!error.message.includes('Canceled')) {
@@ -452,8 +491,6 @@
 		showMicroSDModel = false;
 	};
 
-	console.log('transaction detail:', transactionDestinationAddress, finalTransactionAmount, desiredFee);
-
 	onDestroy(() => {
 		// That make sure the createdPsbt & signedPsbt are empty when the view is destroy
 		createdPsbt;
@@ -465,9 +502,19 @@
 	<div class="columns">
 		<div class="column is-12">
 			<h3 class="title is-3 is-vertical-center top-action">
-				Withdraw from {$configSelectedCurrentData.config.quorum.requiredSigners === 1
-					? $configSelectedCurrentData.name + ' Wallet'
-					: $configSelectedCurrentData.name + ' Multisig Vault (2 of 3)'}
+				{$_('withdraw.steps.headline', { default: 'Withdraw from' })}
+				{#if $applicationSettings.interfaceLanguage === 'en'}
+					{$configSelectedCurrentData.config.quorum.requiredSigners === 1
+						? `${$configSelectedCurrentData.name} ${$_('withdraw.steps.headline_wallet', { default: 'wallet' })}`
+						: `${$configSelectedCurrentData.name} ${$_('withdraw.steps.headline_vault', { default: 'vault' })}`}
+				{:else if $applicationSettings.interfaceLanguage === 'fr'}
+					{$configSelectedCurrentData.config.quorum.requiredSigners === 1
+						? `${$_('withdraw.steps.headline_wallet', { default: 'wallet' })} ${$configSelectedCurrentData.name} `
+						: `${$_('withdraw.steps.headline_vault', { default: 'vault' })} ${$configSelectedCurrentData.name}`}
+				{/if}
+				{#if $configSelectedCurrentData.config.quorum.requiredSigners > 1}
+					(2 of 3)
+				{/if}
 			</h3>
 		</div>
 	</div>
@@ -483,7 +530,7 @@
 					{txInputs}
 					{txInputsTotal}
 					signedDevices={signedDevices.length}
-					walletType={$configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'multi' : 'single'}
+					{walletType}
 				/>
 			</div>
 		{:else if withdrawStep === 2}
@@ -501,6 +548,9 @@
 					{signingSucess}
 					{vaultCompletedKeys}
 					{walletNeedPinSent}
+					{walletType}
+					{signingReady}
+					{signingInProgress}
 					{withdrawStep}
 					on:cancelScanning={handleScanningStop}
 					on:cancelSigning={handleCancelSigningPsbt}
@@ -510,7 +560,7 @@
 					on:replugTrezorDevice={handleReplugTrezorDevice}
 					on:retryPromptPin={handleRetryPromptPin}
 					on:retrySigning={handleRetrySigning}
-					walletType={$configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'multi' : 'single'}
+					on:startSigning={handleSignTransaction}
 				/>
 			</div>
 		{:else if (withdrawStep === 3 || withdrawStep === 4) && showMicroSDModel}
@@ -523,73 +573,79 @@
 			<!-- {desiredFee}
 		{txInputs}
 		{txInputsTotal} -->
-			<Broadcasted
-				{currentBalanceWithdraw}
-				{finalFee}
-				{finalTransactionAmount}
-				{transactionDestinationAddress}
-				{useAllFunds}
-				walletType={$configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'multi' : 'single'}
-			/>
+			<Broadcasted {currentBalanceWithdraw} {finalFee} {finalTransactionAmount} {transactionDestinationAddress} {useAllFunds} {walletType} />
 		{/if}
 	</div>
 
 	{#if withdrawStep >= 2 && withdrawStep <= 5}
-		<MiniPreview
-			{finalFee}
-			{finalTransactionAmount}
-			{transactionDestinationAddress}
-			{txInputsTotal}
-			walletType={$configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'multi' : 'single'}
-		/>
+		<MiniPreview {finalFee} {finalTransactionAmount} {transactionDestinationAddress} {txInputsTotal} {walletType} />
 	{/if}
 
 	<div class="container-action">
 		<div class="buttons">
 			{#if withdrawStep === 1}
 				<Button
-					text={showCancelButton ? 'Cancel transaction' : 'Edit transaction details'}
+					text={showCancelButton
+						? $_('withdraw.steps.button_cancel_transaction', { default: 'Cancel transaction' })
+						: $_('withdraw.steps.button_edit_transaction_details', { default: 'Edit transaction details' })}
 					buttonClass="is-primary is-outlined"
 					on:buttonClicked={handleCancelTransaction}
 				/>
 				<Button
-					text={showCancelButton ? 'Continue transaction' : 'Sign transaction'}
+					text={showCancelButton
+						? $_('withdraw.steps.button_continue_transaction', { default: 'Continue transaction' })
+						: $_('withdraw.steps.button_sign_transaction', { default: 'Sign transaction' })}
 					buttonClass="is-primary"
 					icon="arrowRight"
 					on:buttonClicked={handleTransactionConfirmed}
 				/>
 			{:else if withdrawStep === 2}
-				<Button text="Back to transaction details" buttonClass="is-primary is-outlined" icon="arrowBack" on:buttonClicked={handleBacktoTransactionDetails} />
+				<Button
+					text={$_('withdraw.steps.button_back_transaction_details', { default: 'Back to transaction details' })}
+					buttonClass="is-primary is-outlined"
+					icon="arrowBack"
+					on:buttonClicked={handleBacktoTransactionDetails}
+				/>
 				<Button
 					text={selectedWalletData.model
-						? 'Sign transaction with ' + selectedWalletData.model.replaceAll('_', ' ') + ' (' + selectedWalletData.fingerprint + ')'
-						: 'Sign transaction'}
+						? `${$_('withdraw.steps.button_sign_transaction_with', { default: 'Sign transaction with' })} ${selectedWalletData.model.replaceAll('_', ' ')} (${
+								selectedWalletData.fingerprint
+						  })`
+						: $_('withdraw.steps.button_sign_transaction', { default: 'Sign transaction' })}
 					buttonClass="is-primary"
 					icon="arrowRight"
-					title={selectedWalletData.model ? '' : 'Selected a hardwallet to continue'}
+					title={selectedWalletData.model ? '' : $_('withdraw.steps.button_sign_transaction_with_title', { default: 'Select a hardware device to continue' })}
 					buttonDisabled={!selectedWalletData.fingerprint}
 					on:buttonClicked={handleConfirmSelectedSignee}
 				/>
 			{:else if withdrawStep === 3 || withdrawStep === 4}
 				<Button
-					text={signingSucess ? 'Cancel this signature' : 'Back to transaction details'}
+					text={signingSucess
+						? $_('withdraw.steps.button_cancel_signature', { default: 'Cancel this signature' })
+						: $_('withdraw.steps.button_back_transaction_details', { default: 'Back to transaction details' })}
 					buttonClass="is-primary is-outlined"
 					on:buttonClicked={handleBacktoTransactionDetails}
 				/>
 				<Button
 					text={vaultCompletedKeys + 1 === $configSelectedCurrentData.config.quorum.requiredSigners
-						? 'Review transaction before broadcasting'
-						: 'Sign with second hardware wallet'}
+						? $_('withdraw.steps.button_review_transaction_broadcast', { default: 'Review transaction before broadcast' })
+						: `${$_('withdraw.steps.button_sign_with', { default: 'Sign with' })} second ${$_('withdraw.steps.button_sign_with_hardware', {
+								default: 'hardware device',
+						  })}`}
 					buttonClass="is-primary"
-					title={signingSucess ? '' : 'Sign your transaction to continue'}
+					title={signingSucess ? '' : $_('withdraw.steps.button_sign_to_continue', { default: 'Sign your transaction to continue' })}
 					icon="arrowRight"
 					on:buttonClicked={handleSigningSuccess}
 					buttonDisabled={!signingSucess}
 				/>
 			{:else if withdrawStep === 5}
-				<Button text="Cancel transaction" buttonClass="is-primary is-outlined" on:buttonClicked={handleCancelTransaction} />
 				<Button
-					text="Broadcast your fully signed transaction"
+					text={$_('withdraw.steps.button_cancel_transaction', { default: 'Cancel transaction' })}
+					buttonClass="is-primary is-outlined"
+					on:buttonClicked={handleCancelTransaction}
+				/>
+				<Button
+					text={$_('withdraw.steps.button_broadcast_signed_transaction', { default: 'Broadcast your fully signed transaction' })}
 					buttonClass="is-primary"
 					icon="arrowRight"
 					on:buttonClicked={() => {
@@ -597,28 +653,79 @@
 					}}
 				/>
 			{:else if withdrawStep === 6}
-				<Button text="Send another transaction" buttonClass="is-primary is-outlined" on:buttonClicked={handleTransactionDone} />
-				<Button text="View your transaction" buttonClass="is-primary" on:buttonClicked={handleViewTransactionDone} />
+				<Button
+					text={$_('withdraw.steps.button_send_another_transaction', { default: 'Send another transaction' })}
+					buttonClass="is-primary is-outlined"
+					on:buttonClicked={handleTransactionDone}
+				/>
+				<Button
+					text={$_('withdraw.steps.button_view_transaction', { default: 'View your transaction' })}
+					buttonClass="is-primary"
+					on:buttonClicked={handleViewTransactionDone}
+				/>
 			{/if}
 		</div>
 	</div>
 </div>
 
 {#if showCancelConfirmation}
-	<Overlay title="Cancel this key?" titleIsLeft disableClosing>
-		<p class="mt-3 mb-2">Your <span class="is-uppercase">{scannedWalletData.model.split('_').join(' ')}</span> signature was not confirmed just yet.</p>
-		<p class="mb-6">Are you sure you want to go back?</p>
+	<Overlay title={$_('withdraw.overlay.show_cancel_confirmation.title', { default: 'Remove this signature?' })} titleIsLeft disableClosing>
+		<p class="mt-3 mb-2">
+			{#if $applicationSettings.interfaceLanguage === 'en'}
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_1', { default: 'Your' })}
+				<span class="is-capitalized">{scannedWalletData.model.split('_').join(' ')}</span>
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_2_1', { default: 'signature' })}
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_2_2', { default: 'was not confirmed just yet' })}
+			{:else if $applicationSettings.interfaceLanguage === 'fr'}
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_1', { default: 'Your' })}
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_2_1', { default: 'signature' })}
+				<span class="is-capitalized">{scannedWalletData.model.split('_').join(' ')}</span>
+				{$_('withdraw.overlay.show_cancel_confirmation.paragraph_2_2', { default: 'was not confirmed just yet' })}
+			{/if}.
+		</p>
+		<p class="mb-6">{$_('withdraw.overlay.show_cancel_confirmation.paragraph_3', { default: 'Are you sure you want to go back?' })}</p>
 		<div class="buttons is-centered mt-6">
-			<Button text="Back" buttonClass="is-primary is-outlined" on:buttonClicked={handleContinueConfirmation} />
-			<Button text="Yes, cancel this key" buttonClass="is-primary" on:buttonClicked={handleCancelConfirmation} />
+			<Button
+				text={$_('withdraw.overlay.show_cancel_confirmation.button_back', { default: 'Back' })}
+				buttonClass="is-primary is-outlined"
+				on:buttonClicked={handleContinueConfirmation}
+			/>
+			<Button
+				text={$_('withdraw.overlay.show_cancel_confirmation.button_yes', { default: 'Yes, cancel signature' })}
+				buttonClass="is-primary"
+				on:buttonClicked={handleCancelConfirmation}
+			/>
 		</div>
 	</Overlay>
 {/if}
 
 {#if deviceNotInitialized}
-	<!-- capitalized wallet brand name -->
-	<Overlay title="Error" subtitle={'Your ' + scannedWalletData.model.split('_').join(' ') + ' need to be initialized'} titleIsLeft disableClosing>
-		<p class="mt-2">HWW documentation</p>
+	<Overlay
+		title={$_('creation.overlay.device_not_initialized.title', { default: 'Hardware device not active yet' })}
+		subtitle={`${$_('creation.overlay.device_not_initialized.subtitle', { default: 'You need to initialize your' })} ${scannedWalletData.model
+			.split('_')
+			.join(' ')}`}
+		titleIsLeft
+		disableClosing
+	>
+		<p class="mt-2">
+			{$_('creation.overlay.device_not_initialized.paragraph_1', { default: 'We recommend that you read the official documentation from' })}
+			<span class="is-capitalized">{scannedWalletData.model.split('_')[0]}</span>
+			{$_('creation.overlay.device_not_initialized.paragraph_2', { default: 'available on' })}
+			<span
+				class="is-link has-text-weight-semibold"
+				on:click={() =>
+					openUrl(
+						scannedWalletData.model.toLowerCase().split('_')[0] === 'coldcard'
+							? 'coldcard-docs'
+							: scannedWalletData.model.toLowerCase().split('_')[0] === 'ledger'
+							? 'ledger-doc'
+							: 'trezor-docs',
+					)}>{$_('creation.overlay.device_not_initialized.paragraph_3', { default: 'website' })}</span
+			>.<br />{$_('creation.overlay.device_not_initialized.paragraph_4', { default: 'Reach out to us on our' })}
+			<span class="is-link has-text-weight-semibold" on:click={() => openUrl('telegram')}>Telegram</span>
+			{$_('creation.overlay.device_not_initialized.paragraph_5', { default: 'if you have any questions' })}.
+		</p>
 		<div class="buttons is-centered mt-6">
 			<Button text="Cancel" buttonClass="is-primary is-outlined" on:buttonClicked={handleCancelScanning} />
 			<Button text="Retry scanning" buttonClass="is-primary" on:buttonClicked={handleReScanForDevice} />
@@ -626,9 +733,33 @@
 	</Overlay>
 {/if}
 
+{#if deviceAlreadySigned}
+	<Overlay
+		title={`${$_('withdraw.overlay.device_already_signed.title_1', { default: 'Your' })} ${scannedWalletData.model
+			.split('_')
+			.join(' ')} ${$_('withdraw.overlay.device_already_signed.title_2', { default: '"have already signed the transaction' })}`}
+		titleIsLeft
+		disableClosing
+	>
+		<p class="mt-2">{$_('withdraw.overlay.device_already_signed.paragraph', { default: 'Use another device from your multisig quorum' })}</p>
+		<div class="buttons is-centered mt-6">
+			<Button
+				text={$_('withdraw.overlay.device_already_signed.button_cancel', { default: 'Cancel' })}
+				buttonClass="is-primary is-outlined"
+				on:buttonClicked={handleCancelScanning}
+			/>
+			<Button
+				text={$_('withdraw.overlay.device_already_signed.button_retry', { default: 'Retry another device' })}
+				buttonClass="is-primary"
+				on:buttonClicked={handleReScanForDevice}
+			/>
+		</div>
+	</Overlay>
+{/if}
+
 {#if showPinOverlay}
 	<Overlay
-		title="Unlock your Trezor"
+		title={$_('withdraw.overlay.trezor.title', { default: 'Unlock your Trezor' })}
 		subtitle={trezorPinMessage}
 		titleIsLeft={lockClosingPinOverlay}
 		disableClosing={lockClosingPinOverlay}
@@ -641,26 +772,44 @@
 {/if}
 
 {#if showBroadcastAlertMessage}
-	<Overlay title="Broadcast via Blockstream" titleIsLeft disableClosing>
+	<Overlay title={$_('withdraw.overlay.broadcast.blockstream_title', { default: 'Broadcast via Blockstream' })} titleIsLeft disableClosing>
 		<div class="broadcast-overlay mt-2">
 			<p class="has-text-justified">
-				To keep things simple, we are currently using Blockstream's full node to send your transaction to the Bitcoin network. You will be able to connect your
-				own node shortly for better privacy.
+				{$_('withdraw.overlay.broadcast.blockstream_body', {
+					default:
+						"To keep things simple, we are currently using Blockstream's full node to send your transaction to the Bitcoin network. You will be able to connect your	own node shortly for better privacy.",
+				})}
 			</p>
 			<div class="buttons is-right mt-6">
-				<Button text="Cancel" buttonClass="is-primary is-outlined" on:buttonClicked={handleCancelTransaction} />
-				<Button text="Broadcast transaction" buttonClass="is-primary" on:buttonClicked={handleSendTransaction} />
+				<Button
+					text={$_('withdraw.overlay.broadcast.blockstream_button_cancel', { default: 'Cancel' })}
+					buttonClass="is-primary is-outlined"
+					on:buttonClicked={handleCancelTransaction}
+				/>
+				<Button
+					text={$_('withdraw.overlay.broadcast.blockstream_button_confirm', { default: 'Broadcast transaction' })}
+					buttonClass="is-primary"
+					on:buttonClicked={handleSendTransaction}
+				/>
 			</div>
 		</div>
 	</Overlay>
 {/if}
 
 {#if microSDImportError}
-	<Overlay title="Error on extracting PSBT from Micro SD" titleIsLeft disableClosing>
-		<p class="mt-2 mb-5">Make sure the proper PSBT file was selected</p>
+	<Overlay title={$_('withdraw.overlay.micro_sd_error.title', { default: 'Error on extracting PSBT from Micro SD' })} titleIsLeft disableClosing>
+		<p class="mt-2 mb-5">{$_('withdraw.overlay.micro_sd_error.paragraph', { default: 'Make sure the proper PSBT file was selected' })}</p>
 		<div class="buttons is-centered mt-6">
-			<Button text="Cancel" buttonClass="is-primary is-outlined" on:buttonClicked={handleCancelImportingFromMicroSD} />
-			<Button text="Retry importing signed" buttonClass="is-primary" on:buttonClicked={handleShowExtractFromMicroSD} />
+			<Button
+				text={$_('withdraw.overlay.micro_sd_error.button_cancel', { default: 'Cancel' })}
+				buttonClass="is-primary is-outlined"
+				on:buttonClicked={handleCancelImportingFromMicroSD}
+			/>
+			<Button
+				text={$_('withdraw.overlay.micro_sd_error.button_retry', { default: 'Retry importing signed' })}
+				buttonClass="is-primary"
+				on:buttonClicked={handleShowExtractFromMicroSD}
+			/>
 		</div>
 	</Overlay>
 {/if}

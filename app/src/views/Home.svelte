@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import { bitcoinTestnetNetwork } from '../store';
 	import Button from '../components/ui/Button.svelte';
@@ -81,30 +82,38 @@
 	<section class="hero top-hero">
 		<div class="hero-body">
 			<div class="columns is-centered">
-				<div class="column is-5-desktop is-6-tablet">
+				<div class="column is-6-desktop is-7-tablet">
 					<div class="card">
 						<div class="card-content is-fullheight has-text-centered">
 							<div class="card-title">
 								<h1 class="title is-2 mb-5-custom">
-									Hold the keys
+									{$_('home.headline_line_1', { default: 'Hold the keys' })}
 									<br />
-									to your bitcoin
+									{$_('home.headline_line_2', { default: 'to your bitcoin' })}
 								</h1>
 							</div>
 
 							<p>
-								Add a wallet or create a multisig vault to manage your bitcoin.
+								{$_('home.intro_body_line_1', { default: 'Add a wallet or create multisig vault to manage your bitcoin.' })}
 								<br />
-								All keys are held by your <u title="Currently works with Coldcard, Ledger & Trezor. More to come!">hardware devices</u>, in your own control.
+								{$_('home.intro_body_line_2', { default: 'All keys are held by your' })}
+								<u title={$_('home.intro_body_line_2_cta_title', { default: 'Currently compatible with Coldcard, Ledger & Trezor. More to come!' })}>
+									{$_('home.intro_body_line_2_cta', { default: 'hardware devices' })}</u
+								>{$_('home.intro_body_line_2_1', { default: ', in your own control.' })}
 							</p>
 
-							<div class="card-bottom">
+							<div class="card-bottom mt-4">
 								<div class="buttons is-centered mt-6">
-									<Button text="Get Started" icon="arrowRight" buttonClass="is-primary" on:buttonClicked={handleShowDisclaimer} />
+									<Button
+										text={$_('home.button', { default: 'Get started' })}
+										icon="arrowRight"
+										buttonClass="is-primary"
+										on:buttonClicked={handleShowDisclaimer}
+									/>
 								</div>
 								<p class="has-space-after-button">
-									Already have a vault or a wallet?
-									<span class="is-link has-text-weight-bold" on:click={openFileDialog}>Import your config file</span>
+									{$_('home.config', { default: 'Already have a vault or a wallet?' })}
+									<span class="is-link has-text-weight-bold" on:click={openFileDialog}>{$_('home.config_cta', { default: 'Import your config file' })}</span>
 								</p>
 							</div>
 						</div>
@@ -124,10 +133,12 @@
 {#if showDisclamerOverlay}
 	<Overlay titleIsLeft disableClosing subtitle>
 		<span slot="title"
-			>Beta version (0.3.0)
+			>{$_('disclaimer.title', { default: 'Beta version' })} (0.4.0)
 			<div
 				class="field switch-testnet"
-				title="Only for testing and development using test bitcoin (tBTC) instead of actual bitcoin (BTC). Compatible with all hardware devices"
+				title={$_('settings.testnet_title', {
+					default: 'Only for testing and development using test bitcoin (tBTC) instead of actual bitcoin (BTC). Compatible with all hardware devices',
+				})}
 			>
 				<input
 					id="switchTestnet"
@@ -137,26 +148,40 @@
 					bind:checked={useTestnet}
 					on:change={handleChangeNetwork}
 				/>
-				<label for="switchTestnet">Use Testnet</label>
+				<label for="switchTestnet">{$_('settings.testnet', { default: 'Use Testnet' })}</label>
 			</div>
 		</span>
 		<div class="disclaimer-overlay">
-			<p>Only use with small amounts of bitcoin or use testnet.</p>
+			<p>{$_('disclaimer.paragraph_1', { default: 'Only use with small amounts of bitcoin or use testnet.' })}</p>
 			<p class="mt-2 has-text-justified">
-				This software is in beta. It's thoughtfully tested and secure, but expect hickups here and there. You can also change the Bitcoin network to {$bitcoinTestnetNetwork
-					? 'mainnet'
-					: 'testnet'}. We will share updates on
+				{$_('disclaimer.paragraph_2', {
+					default:
+						"This software is in beta. It's thoughtfully tested and secure, but expect hiccups here and there. You can also change the Bitcoin network to",
+				})}
+				{$bitcoinTestnetNetwork ? 'mainnet' : 'testnet'}. {$_('disclaimer.paragraph_3', {
+					default: 'We will share updates on',
+				})}
 				<span class="is-link has-text-weight-normal" on:click={() => openUrl('twitter')} title="https://twitter.com/duxreserve">Twitter</span>
-				as we make improvements and find bugs.
+				{$_('disclaimer.paragraph_4', { default: 'as we make improvements and find bugs.' })}
 			</p>
 			<p class="mt-2">
-				Our application is free and <span title="MIT license">open source</span> so you can also
-				<span class="is-link has-text-weight-normal" on:click={() => openUrl('github')} title="https://github.com/dux-reserve">take a look and contribute</span
+				{$_('disclaimer.paragraph_5', { default: 'Our application is free and open source so you can also' })}
+				<span class="is-link has-text-weight-normal" on:click={() => openUrl('github')} title="https://github.com/dux-reserve"
+					>{$_('disclaimer.paragraph_6', { default: 'take a look and contribute' })}</span
 				>.
 			</p>
 			<div class="buttons is-right mt-6">
-				<Button text="I'll just wait" buttonClass="is-primary is-outlined" on:buttonClicked={handleCloseDisclaimer} />
-				<Button text="Ok, makes sense" buttonClass="is-primary" icon="arrowRight" on:buttonClicked={handleAcceptDisclaimer} />
+				<Button
+					text={$_('disclaimer.button_back', { default: "I'll just wait" })}
+					buttonClass="is-primary is-outlined"
+					on:buttonClicked={handleCloseDisclaimer}
+				/>
+				<Button
+					text={$_('disclaimer.button_ok', { default: 'Ok, makes sense' })}
+					buttonClass="is-primary"
+					icon="arrowRight"
+					on:buttonClicked={handleAcceptDisclaimer}
+				/>
 			</div>
 		</div>
 	</Overlay>
@@ -184,7 +209,7 @@
 			}
 
 			.column {
-				width: 577px;
+				width: 635px;
 			}
 		}
 	}

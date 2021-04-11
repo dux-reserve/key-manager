@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
+	import 'dayjs/locale/fr';
 	import * as animateScroll from 'svelte-scrollto';
 	import dayjs from 'dayjs';
-	import { configData } from '../../../store';
+	import { applicationSettings, configData } from '../../../store';
 
 	export let configName = '';
 	export let importedDevices = [];
@@ -30,11 +32,14 @@
 									{configName}
 								</h1>
 								<h2 class="title is-family-primary is-5 has-smaller-margin">
-									Created on {dayjs(
+									{$_('creation.confirm_config.created_on', { default: 'Created on' })}
+									{dayjs(
 										walletType === 'single'
 											? $configData.wallets[$configData.wallets.length - 1].created_at
 											: $configData.vaults[$configData.vaults.length - 1].created_at,
-									).format('dddd[,] MMMM DD[,] YYYY')}
+									)
+										.locale($applicationSettings.interfaceLanguage === 'fr' ? 'fr' : 'en')
+										.format($applicationSettings.interfaceLanguage === 'fr' ? 'dddd DD MMMM YYYY' : 'dddd[,] MMMM DD[,] YYYY')}
 								</h2>
 								<div class="key-list">
 									{#each importedDevices as { type, fingerprint }}
@@ -43,7 +48,9 @@
 											<p class="is-size-5 has-text-left is-capitalized">
 												{#if type === 'coldcard'}Coldcard{:else if type === 'ledger'}Ledger{:else if type === 'trezor'}Trezor{/if}
 
-												(<span class="is-uppercase" title="Device unique fingerprint">{fingerprint}</span>)
+												(<span class="is-uppercase" title={$_('creation.confirm_config.device_fingerprint', { default: 'Device unique fingerprint' })}
+													>{fingerprint}</span
+												>)
 											</p>
 										</div>
 									{/each}
@@ -52,9 +59,14 @@
 							<div class="column is-4">
 								<p class="is-size-5 is-vertical-center has-text-centered config-icon">
 									{#if walletType === 'multi'}
-										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={vaultIcon} alt="Vault icon" /></span>Vault
+										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={vaultIcon} alt="Vault icon" /></span>{$_('creation.confirm_config.vault', {
+											default: 'Vault',
+										})}
 									{:else}
-										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={walletIcon} alt="Wallet icon" /></span>Wallet
+										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={walletIcon} alt="Wallet icon" /></span>{$_(
+											'creation.confirm_config.wallet',
+											{ default: 'Wallet' },
+										)}
 									{/if}
 								</p>
 								<div class="check-circle has-text-centered">
@@ -93,10 +105,10 @@
 
 	.check-circle {
 		justify-content: space-around;
-		margin-top: 3.5rem;
+		margin-top: 3.75rem;
 
 		img {
-			width: 121px;
+			width: 60px;
 		}
 	}
 </style>

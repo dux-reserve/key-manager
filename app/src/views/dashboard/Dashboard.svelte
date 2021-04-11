@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import dayjs from 'dayjs';
 	import { location, querystring, replace } from 'svelte-spa-router';
 	import {
+		applicationSettings,
 		bitcoinChartArrayData,
 		bitcoinCurrentPrices,
 		bitcoinMarketData,
@@ -13,14 +15,14 @@
 		configsCurrentDataWalletsArray,
 		configSelectedCurrentData,
 		currentNetworkConfigData,
+		saveData,
 		selectedCurrency,
 		timeNow,
-		userSettings,
 	} from '../../store';
 	import { formatNumberByThousands, isObjectEmpty, isAudioPlaying, satoshisToBitcoins, timer } from '../../utils/helpers';
 
 	import Button from '../../components/ui/Button.svelte';
-	// import SelectionDropDown from '../../components/ui/SelectionDropDown.svelte';
+	import SelectionDropDown from '../../components/ui/SelectionDropDown.svelte';
 	import HeroSocialFooter from '../../components/ui/SocialFooter.svelte';
 	import Overlay from '../../components/ui/Overlay.svelte';
 	import Deposit from './Deposit.svelte';
@@ -47,29 +49,28 @@
 
 	let navigatorOnline = navigator.onLine;
 
-	// let receiveConfirmedNotification = false;
-	// let receivedNotification = false;
-	// let withdrawConfirmedNotification = false;
 	let accountDataLoaded = false;
 	let allArray = [];
+	let allArrayForChangePage = [];
 	let allConfigArray = [];
 	let allPendingAmount = [];
 	let configDropdownArray = [];
 	let configurationDropDownSelectedChoice = 0;
-	let currentAvailableAmount = -1;
+	let currentAvailableAmount = undefined;
 	let currentPendingAmount = 0;
-	let dropdownConfigTitle = [];
 	let endShowLoadingTransaction = false;
 	let forcedStep = 1;
 	let forcedWalletType = '';
 	let hideTopActionForWithdraw = false;
 	let isUpdating = false;
+	let configFileChanging = false;
 	let newAdded = false;
 	let refreshingAccountData = false;
 	let requestedPage = '/dashboard';
 	let showAlertCreation = false;
 	let showAlertOverlay = false;
 	let totalCurrentBalance = undefined;
+	let totalCurrentPendingAmount = 0;
 
 	$: if (($querystring || !$querystring) && hideTopActionForWithdraw && !$querystring === 'withdraw') {
 		hideTopActionForWithdraw = false;
@@ -80,12 +81,42 @@
 		replace('/dashboard');
 	}
 
+	const handleAllPendingAmount = () => {
+		allPendingAmount = [];
+		for (let i = 0; i < allArray.length; i++) {
+			if (allArray[i] && allArray[i].availableUtxos) {
+				let currentAvailableAmountCopy = 0;
+				for (let j = 0; j < allArray[i].availableUtxos.length; j++) {
+					if (
+						(allArray[i].availableUtxos[j].status && allArray[i].availableUtxos[j].status.confirmed) ||
+						allArray[i].changeAddresses.filter(change => change.address === allArray[i].availableUtxos[j].address.address).length >= 1
+					) {
+						currentAvailableAmountCopy += allArray[i].availableUtxos[j].value;
+					}
+				}
+
+				allPendingAmount = [...allPendingAmount, allArray[i].currentBalance - currentAvailableAmountCopy];
+			}
+		}
+
+		if (allPendingAmount.length >= 1) {
+			totalCurrentPendingAmount = allPendingAmount.reduce((previous, current) => {
+				return previous + current;
+			}, 0);
+		}
+	};
+
 	const handleChangePage = link => {
 		if (!hideTopActionForWithdraw) {
 			if (link.includes('id=') && link.split('id=')[1] !== $querystring.split('id=')[1]) {
+				currentAvailableAmount = undefined;
 				allConfigArray = [...$currentNetworkConfigData.vaults, ...$currentNetworkConfigData.wallets];
 				configurationDropDownSelectedChoice = allConfigArray.findIndex(config => config.id === link.split('id=')[1]);
-				$configSelectedCurrentData = allArray[configurationDropDownSelectedChoice] ? allArray[configurationDropDownSelectedChoice] : {};
+				$configSelectedCurrentData = !isObjectEmpty(allArrayForChangePage[configurationDropDownSelectedChoice])
+					? allArrayForChangePage[configurationDropDownSelectedChoice]
+					: !isObjectEmpty(allArray[configurationDropDownSelectedChoice])
+					? allArray[configurationDropDownSelectedChoice]
+					: {};
 
 				if ($configSelectedCurrentData.availableUtxos && accountDataLoaded) {
 					let currentAvailableAmountCopy = 0;
@@ -96,10 +127,6 @@
 								.length >= 1
 						) {
 							currentAvailableAmountCopy += $configSelectedCurrentData.availableUtxos[i].value;
-
-							if (currentAvailableAmount < 0) {
-								currentAvailableAmount = currentAvailableAmountCopy;
-							}
 						}
 					}
 
@@ -124,7 +151,6 @@
 					replace(link);
 				}, 0);
 			}
-			// WTF
 		} else if (link.split('/dashboard?')[1] !== $querystring) {
 			requestedPage = link;
 			showAlertOverlay = true;
@@ -147,32 +173,8 @@
 	};
 
 	const handleChangeCurrentConfigFile = ({ detail }) => {
-		allConfigArray = [...$currentNetworkConfigData.vaults, ...$currentNetworkConfigData.wallets];
-		configurationDropDownSelectedChoice = allConfigArray.findIndex(config => config.id === detail.id);
-
-		$configSelectedCurrentData = allArray[configurationDropDownSelectedChoice] ? allArray[configurationDropDownSelectedChoice] : {};
-
-		if ($configSelectedCurrentData.availableUtxos && accountDataLoaded) {
-			let currentAvailableAmountCopy = 0;
-			for (let i = 0; i < $configSelectedCurrentData.availableUtxos.length; i++) {
-				if (
-					($configSelectedCurrentData.availableUtxos[i].status && $configSelectedCurrentData.availableUtxos[i].status.confirmed) ||
-					$configSelectedCurrentData.changeAddresses.filter(change => change.address === $configSelectedCurrentData.availableUtxos[i].address.address).length >=
-						1
-				) {
-					currentAvailableAmountCopy += $configSelectedCurrentData.availableUtxos[i].value;
-					if (currentAvailableAmount < 0) {
-						currentAvailableAmount = currentAvailableAmountCopy;
-					}
-				}
-			}
-
-			currentAvailableAmount = currentAvailableAmountCopy;
-			currentPendingAmount = $configSelectedCurrentData.currentBalance - currentAvailableAmount;
-		}
-
 		if (detail.viewTransaction) {
-			replace(`/dashboard?view=transactions,id=${detail.id}`);
+			handleChangePage(`/dashboard?view=transactions,id=${detail.id}`);
 		}
 	};
 
@@ -211,8 +213,8 @@
 			const oldBitcoinNetworkBlockHeight = $bitcoinNetworkBlockHeight;
 			$bitcoinNetworkBlockHeight = await window.api.ipcRenderer.invoke('data:get-bitcoin-network-block-height');
 			if (
-				$userSettings.notification &&
-				$userSettings.notificationBlockfound &&
+				$applicationSettings.notification &&
+				$applicationSettings.notificationBlockfound &&
 				oldBitcoinNetworkBlockHeight < $bitcoinNetworkBlockHeight &&
 				oldBitcoinNetworkBlockHeight !== 0
 			) {
@@ -221,7 +223,7 @@
 					body: 'Present block height: ' + formatNumberByThousands($bitcoinNetworkBlockHeight, false, '', false, 0),
 				});
 				console.log('New Block found');
-				if ($userSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
+				if ($applicationSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
 					receivedSound.play();
 				}
 			}
@@ -241,7 +243,7 @@
 		const sortedOldConfigTransactionUnconfirmed = oldConfig.transactions ? oldConfig.transactions.filter(tx => tx.status.confirmed === false) : [];
 		const sortedCurrentConfigTransactionUnconfirmed = accountData.transactions ? accountData.transactions.filter(tx => tx.status.confirmed === false) : [];
 
-		if ($userSettings.notificationReceive) {
+		if ($applicationSettings.notificationReceive) {
 			for (let i = 0; i < sortedCurrentConfigTransactionUnconfirmed.length; i++) {
 				if (
 					sortedOldConfigTransactionUnconfirmed.length < sortedCurrentConfigTransactionUnconfirmed.length &&
@@ -249,8 +251,8 @@
 					sortedCurrentConfigTransactionUnconfirmed[i].type === 'received' &&
 					sortedCurrentConfigTransactionUnconfirmed.length - 1 === i
 				) {
-					const title = $userSettings.notificationIncognito ? 'New transaction received' : `New transaction received on ${accountData.name}`;
-					const body = $userSettings.notificationIncognito
+					const title = $applicationSettings.notificationIncognito ? 'New transaction received' : `New transaction received on ${accountData.name}`;
+					const body = $applicationSettings.notificationIncognito
 						? ''
 						: satoshisToBitcoins(sortedCurrentConfigTransactionUnconfirmed[i].value).toNumber() +
 						  ($bitcoinTestnetNetwork ? ' tBTC on ' : ' BTC on ') +
@@ -260,7 +262,7 @@
 					try {
 						window.api.ipcRenderer.invoke('os:desktop-notification', { title: title, body: body });
 
-						if ($userSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
+						if ($applicationSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
 							receivedSound.play();
 						}
 					} catch (error) {
@@ -269,7 +271,7 @@
 				}
 			}
 		}
-		if ($userSettings.notificationReceiveConfirm && oldConfig.transactions && oldConfig.transactions.length >= 1)
+		if ($applicationSettings.notificationReceiveConfirm && oldConfig.transactions && oldConfig.transactions.length >= 1)
 			for (let i = 0; i < sortedCurrentConfigTransactionConfirmed.length; i++) {
 				if (
 					sortedOldConfigTransactionConfirmed.length < sortedCurrentConfigTransactionConfirmed.length &&
@@ -277,7 +279,7 @@
 					sortedCurrentConfigTransactionConfirmed[i].status.confirmed &&
 					sortedCurrentConfigTransactionConfirmed[i].type === 'received'
 				) {
-					const title = $userSettings.notificationIncognito
+					const title = $applicationSettings.notificationIncognito
 						? 'Deposit confirmed'
 						: `Deposit confirmed on ${accountData.name} in block: ${formatNumberByThousands(
 								sortedCurrentConfigTransactionConfirmed[i].status.block_height,
@@ -286,7 +288,7 @@
 								false,
 								0,
 						  )}`;
-					const body = $userSettings.notificationIncognito
+					const body = $applicationSettings.notificationIncognito
 						? ''
 						: satoshisToBitcoins(sortedCurrentConfigTransactionConfirmed[i].value).toNumber() +
 						  ($bitcoinTestnetNetwork ? ' tBTC on ' : ' BTC on ') +
@@ -295,7 +297,7 @@
 					try {
 						window.api.ipcRenderer.invoke('os:desktop-notification', { title: title, body: body });
 
-						if ($userSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
+						if ($applicationSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
 							confirmedSound.play();
 						}
 					} catch (error) {
@@ -303,7 +305,7 @@
 					}
 				}
 			}
-		if ($userSettings.notificationWithdrawConfirm && oldConfig.transactions && oldConfig.transactions.length >= 1)
+		if ($applicationSettings.notificationWithdrawConfirm && oldConfig.transactions && oldConfig.transactions.length >= 1)
 			for (let i = 0; i < sortedCurrentConfigTransactionConfirmed.length; i++) {
 				if (
 					sortedOldConfigTransactionConfirmed.length < sortedCurrentConfigTransactionConfirmed.length &&
@@ -311,7 +313,7 @@
 					sortedCurrentConfigTransactionConfirmed[i].status.confirmed &&
 					sortedCurrentConfigTransactionConfirmed[i].type === 'sent'
 				) {
-					const title = $userSettings.notificationIncognito
+					const title = $applicationSettings.notificationIncognito
 						? 'Withdraw confirmed'
 						: `Withdraw from ${accountData.name} confirmed in block: ${formatNumberByThousands(
 								sortedCurrentConfigTransactionConfirmed[i].status.block_height,
@@ -320,7 +322,7 @@
 								false,
 								0,
 						  )}`;
-					const body = $userSettings.notificationIncognito
+					const body = $applicationSettings.notificationIncognito
 						? ''
 						: satoshisToBitcoins(sortedCurrentConfigTransactionConfirmed[i].value).toNumber() +
 						  ($bitcoinTestnetNetwork ? ' tBTC on ' : ' BTC on ') +
@@ -330,7 +332,7 @@
 					try {
 						window.api.ipcRenderer.invoke('os:desktop-notification', { title: title, body: body });
 
-						if ($userSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
+						if ($applicationSettings.notificationSound && !isAudioPlaying(receivedSound) && !isAudioPlaying(confirmedSound)) {
 							confirmedSound.play();
 						}
 					} catch (error) {
@@ -341,11 +343,12 @@
 	};
 
 	const handleAccountData = (accountData, notification, oldConfig) => {
-		if (notification && $userSettings.notification && !isObjectEmpty(oldConfig) && oldConfig.transactions !== accountData.transactions) {
-			// TODO condition console.log('notification push');
-			// receivedNotification = false; // One notification at a time (last received)
-			// receiveConfirmedNotification = false; // (last received confirmed)
-			// withdrawConfirmedNotification = false; // (last withdraw confirmed)
+		if (
+			notification &&
+			$applicationSettings.notification &&
+			!isObjectEmpty(oldConfig) &&
+			Object.values(oldConfig.transactions) !== Object.values(accountData.transactions)
+		) {
 			handleNotificationLookup(accountData, oldConfig);
 		}
 	};
@@ -370,17 +373,63 @@
 		$currentNetworkConfigData = { version: $configData.version, name: $configData.name, wallets: filteredWallets, vaults: filteredVaults };
 	};
 
-	const calculatedPendingsAmount = () => {
-		if (allArray.length >= 1) {
-			totalCurrentBalance = allArray.reduce((prev, cur) => {
-				return prev + cur.currentBalance;
+	const calculatedTotalAmount = () => {
+		if (allConfigArray.length >= 1) {
+			totalCurrentBalance = allConfigArray.reduce((previous, current) => {
+				return previous + current.currentBalance;
 			}, 0);
+		}
+	};
+
+	const checkForCurrentNetworkLocalConfigFile = async () => {
+		try {
+			const fileExist = await window.api.ipcRenderer.invoke('config-data:check-for-file');
+
+			if (fileExist) {
+				const configDatafromFile = await window.api.ipcRenderer.invoke('config-data:read-file');
+
+				if ($bitcoinTestnetNetwork === configDatafromFile.testnet) {
+					$configsCurrentDataVaultsArray = configDatafromFile.config_data_vault;
+					$configsCurrentDataWalletsArray = configDatafromFile.config_data_wallet;
+
+					$configSelectedCurrentData = allConfigArray[configurationDropDownSelectedChoice];
+
+					accountDataLoaded = true;
+
+					filterNetworkConfigData();
+
+					allConfigArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
+					allArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
+					handleAllPendingAmount();
+					calculatedTotalAmount();
+				}
+			}
+		} catch (error) {
+			console.log('error on getting local config data');
+		}
+	};
+
+	const handleSaveCurrentNetworkConfigLocally = async () => {
+		try {
+			const data = {
+				config_data_wallet: $configsCurrentDataWalletsArray,
+				config_data_vault: $configsCurrentDataVaultsArray,
+				testnet: $bitcoinTestnetNetwork,
+			};
+
+			if (!isObjectEmpty(allConfigArray)) {
+				await window.api.ipcRenderer.invoke('config-data:create-file', {
+					data: data,
+				});
+			}
+		} catch (error) {
+			console.log('error on creating local config data');
 		}
 	};
 
 	const updateCurrentAccountData = async (notification = true, filterNetwork = true) => {
 		try {
-			if (navigatorOnline) {
+			if (navigatorOnline && !configFileChanging) {
 				getNetworkBlockHeight();
 
 				if (filterNetwork) {
@@ -411,9 +460,14 @@
 					handleAccountData(accountData, notification, oldConfig);
 				}
 
-				allArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
+				allConfigArray = allArray;
+				allArrayForChangePage = allArray;
 
-				$configSelectedCurrentData = allArray[configurationDropDownSelectedChoice];
+				$configSelectedCurrentData = allConfigArray[configurationDropDownSelectedChoice];
+
+				if ($querystring.includes('id=')) {
+					handleChangePage(`/dashboard?view=transactions,id=${$configSelectedCurrentData.config.id}`);
+				}
 
 				const currentOldConfig = $configSelectedCurrentData;
 
@@ -426,10 +480,6 @@
 								.length >= 1
 						) {
 							currentAvailableAmountCopy += $configSelectedCurrentData.availableUtxos[i].value;
-
-							if (currentAvailableAmount < 0) {
-								currentAvailableAmount = currentAvailableAmountCopy;
-							}
 						}
 					}
 
@@ -440,10 +490,12 @@
 		} catch (error) {
 			console.log('Error on updating account data', error);
 			await timer(6666);
-			updateCurrentAccountData();
+			await updateCurrentAccountData();
 		} finally {
 			accountDataLoaded = true;
-			calculatedPendingsAmount();
+			handleAllPendingAmount();
+			calculatedTotalAmount();
+			// handleSaveCurrentNetworkConfigLocally();
 		}
 	};
 
@@ -471,27 +523,49 @@
 		}
 	};
 
-	const handleConfigFileChanged = () => {
+	// TODO: refactor
+	const handleConfigFileChanged = async () => {
+		configFileChanging = true;
 		refreshingAccountData = true;
-		updateCurrentAccountData();
+		allArray = [];
+		allConfigArray = [];
+		allPendingAmount = [];
+		configDropdownArray = [];
+		configurationDropDownSelectedChoice = 0;
+		currentAvailableAmount = undefined;
+		currentPendingAmount = 0;
+		totalCurrentBalance = undefined;
+		$configSelectedCurrentData = {};
+		$configsCurrentDataVaultsArray = [];
+		$configsCurrentDataWalletsArray = [];
+		filterNetworkConfigData();
+		configFileChanging = false;
+		await updateCurrentAccountData();
 		refreshingAccountData = false;
 	};
 
 	const handleNetworkChange = () => {
-		totalCurrentBalance = -1;
-		currentAvailableAmount = -1;
-		$bitcoinTestnetNetwork = !$bitcoinTestnetNetwork;
+		refreshingAccountData = true;
+		totalCurrentBalance = undefined;
+		currentAvailableAmount = undefined;
 		allArray = [];
+		currentPendingAmount = 0;
+		configurationDropDownSelectedChoice = 0;
+		allConfigArray = [];
+		allPendingAmount = [];
+		configDropdownArray = [];
 		$configSelectedCurrentData = {};
 		$configsCurrentDataVaultsArray = [];
 		$configsCurrentDataWalletsArray = [];
+		$bitcoinTestnetNetwork = !$bitcoinTestnetNetwork;
 
 		setTimeout(async () => {
 			await window.api.ipcRenderer.invoke('config:switch-network', {
 				testnet: $bitcoinTestnetNetwork,
 			});
 
-			updateCurrentAccountData();
+			await updateCurrentAccountData();
+			refreshingAccountData = false;
 		}, 0);
 	};
 
@@ -512,12 +586,7 @@
 
 	const handleForceUpdateCurrentAccountData = async () => {
 		refreshingAccountData = true;
-		if (navigatorOnline) {
-			getCurrentBitcoinPrices();
-			getBicoinMarketData();
-			getNetworkBlockHeight();
-			getHistoricalBitcoinPrice();
-		}
+		handleSyncPriceData();
 
 		await updateCurrentAccountData();
 		setTimeout(() => {
@@ -526,31 +595,38 @@
 	};
 
 	const setIntervalAccountData = () => {
-		setInterval(() => {
-			if ($userSettings.autoRefresh && navigatorOnline && accountDataLoaded && !isUpdating && !refreshingAccountData && !hideTopActionForWithdraw) {
+		setInterval(async () => {
+			if ($applicationSettings.autoRefresh && navigatorOnline && accountDataLoaded && !isUpdating && !refreshingAccountData && !hideTopActionForWithdraw) {
 				accountDataLoaded = false;
-				updateCurrentAccountData();
+				await updateCurrentAccountData();
 			}
 		}, 60001);
 	};
 
+	const handleSyncPriceData = async () => {
+		if (((!isUpdating && !refreshingAccountData) || $querystring !== 'view=widthdraw') && navigatorOnline && !hideTopActionForWithdraw) {
+			getCurrentBitcoinPrices();
+			await getHistoricalBitcoinPrice();
+			getBicoinMarketData();
+
+			// update local 'time'
+			$timeNow = dayjs();
+
+			setTimeout(() => {
+				$saveData = true;
+			}, 0);
+		}
+	};
+
 	const setIntervalHistoricalBitcoinPrice = () => {
 		setInterval(() => {
-			if (((!isUpdating && !refreshingAccountData) || $querystring !== 'view=widthdraw') && navigatorOnline && !hideTopActionForWithdraw) {
-				getCurrentBitcoinPrices();
-				getBicoinMarketData();
-				getHistoricalBitcoinPrice();
-				// update local time
-				$timeNow = dayjs();
-			}
+			handleSyncPriceData();
 		}, 60421); //  rate limits with up to 100 requests/minute but only refresh every 60 secondes
 	};
 
-	// const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
-	// 	if (configDropdownArray.length >= 1) {
-	// 		$configSelectedCurrentData = configDropdownArray[detail];
-	// 	}
-	// };
+	const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
+		configurationDropDownSelectedChoice = detail;
+	};
 
 	filterNetworkConfigData();
 
@@ -564,29 +640,33 @@
 			navigatorOnline = false;
 		});
 
-		if ($configsCurrentDataVaultsArray.length > 1) {
-			allArray = [...$configsCurrentDataVaultsArray];
-		}
+		// if ($configsCurrentDataVaultsArray.length > 1) {
+		// 	allArray = [...$configsCurrentDataVaultsArray];
+		// }
 
-		if ($configsCurrentDataWalletsArray.length > 1) {
-			allArray = [...allArray, ...$configsCurrentDataWalletsArray];
-		}
+		// if ($configsCurrentDataWalletsArray.length > 1) {
+		// 	allArray = [...allArray, ...$configsCurrentDataWalletsArray];
+		// }
 
-		calculatedPendingsAmount();
+		// calculatedTotalAmount();
 
 		if (navigatorOnline) {
 			getCurrentBitcoinPrices();
-			getBicoinMarketData();
-			getNetworkBlockHeight();
 			getHistoricalBitcoinPrice();
+			getBicoinMarketData();
+			$timeNow = dayjs();
+			getNetworkBlockHeight();
 		}
 
-		console.time('First config generation timer');
+		// await checkForCurrentNetworkLocalConfigFile();
+		// console.time('First');
 		await updateCurrentAccountData(false, true);
-		console.timeEnd('First config generation timer');
+		// console.timeEnd('First');
 
 		setIntervalAccountData();
 		setIntervalHistoricalBitcoinPrice();
+
+		handleSyncPriceData();
 	});
 </script>
 
@@ -598,21 +678,21 @@
 					class="icon has-no-hover"
 					class:is-prussian-blue={$location === '/dashboard' && $querystring}
 					class:is-active={$location === '/dashboard' && !$querystring}><img src={dashboadIcon} alt="icon" /></span
-				>Dashboard
+				>{$_('dashboard.menu.dashboard', { default: 'Dashboard' })}
 			</a>
 		</li>
 		<li>
 			<a on:click={() => handleChangePage('/dashboard?view=widthdraw')} class:is-active={$querystring === 'view=widthdraw'}>
 				<span class="icon has-no-hover" class:is-prussian-blue={$location !== 'view=widthdraw'} class:is-active={$querystring === 'view=widthdraw'}
 					><img src={withdrawIcon} alt="icon" /></span
-				>Withdraw
+				>{$_('dashboard.menu.withdraw', { default: 'Withdraw' })}
 			</a>
 		</li>
 		<li>
 			<a on:click={() => handleChangePage('/dashboard?view=deposit')} class:is-active={$querystring === 'view=deposit'}>
 				<span class="icon has-no-hover" class:is-prussian-blue={$location !== 'view=deposit'} class:is-active={$querystring === 'view=deposit'}
 					><img src={depositIcon} alt="icon" /></span
-				>Deposit
+				>{$_('dashboard.menu.deposit', { default: 'Deposit' })}
 			</a>
 		</li>
 
@@ -620,50 +700,61 @@
 			<a on:click={() => handleChangePage('/dashboard?view=settings')} class:is-active={$querystring === 'view=settings'}>
 				<span class="icon has-no-hover" class:is-prussian-blue={$location !== 'view=settings'} class:is-active={$querystring === 'view=settings'}
 					><img src={settingsIcon} alt="icon" /></span
-				>Settings
+				>{$_('dashboard.menu.settings', { default: 'Settings' })}
 			</a>
 		</li>
 
 		<li>
 			<a class="is-disabled" title="Subscribe to our newsletter for updates or follow us on twitter">
-				<span class="icon is-small has-no-hover is-grey bitcoin-icon"><img src={bitcoinLetter} alt="icon" /></span>Buy <span class="is-size-7">/</span>
-				Sell<span class="exposant has-text-primary">soon</span>
+				<span class="icon is-small has-no-hover is-grey bitcoin-icon"><img src={bitcoinLetter} alt="icon" /></span>{$_('dashboard.menu.buy', {
+					default: 'Buy',
+				})}
+				<!-- <span class="is-size-7">/</span>Sell -->
+				<span class="exposant has-text-primary">{$_('dashboard.menu.soon', { default: 'soon' })}</span>
 			</a>
 		</li>
 	</ul>
 	<ul class="menu-list vaults">
 		<li>
 			<a class="has-no-hover" class:has-text-weight-bold={$querystring.includes('vault')}>
-				<span class="icon is-prussian-blue has-no-hover"><img src={vaultIcon} alt="icon" /></span>Vault
+				<span class="icon is-prussian-blue has-no-hover"><img src={vaultIcon} alt="icon" /></span>{$_('dashboard.menu.vault', { default: 'Vault' })}
 			</a>
-			{#each $currentNetworkConfigData.vaults as { id, name }}
-				<a
-					class="mt-2 ml-1 pr-3 has-text-weight-normal sub-menu-list move-on-hover is-capitalized has-text-multiline"
-					class:is-active={$querystring === `view=transactions,id=${id}`}
-					on:click={() => handleChangePage(`/dashboard?view=transactions,id=${id}`)}
-				>
-					{name}
-				</a>
-			{/each}
-			<a class="mt-2 ml-1 has-text-weight-semibold sub-menu-list is-primary is-capitalized move-on-hover" on:click={handleCreateNewVault}>+ Add Vault</a>
+			{#if !isObjectEmpty($currentNetworkConfigData)}
+				{#each $currentNetworkConfigData.vaults as { id, name }}
+					<a
+						class="mt-2 ml-1 pr-3 has-text-weight-normal sub-menu-list move-on-hover is-capitalized has-text-multiline"
+						class:is-active={$querystring === `view=transactions,id=${id}`}
+						on:click={() => handleChangePage(`/dashboard?view=transactions,id=${id}`)}
+					>
+						{name}
+					</a>
+				{/each}
+			{/if}
+			<a class="mt-2 ml-1 has-text-weight-semibold sub-menu-list is-primary is-capitalized move-on-hover" on:click={handleCreateNewVault}
+				>+ {$_('dashboard.menu.add_vault', { default: 'Add Vault' })}</a
+			>
 		</li>
 	</ul>
 
 	<ul class="menu-list wallets">
 		<li>
 			<a class="has-no-hover" class:has-text-weight-bold={$querystring.includes('wallet')}>
-				<span class="icon is-prussian-blue has-no-hover"><img src={walletIcon} alt="icon" /></span>Wallet
+				<span class="icon is-prussian-blue has-no-hover"><img src={walletIcon} alt="icon" /></span>{$_('dashboard.menu.wallet', { default: 'Wallet' })}
 			</a>
-			{#each $currentNetworkConfigData.wallets as { id, name }}
-				<a
-					class="mt-2 ml-1 pr-3 has-text-weight-normal sub-menu-list move-on-hover is-capitalized has-text-multiline"
-					class:is-active={$querystring === `view=transactions,id=${id}`}
-					on:click={() => handleChangePage(`/dashboard?view=transactions,id=${id}`)}
-				>
-					{name}
-				</a>
-			{/each}
-			<a class="mt-2 ml-1 has-text-weight-semibold sub-menu-list is-primary is-capitalized move-on-hover" on:click={handleCreateNewWallet}>+ Add Wallet</a>
+			{#if !isObjectEmpty($currentNetworkConfigData)}
+				{#each $currentNetworkConfigData.wallets as { id, name }}
+					<a
+						class="mt-2 ml-1 pr-3 has-text-weight-normal sub-menu-list move-on-hover is-capitalized has-text-multiline"
+						class:is-active={$querystring === `view=transactions,id=${id}`}
+						on:click={() => handleChangePage(`/dashboard?view=transactions,id=${id}`)}
+					>
+						{name}
+					</a>
+				{/each}
+			{/if}
+			<a class="mt-2 ml-1 has-text-weight-semibold sub-menu-list is-primary is-capitalized move-on-hover" on:click={handleCreateNewWallet}
+				>+ {$_('dashboard.menu.add_wallet', { default: 'Add Wallet' })}</a
+			>
 		</li>
 	</ul>
 </aside>
@@ -674,25 +765,27 @@
 			{#if $location === '/dashboard' && $querystring === ''}
 				<div class="column is-9">
 					<h3 class="title is-3">
-						{#if $timeNow.hour() >= 0 && $timeNow.hour() < 3}
-							Good night,
-						{:else if $timeNow.hour() >= 3 && $timeNow.hour() < 12}
-							Good morning,
-						{:else if $timeNow.hour() >= 12 && $timeNow.hour() <= 17}
-							Good afternoon,
-						{:else}
-							Good evening,
+						{#if !isObjectEmpty($timeNow)}
+							{#if $timeNow.hour() >= 0 && $timeNow.hour() < 3}
+								{$_('dashboard.welcoming_message.good_night', { default: 'Good night' })},
+							{:else if $timeNow.hour() >= 3 && $timeNow.hour() < 12}
+								{$_('dashboard.welcoming_message.good_morning', { default: 'Good morning' })},
+							{:else if $timeNow.hour() >= 12 && $timeNow.hour() <= 17}
+								{$_('dashboard.welcoming_message.good_afternoon', { default: 'Good afternoon' })},
+							{:else}
+								{$_('dashboard.welcoming_message.good_evening', { default: 'Good evening' })},
+							{/if}
 						{/if}
 						<span title="VIRES IN NUMERIS">Bitcoin</span>er
 					</h3>
 				</div>
 			{:else if $location === '/dashboard' && $querystring === 'view=deposit'}
 				<div class="column is-9">
-					<h3 class="title is-3">Deposit bitcoin</h3>
+					<h3 class="title is-3">{$_('dashboard.receiving.headline', { default: 'Deposit bitcoin' })}</h3>
 				</div>
 			{:else if $location === '/dashboard' && $querystring === 'view=widthdraw'}
 				<div class="column is-9">
-					<h3 class="title is-3">Withdraw bitcoin</h3>
+					<h3 class="title is-3">{$_('withdraw.main.headline', { default: 'Withdraw bitcoin' })}</h3>
 				</div>
 			{:else if $location === '/dashboard' && $querystring.includes('view=transactions')}
 				<div class="column is-9">
@@ -702,7 +795,7 @@
 				</div>
 			{:else if $location === '/dashboard' && $querystring.includes('view=settings')}
 				<div class="column">
-					<h3 class="title is-3">Settings</h3>
+					<h3 class="title is-3">{$_('settings.headline', { default: 'Settings' })}</h3>
 				</div>
 			{/if}
 			{#if !$querystring.includes('view=settings') && !$querystring.includes('view=newCreation')}
@@ -710,7 +803,7 @@
 					<div class="buttons is-right">
 						<Button
 							buttonClass="is-primary is-small button-refresh"
-							text="Refresh"
+							text={$_('dashboard.welcome.button_refresh', { default: 'Refresh' })}
 							icon="refresh"
 							loading={refreshingAccountData}
 							on:buttonClicked={handleForceUpdateCurrentAccountData}
@@ -721,7 +814,7 @@
 			{#if $querystring.includes('view=settings')}
 				<div class="column">
 					<div class="buttons is-right">
-						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>Version:</b> 0.3.0-beta</h6>
+						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>{$_('settings.version', { default: 'Version' })}:</b> 0.4.0-beta</h6>
 					</div>
 				</div>
 			{/if}
@@ -729,7 +822,7 @@
 	{/if}
 
 	{#if $location === '/dashboard' && $querystring === ''}
-		<Welcome {totalCurrentBalance} on:changeCurrentConfigFile={handleChangeCurrentConfigFile} />
+		<Welcome {totalCurrentBalance} on:changeCurrentConfigFile={handleChangeCurrentConfigFile} {allPendingAmount} {totalCurrentPendingAmount} />
 	{:else if $location === '/dashboard' && $querystring === 'view=deposit'}
 		<Deposit {currentPendingAmount} on:changeCurrentConfigFile={handleChangeCurrentConfigFile} />
 	{:else if $location === '/dashboard' && $querystring === 'view=widthdraw'}
@@ -765,29 +858,58 @@
 {/if}
 
 {#if showAlertOverlay}
-	<Overlay title="Cancel this transaction? " titleIsLeft disableClosing>
-		<p>Are you sure that you want to cancel this transaction? All details will be lost. You’ll have to create another one.</p>
+	<Overlay title={$_('dashboard.overlay.alert.title', { default: 'Cancel this transaction?' })} titleIsLeft disableClosing>
+		<p>
+			{$_('dashboard.overlay.alert.paragraph', {
+				default: 'Are you sure that you want to cancel this transaction? All details will be lost. You’ll have to create another one',
+			})}.
+		</p>
 		<div class="buttons is-centered mt-6">
-			<Button buttonClass="is-primary is-outlined" text="Continue transaction" on:buttonClicked={continuePresentTransaction} />
-			<Button buttonClass="is-primary" text="Cancel withdraw" on:buttonClicked={cancelPresentTransaction} />
+			<Button
+				buttonClass="is-primary is-outlined"
+				text={$_('dashboard.overlay.alert.button_continue', { default: 'Continue transaction' })}
+				on:buttonClicked={continuePresentTransaction}
+			/>
+			<Button
+				buttonClass="is-primary"
+				text={$_('dashboard.overlay.alert.button_cancel', { default: 'Cancel withdraw' })}
+				on:buttonClicked={cancelPresentTransaction}
+			/>
 		</div>
 	</Overlay>
 {/if}
 
 {#if showAlertCreation}
 	<Overlay
-		title={`Cancel this ${forcedWalletType === 'single' ? 'wallet' : 'vault'}?`}
-		subtitle={`Your ${forcedWalletType === 'single' ? 'wallet' : 'vault'} isn't created yet`}
+		title={`${$_('dashboard.overlay.alert_creation.title_1', { default: 'Cancel this' })} ${forcedWalletType === 'single' ? 'wallet' : 'vault'}?`}
+		subtitle={`${$_('dashboard.overlay.alert_creation.subtitle_your', { default: 'Your' })} ${
+			forcedWalletType === 'single'
+				? $_('dashboard.overlay.alert_creation.wallet', { default: 'wallet' })
+				: $_('dashboard.overlay.alert_creation.vault', { default: 'vault' })
+		} ${$_('dashboard.overlay.alert_creation.subtitle_not_created', { default: "isn't created yet" })}`}
 		titleIsLeft
 		disableClosing
 	>
 		<p class="mt-2">
-			You are about to cancel the creation of this {forcedWalletType === 'single' ? 'wallet' : 'vault'}. It will not be saved and you will have to start over.
+			{$_('dashboard.overlay.alert_creation.paragraph_1_1', { default: 'You are about to cancel the creation of this' })}
+			{forcedWalletType === 'single'
+				? $_('dashboard.overlay.alert_creation.wallet', { default: 'wallet' })
+				: $_('dashboard.overlay.alert_creation.vault', { default: 'vault' })}. {$_('dashboard.overlay.alert_creation.paragraph_1_2', {
+				default: 'It will not be saved and you will have to start over',
+			})}.
 		</p>
 		<p class="mb-5">Are you sure you want to continue?</p>
 		<div class="buttons is-centered mt-6">
-			<Button text="Continue" buttonClass="is-primary is-outlined" on:buttonClicked={handleContinueCreationOverlay} />
-			<Button text="Cancel Creation" buttonClass="is-primary" on:buttonClicked={handleCancelCreationOverlay} />
+			<Button
+				text={$_('dashboard.overlay.alert_creation.button_continue', { default: 'Continue' })}
+				buttonClass="is-primary is-outlined"
+				on:buttonClicked={handleContinueCreationOverlay}
+			/>
+			<Button
+				text={$_('dashboard.overlay.alert_creation.button_cancel', { default: 'Cancel creation' })}
+				buttonClass="is-primary"
+				on:buttonClicked={handleCancelCreationOverlay}
+			/>
 		</div>
 	</Overlay>
 {/if}

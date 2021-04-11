@@ -1,16 +1,18 @@
 <script>
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { querystring } from 'svelte-spa-router';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import dayjs from 'dayjs';
+	import 'dayjs/locale/fr';
 	import { formatNumberByThousands, satoshisToBitcoins } from '../../utils/helpers';
 	import {
+		applicationSettings,
 		bitcoinCurrentPrices,
 		bitcoinNetworkBlockHeight,
+		bitcoinTestnetNetwork,
 		configSelectedCurrentData,
 		selectedCurrency,
-		userSettings,
-		bitcoinTestnetNetwork,
 	} from '../../store';
 	import Button from '../../components/ui/Button.svelte';
 	import Loading from '../../components/ui/Loading.svelte';
@@ -49,7 +51,10 @@
 	const handleViewDetail = (tx, overlay = false) => {
 		const confirmationNumber = tx.status.confirmed ? $bitcoinNetworkBlockHeight - tx.status.block_height + 1 : 1;
 		overlayData = { ...tx, confirmations: confirmationNumber };
-		const string = overlayData.confirmations > 1 ? ' confirmations' : ' confirmation';
+		const string =
+			overlayData.confirmations > 1
+				? $_('dashboard.transaction.overlay.title.confirmations', { default: ' confirmations' })
+				: $_('dashboard.transaction.overlay.title.confirmation', { default: ' confirmation' });
 		overlayData = { ...overlayData, confirmationString: string };
 		if (overlay) {
 			overlayLoadedTx = { ...tx };
@@ -81,7 +86,7 @@
 <div class="columns">
 	<div class="column">
 		<h3 class="title is-4">
-			All transactions
+			{$_('dashboard.transaction.title', { default: 'All transactions' })}
 			{#if $bitcoinTestnetNetwork}
 				<span class="is-size-5">(TESTNET)</span>
 			{/if}
@@ -94,14 +99,14 @@
 		<div class="card">
 			<div class="card-content">
 				{#if !$configSelectedCurrentData || !$configSelectedCurrentData.config}
-					<Loading text="Loading data" />
+					<Loading text={$_('dashboard.transaction.loading', { default: 'Loading data' })} />
 				{:else}
 					{#if showLoadingTransaction}
-						<Loading text={'Updating data'} dontShowLogo />
+						<Loading text={$_('dashboard.transaction.updating', { default: 'Updating data' })} dontShowLogo />
 					{/if}
 					{#if $configSelectedCurrentData.transactions.length < 1}
 						<div class="no-transaction">
-							<h4 class="title is-5 has-text-weight-medium">No transaction found</h4>
+							<h4 class="title is-5 has-text-weight-medium">{$_('dashboard.transaction.no_tx_found', { default: 'No transaction found' })}</h4>
 						</div>
 					{:else}
 						{#each $configSelectedCurrentData.transactions.slice().reverse() as { address, status, value, type }, i}
@@ -113,18 +118,20 @@
 										{:else}<span class="icon has-no-hover is-inline-block is-withdraw"><img src={Withdraw} alt="Withdraw" /></span>{/if}
 									</div>
 									<div class="info has-text-multiline mr-2">
-										<p class="date is-size-7 has-text-grey-dark is-uppercase has-text-weight-medium">Unconfirmed</p>
+										<p class="date is-size-7 has-text-grey-dark is-uppercase has-text-weight-medium">
+											{$_('dashboard.transaction.unconfirmed', { default: 'Unconfirmed' })}
+										</p>
 										<h5 class="address subtitle is-size-5 has-text-weight-semibold is-family-primary">{type === 'received' ? address.address : address}</h5>
 									</div>
 									<div class="details">
 										<p class="value is-size-6">
 											<span>
-												{$userSettings.satoshiUnit
+												{$applicationSettings.satoshiUnit
 													? formatNumberByThousands(value, false, '', false, 0)
 													: formatNumberByThousands(satoshisToBitcoins(value).toNumber(), false, '', false, 8)}</span
-											><span class="is-size-7 ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
+											><span class="is-size-7 ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
 										</p>
-										<p class="action is-size-6 has-text-grey-darker">View details</p>
+										<p class="action is-size-6 has-text-grey-darker">{$_('dashboard.transaction.view_details', { default: 'View details' })}</p>
 									</div>
 								</div>
 							{/if}
@@ -138,18 +145,23 @@
 										{:else}<span class="icon has-no-hover is-inline-block is-withdraw"><img src={Withdraw} alt="Withdraw" /></span>{/if}
 									</div>
 									<div class="info has-text-multiline mr-2">
-										<p class="date is-size-7 has-text-grey-dark">{dayjs.unix(status.block_time).format('ddd[,] MMM D[,] YYYY HH[:]mm')}</p>
+										<p class="date is-size-7 has-text-grey-dark is-capitalized">
+											{dayjs
+												.unix(status.block_time)
+												.locale($applicationSettings.interfaceLanguage === 'fr' ? 'fr' : 'en')
+												.format('dddd[,] MMMM D[,] YYYY HH[:]mm')}
+										</p>
 										<h5 class="address subtitle is-size-5 has-text-weight-semibold is-family-primary">{type === 'received' ? address.address : address}</h5>
 									</div>
 									<div class="details">
 										<p class="value is-size-6">
 											<span>
-												{$userSettings.satoshiUnit
+												{$applicationSettings.satoshiUnit
 													? formatNumberByThousands(value, false, '', false, 0)
 													: formatNumberByThousands(satoshisToBitcoins(value).toNumber(), false, '', false, 8)}</span
-											><span class="is-size-7 ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
+											><span class="is-size-7 ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
 										</p>
-										<p class="action is-size-6 has-text-grey-darker">View details</p>
+										<p class="action is-size-6 has-text-grey-darker">{$_('dashboard.transaction.view_details', { default: 'View details' })}</p>
 									</div>
 								</div>
 							{/if}
@@ -163,18 +175,28 @@
 
 {#if showOverlay}
 	<Overlay
-		title={overlayData.status.confirmed ? 'Completed with ' + overlayData.confirmations + overlayData.confirmationString + ' ✓' : 'Waiting for confirmation...'}
+		title={overlayData.status.confirmed
+			? $_('dashboard.transaction.overlay.title.completed', { default: 'Completed with ' }) +
+			  formatNumberByThousands(overlayData.confirmations, false, '', false, 0) +
+			  overlayData.confirmationString +
+			  ' ✓'
+			: $_('dashboard.transaction.overlay.title.waiting', { default: 'Waiting for confirmation...' })}
 		subtitle={overlayData.status.confirmed
-			? dayjs.unix(overlayData.status.block_time).format('dddd[,] MMMM DD[,] YYYY HH[:]mm')
+			? dayjs
+					.unix(overlayData.status.block_time)
+					.locale($applicationSettings.interfaceLanguage === 'fr' ? 'fr' : 'en')
+					.format('dddd[,] MMMM DD[,] YYYY HH[:]mm')
 			: overlayData.type === 'received'
-			? 'Incoming transaction'
-			: 'Withdraw transaction'}
+			? $_('dashboard.transaction.overlay.subtitle.incoming', { default: 'Incoming transaction' })
+			: $_('dashboard.transaction.overlay.subtitle.withdraw', { default: 'Withdraw transaction' })}
 		on:closeOverlayClicked={handleCloseOverlay}
 	>
 		<div class="transaction-details-overlay">
 			<div class="field is-selectable">
 				<div class="label">
-					{overlayData.type === 'received' ? 'Received on ' : 'Sent to '}
+					{overlayData.type === 'received'
+						? $_('dashboard.transaction.overlay.label.received', { default: 'Received on' })
+						: $_('dashboard.transaction.overlay.label.sent', { default: 'Sent to' })}
 				</div>
 				{#if overlayData.type === 'received'}
 					{$configSelectedCurrentData.name} {$configSelectedCurrentData.config.totalSigners > 1 ? 'vault' : 'wallet'} |
@@ -182,26 +204,36 @@
 				{overlayData.type === 'received' ? overlayData.address.address : overlayData.address}
 			</div>
 			<div class="field is-selectable">
-				<div class="label">Amount</div>
-				{$userSettings.satoshiUnit
+				<div class="label">{$_('dashboard.transaction.overlay.label.amount', { default: 'Amount' })}</div>
+				{$applicationSettings.satoshiUnit
 					? formatNumberByThousands(overlayData.value, false, '', false, 0)
 					: formatNumberByThousands(satoshisToBitcoins(overlayData.value).toNumber(), false, '', false, 8)}<span class="is-size-7 ml-1"
-					>{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span
+					>{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span
 				>
-				<span class="is-size-8" title={'Current ' + $selectedCurrency + ' value'}>
+				<span
+					class="is-size-8"
+					title={`{${$_('withdraw.preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.preview.value', {
+						default: 'value',
+					})}`}
+				>
 					(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(overlayData.value).toNumber(), true, $selectedCurrency)}<span
 						class="ml-1">{$selectedCurrency}</span
 					>)
 				</span>
 			</div>
 			<div class="field is-selectable">
-				<div class="label">Fee</div>
-				{$userSettings.satoshiUnit
+				<div class="label">{$_('dashboard.transaction.overlay.label.fee', { default: 'Fee' })}</div>
+				{$applicationSettings.satoshiUnit
 					? formatNumberByThousands(overlayData.fee, false, '', false, 0)
 					: formatNumberByThousands(satoshisToBitcoins(overlayData.fee).toNumber(), false, '', false, 8)}<span class="is-size-7 ml-1"
-					>{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span
+					>{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span
 				>
-				<span class="is-size-8" title={'Current ' + $selectedCurrency + ' value'}>
+				<span
+					class="is-size-8"
+					title={`{${$_('withdraw.preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.preview.value', {
+						default: 'value',
+					})}`}
+				>
 					(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(overlayData.fee).toNumber(), true, $selectedCurrency)}<span
 						class="ml-1">{$selectedCurrency}</span
 					>)
@@ -211,26 +243,25 @@
 				<div class="field is-selectable">
 					<div class="label">
 						{#if $bitcoinTestnetNetwork}
-							Testnet block
+							{$_('dashboard.transaction.overlay.label.testnet_height', { default: 'Testnet block height' })}
 						{:else}
-							Block
+							{$_('dashboard.transaction.overlay.label.height', { default: 'Block height' })}
 						{/if}
-						height
 					</div>
 					{formatNumberByThousands(overlayData.status.block_height, false, '', false, 0)}
 				</div>
 			{/if}
 			<div class="field is-selectable">
-				<div class="label">Transaction ID</div>
+				<div class="label">{$_('dashboard.transaction.overlay.label.id', { default: 'Transaction ID' })}</div>
 				{overlayData.txid}
 			</div>
 			<div class="buttons is-right mt-5">
 				<Button
-					text="View on Blockstream explorer"
+					text={$_('dashboard.transaction.overlay.label.button_cta', { default: 'View on Blockstream explorer' })}
 					buttonClass="is-primary"
 					icon="goToWeb"
 					on:buttonClicked={() => openTransactionUrl(overlayData.txid)}
-					title="Open in default browser"
+					title={$_('dashboard.transaction.overlay.label.button_title', { default: 'Open in default browser' })}
 				/>
 			</div>
 		</div>

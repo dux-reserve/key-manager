@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency, timeNow, userSettings } from '../../store';
+	import { _ } from 'svelte-i18n';
+	import dayjs from 'dayjs';
+	import { applicationSettings, bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency } from '../../store';
 	import { formatNumberByThousands, satoshisToBitcoins } from '../../utils/helpers';
 	import Button from '../../components/ui/Button.svelte';
 	import SelectionDropDown from '../../components/ui/SelectionDropDown.svelte';
@@ -26,9 +28,9 @@
 		$configSelectedCurrentData.config.extendedPublicKeys.forEach(extendedPublicKey => {
 			if ($configSelectedCurrentData.config && extendedPublicKey.lastHealthCheck) {
 				lastHealthCheckTime.push({
-					day: $timeNow.isSame(extendedPublicKey.lastHealthCheck, 'day') ? 0 : $timeNow.diff(extendedPublicKey.lastHealthCheck, 'day') + 1,
-					week: $timeNow.diff(extendedPublicKey.lastHealthCheck, 'week'),
-					months: $timeNow.diff(extendedPublicKey.lastHealthCheck, 'month'),
+					day: dayjs().isSame(extendedPublicKey.lastHealthCheck, 'day') ? 0 : dayjs().diff(extendedPublicKey.lastHealthCheck, 'day') + 1,
+					week: dayjs().diff(extendedPublicKey.lastHealthCheck, 'week'),
+					months: dayjs().diff(extendedPublicKey.lastHealthCheck, 'month'),
 				});
 			}
 		});
@@ -42,9 +44,9 @@
 		}, 60001);
 	};
 
-	const handleConfigReselected = ({ detail }) => {
-		console.log('details', detail);
-	};
+	// const handleConfigReselected = ({ detail }) => {
+	// 	console.log('details', detail);
+	// };
 
 	onMount(() => {
 		setIntervalCalculateLastHealthCheck();
@@ -65,27 +67,38 @@
 						</h2>
 						<h3 class="subtitle is-6 has-text-weight-normal is-family-primary is-vertical-center">
 							{#if $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners >= 2}
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={vaultIcon} alt="Vault icon" /></span>{$configSelectedCurrentData
-									.config.quorum.requiredSigners} of
-								{$configSelectedCurrentData.config.quorum.totalSigners}
-								Vault
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={vaultIcon} alt="Vault icon" /></span>
+								{#if $applicationSettings.interfaceLanguage === 'en'}
+									{$configSelectedCurrentData.config.quorum.requiredSigners}
+									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$configSelectedCurrentData.config.quorum.totalSigners}
+									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+								{:else if $applicationSettings.interfaceLanguage === 'fr'}
+									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+									{$configSelectedCurrentData.config.quorum.requiredSigners}
+									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$configSelectedCurrentData.config.quorum.totalSigners}
+								{/if}
 							{:else if $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners === 1}
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span>Wallet
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span
+								>{$_('dashboard.current_config_details.wallet', { default: 'Wallet' })}
 							{/if}
 						</h3>
 					</div>
 				{/if}
 				<div class="card-title">
-					<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">Balance</h5>
+					<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('dashboard.current_config_details.balance', { default: 'Balance' })}</h5>
 					{#if dontshowWalletName}
 						<h3 class="subtitle is-6 has-text-weight-normal is-family-primary is-vertical-center">
 							{#if $configSelectedCurrentData && $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners >= 2}
 								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={vaultIcon} alt="Vault icon" /></span>{$configSelectedCurrentData
-									.config.quorum.requiredSigners} of
+									.config.quorum.requiredSigners}
+								{$_('dashboard.current_config_details.of', { default: 'of' })}
 								{$configSelectedCurrentData.config.quorum.totalSigners}
-								Vault
+								{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
 							{:else if $configSelectedCurrentData && $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners === 1}
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span>Wallet
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span
+								>{$_('dashboard.current_config_details.wallet', { default: 'Wallet' })}
 							{/if}
 						</h3>
 					{/if}
@@ -107,7 +120,7 @@
 					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name}
 					class:is-selectable={$configSelectedCurrentData && $configSelectedCurrentData.name}
 				>
-					{$userSettings.satoshiUnit
+					{$applicationSettings.satoshiUnit
 						? formatNumberByThousands($configSelectedCurrentData ? $configSelectedCurrentData.currentBalance : 0, false, '', false, 0)
 						: formatNumberByThousands(
 								satoshisToBitcoins($configSelectedCurrentData ? $configSelectedCurrentData.currentBalance : 0).toNumber(),
@@ -115,23 +128,33 @@
 								'',
 								false,
 								8,
-						  )}<span class="is-size-7 ml-1"> {$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
+						  )}<span class="is-size-7 ml-1"> {$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
 				</p>
 				{#if currentPendingAmount}
 					<p class="is-size-7 pt-2 has-text-grey-dark" class:is-selectable={$configSelectedCurrentData.name}>
-						{$userSettings.satoshiUnit
+						{$applicationSettings.satoshiUnit
 							? formatNumberByThousands(currentPendingAmount, false, '', false, 0)
 							: formatNumberByThousands(satoshisToBitcoins(currentPendingAmount).toNumber(), false, '', false, 8)}<span class="is-size-8-custom ml-1">
-							{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}</span
+							{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span
 						>
-						pending*
+						{$_('dashboard.current_config_details.pending', { default: 'pending' })}*
 					</p>
 				{/if}
 				{#if showActionButtons}
 					<div class="card-bottom">
 						<div class="buttons is-centered">
-							<Button text="Deposit" icon="deposit" buttonClass="is-primary is-outlined" buttonLink="/dashboard?view=deposit" />
-							<Button text="Withdraw" icon="withdraw" buttonClass="is-primary" buttonLink="/dashboard?view=widthdraw" />
+							<Button
+								text={$_('dashboard.current_config_details.button_receiving', { default: 'Deposit' })}
+								icon="deposit"
+								buttonClass="is-primary is-outlined"
+								buttonLink="/dashboard?view=deposit"
+							/>
+							<Button
+								text={$_('dashboard.current_config_details.button_withdraw', { default: 'Withdraw' })}
+								icon="withdraw"
+								buttonClass="is-primary"
+								buttonLink="/dashboard?view=widthdraw"
+							/>
 						</div>
 					</div>
 				{/if}
@@ -143,13 +166,29 @@
 			<div class="card-content">
 				<div class="card-title">
 					<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">
-						Key{$configSelectedCurrentData && $configSelectedCurrentData.config && $configSelectedCurrentData.config.extendedPublicKeys.length > 1
-							? 's'
-							: $configSelectedCurrentData && $configSelectedCurrentData.config
-							? ''
-							: '(s)'} health
+						{#if $applicationSettings.interfaceLanguage === 'en'}
+							{$_('dashboard.current_config_details.key', { default: 'Key' })}{$configSelectedCurrentData &&
+							$configSelectedCurrentData.config &&
+							$configSelectedCurrentData.config.extendedPublicKeys.length > 1
+								? 's'
+								: $configSelectedCurrentData && $configSelectedCurrentData.config
+								? ''
+								: '(s)'}
+							{$_('dashboard.current_config_details.health', { default: 'health' })}
+						{:else if $applicationSettings.interfaceLanguage === 'fr'}
+							{$_('dashboard.current_config_details.health', { default: 'health' })}
+							{$_('dashboard.current_config_details.key', { default: 'Key' })}{$configSelectedCurrentData &&
+							$configSelectedCurrentData.config &&
+							$configSelectedCurrentData.config.extendedPublicKeys.length > 1
+								? 's'
+								: $configSelectedCurrentData && $configSelectedCurrentData.config
+								? ''
+								: '(s)'}
+						{/if}
 					</h5>
-					<h6 class="subtitle has-smaller-margin is-5 is-marginless has-text-right has-text-weight-bold">Last checked</h6>
+					<h6 class="subtitle has-smaller-margin is-5 is-marginless has-text-right has-text-weight-bold">
+						{$_('dashboard.current_config_details.last_check', { default: 'Last checked' })}
+					</h6>
 				</div>
 				{#if $configSelectedCurrentData && $configSelectedCurrentData.config && lastHealthCheckTime.length >= 1}
 					{#each $configSelectedCurrentData.config.extendedPublicKeys as { device }, i}
@@ -158,16 +197,23 @@
 							<p class="is-size-6 has-text-left is-capitalized ">
 								{device.model.replaceAll('_', ' ')} <span class="is-uppercase">({device.fingerprint})</span>
 							</p>
-							{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].months >= 1}
+							{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].months > 1}
 								<p class="is-size-6-custom has-text-right">
 									<span class:has-text-danger={lastHealthCheckTime[i].months >= 12}>
 										{lastHealthCheckTime[i].months}
-										Month{lastHealthCheckTime[i].months >= 1 ? 's' : ''}
-										ago
+										{$_('dashboard.current_config_details.month', { default: 'Month' })}{lastHealthCheckTime[i].months >= 1 &&
+										$applicationSettings.interfaceLanguage !== 'fr'
+											? 's'
+											: ''}
+										{$_('dashboard.current_config_details.ago', { default: 'ago' })}
 									</span>
 								</p>
-							{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].week >= 1}
-								<p class="is-size-6-custom has-text-right">{lastHealthCheckTime[i].week} Week{lastHealthCheckTime[i].week >= 1 ? 's' : ''} ago</p>
+							{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].week > 1}
+								<p class="is-size-6-custom has-text-right">
+									{lastHealthCheckTime[i].week}
+									{$_('dashboard.current_config_details.week', { default: 'Week' })}{lastHealthCheckTime[i].week > 1 ? 's' : ''}
+									{$_('dashboard.current_config_details.ago', { default: 'ago' })}
+								</p>
 							{:else}
 								<p class="is-size-6-custom has-text-right">
 									{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day === 0}
@@ -175,7 +221,8 @@
 									{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day === 1}Yesterday{:else}{lastHealthCheckTime.length >=
 											1 && lastHealthCheckTime[i]
 											? lastHealthCheckTime[i].day
-											: ''} days ago{/if}
+											: ''}
+										{$_('dashboard.current_config_details.days', { default: 'days ago' })}{lastHealthCheckTime[i].week > 1 ? 's' : ''}{/if}
 								</p>
 							{/if}
 						</div>

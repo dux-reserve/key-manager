@@ -1,8 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import { formatNumberByThousands, satoshisToBitcoins } from '../../utils/helpers';
-	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency, userSettings } from '../../store';
+	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency, applicationSettings } from '../../store';
 
 	const helpIcon = './img/icons/ui/help.svg';
 
@@ -17,7 +18,7 @@
 
 	$: currentBalanceWithdraw = $configSelectedCurrentData.currentBalance ? $configSelectedCurrentData.currentBalance : 0;
 
-	$: feePercentage = ((finalFee / finalTransactionAmount) * 100).toFixed(0);
+	$: feePercentage = ((finalFee / finalTransactionAmount) * 100).toFixed((finalFee / finalTransactionAmount) * 100 < 1 ? 2 : 0);
 
 	onMount(async () => {
 		animateScroll.scrollToTop();
@@ -31,56 +32,87 @@
 				<div class="card-content">
 					<div class="card-title ">
 						<p class="subtitle is-5 is-primary has-text-weight-bold mb-4">
-							Review {signedDevices === 0
-								? 'unsigned'
-								: signedDevices !== $configSelectedCurrentData.config.quorum.requiredSigners && signedDevices >= 1
-								? 'partly signed'
-								: 'signed'}
-							{$bitcoinTestnetNetwork ? 'testnet' : ''} transaction
+							{#if $applicationSettings.interfaceLanguage === 'en'}
+								{$_('withdraw.preview.title_review', { default: 'Review' })}
+								{signedDevices === 0
+									? $_('withdraw.preview.title_review_unsigned', { default: 'unsigned' })
+									: signedDevices !== $configSelectedCurrentData.config.quorum.requiredSigners && signedDevices >= 1
+									? $_('withdraw.preview.title_review_partly_signed', { default: 'partially signed' })
+									: $_('withdraw.preview.title_review_signed', { default: 'signed' })}
+								{$bitcoinTestnetNetwork ? 'testnet' : ''}
+								{$_('withdraw.preview.title_review_transaction', { default: 'transaction' })}
+							{:else if $applicationSettings.interfaceLanguage === 'fr'}
+								{$_('withdraw.preview.title_review', { default: 'Review' })}
+								{$_('withdraw.preview.title_review_transaction', { default: 'transaction' })}
+								{$bitcoinTestnetNetwork ? 'testnet' : ''}
+								{signedDevices === 0
+									? $_('withdraw.preview.title_review_unsigned', { default: 'unsigned' })
+									: signedDevices !== $configSelectedCurrentData.config.quorum.requiredSigners && signedDevices >= 1
+									? $_('withdraw.preview.title_review_partly_signed', { default: 'partially signed' })
+									: $_('withdraw.preview.title_review_signed', { default: 'signed' })}
+							{/if}
 						</p>
 					</div>
 					<div class="columns">
 						<div class="column is-6 is-selectable">
 							<div class="field is-selectable">
-								<div class="label">Destination address (output #1)</div>
+								<div class="label">{$_('withdraw.preview.destination_address', { default: 'Destination address' })} (output #1)</div>
 								<p class="has-text-weight-normal has-text-multiline">
 									{transactionDestinationAddress}
 								</p>
 							</div>
 							<div class="field is-selectable">
-								<div class="label">Amount</div>
+								<div class="label">{$_('withdraw.preview.amount', { default: 'Amount' })}</div>
 								<p class="has-text-weight-normal has-text-multiline">
-									{$userSettings.satoshiUnit
+									{$applicationSettings.satoshiUnit
 										? formatNumberByThousands(finalTransactionAmount, false, '', false, 0)
 										: formatNumberByThousands(satoshisToBitcoins(finalTransactionAmount), false, '', false, 8)}
-									{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-									<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}>
+									{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+									<span
+										class="is-size-7"
+										title={`{${$_('withdraw.preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.preview.value', {
+											default: 'value',
+										})}`}
+									>
 										(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalTransactionAmount), true, $selectedCurrency)}
 										{$selectedCurrency})
 									</span>
 								</p>
 							</div>
 							<div class="field is-selectable">
-								<div class="label">Network fee <span title="Fee percentage in relation to transaction amount">({feePercentage}%)</span></div>
+								<div class="label">
+									{$_('withdraw.preview.network_fee', { default: 'Network fee' })}
+									<span data-tooltip={$_('withdraw.preview.network_fee_title', { default: 'Fee percentage in relation to transaction amount' })}
+										>({feePercentage}%)</span
+									>
+								</div>
 								<p class="has-text-weight-normal has-text-multiline">
-									{$userSettings.satoshiUnit
+									{$applicationSettings.satoshiUnit
 										? formatNumberByThousands(finalFee, false, '', false, 0)
 										: formatNumberByThousands(satoshisToBitcoins(finalFee), false, '', false, 8)}
-									{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-									<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}
+									{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+									<span
+										class="is-size-7"
+										title={`{${$_('withdraw.preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.preview.value', {
+											default: 'value',
+										})}`}
 										>(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalFee), true, $selectedCurrency)}
 										{$selectedCurrency})
 									</span>
 								</p>
 							</div>
 							<div class="field is-selectable">
-								<div class="label">New balance</div>
+								<div class="label">{$_('withdraw.preview.new_balance', { default: 'New balance' })}</div>
 								<p class="has-text-weight-normal has-text-multiline">
-									{$userSettings.satoshiUnit
+									{$applicationSettings.satoshiUnit
 										? formatNumberByThousands(currentBalanceWithdraw - finalTransactionAmount - finalFee, false, '', false, 0)
 										: formatNumberByThousands(satoshisToBitcoins(currentBalanceWithdraw - finalTransactionAmount - finalFee), false, '', false, 8)}
-									{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-									<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}
+									{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+									<span
+										class="is-size-7"
+										title={`{${$_('withdraw.preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.preview.value', {
+											default: 'value',
+										})}`}
 										>(≈{formatNumberByThousands(
 											$bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(currentBalanceWithdraw - finalTransactionAmount - finalFee),
 											true,
@@ -96,12 +128,14 @@
 							{#if txInputsTotal - finalTransactionAmount - finalFee > 0}
 								<div class="field is-selectable">
 									<div class="label">
-										Change address (output #2)<span
+										{$_('withdraw.preview.change_address', { default: 'Change address' })} (output #2)<span
 											class="icon is-small ml-2 is-prussian-blue"
-											title={`When you withdraw funds from your bitcoin ${
-												walletType === 'single' ? 'wallet' : 'vault'
-											}, the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address`}
-											><img src={helpIcon} alt="help" /></span
+											data-tooltip={`${$_('withdraw.preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })}} ${
+												walletType === 'single' ? $_('withdraw.preview.wallet', { default: 'wallet' }) : $_('withdraw.preview.vault', { default: 'vault' })
+											}, ${$_('withdraw.preview.tooltip_2', {
+												default:
+													'the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address',
+											})}`}><img src={helpIcon} alt="help" /></span
 										>
 									</div>
 									<p class="has-text-weight-normal has-text-multiline">
@@ -110,19 +144,21 @@
 								</div>
 								<div class="field is-selectable">
 									<div class="label">
-										Change amount<span
+										{$_('withdraw.preview.change_amount', { default: 'Change amount' })}<span
 											class="icon is-small ml-2 is-prussian-blue"
-											title={`When you withdraw funds from your bitcoin ${
-												walletType === 'single' ? 'wallet' : 'vault'
-											}, the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address`}
-											><img src={helpIcon} alt="help" /></span
+											data-tooltip={`${$_('withdraw.preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })}} ${
+												walletType === 'single' ? $_('withdraw.preview.wallet', { default: 'wallet' }) : $_('withdraw.preview.vault', { default: 'vault' })
+											}, ${$_('withdraw.preview.tooltip_2', {
+												default:
+													'the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address',
+											})}`}><img src={helpIcon} alt="help" /></span
 										>
 									</div>
 									<p class="has-text-weight-normal has-text-multiline">
-										{$userSettings.satoshiUnit
+										{$applicationSettings.satoshiUnit
 											? formatNumberByThousands(txInputsTotal - finalTransactionAmount - finalFee, false, '', false, 0)
 											: formatNumberByThousands(satoshisToBitcoins(txInputsTotal - finalTransactionAmount - finalFee), false, '', false, 8)}
-										{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
+										{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
 									</p>
 								</div>
 							{/if}
@@ -137,6 +173,10 @@
 <style lang="scss">
 	.transaction-io-margin {
 		margin-bottom: 0.5625rem;
+	}
+
+	[data-tooltip]::before {
+		width: 350px;
 	}
 
 	.transaction-io {

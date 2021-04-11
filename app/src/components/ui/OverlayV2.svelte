@@ -1,5 +1,6 @@
 <script>
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { disableScroll } from '../../store';
 
 	export let disableClosing = false;
@@ -37,16 +38,18 @@
 		<div class="card-content">
 			<div class="card-title">
 				{#if title}
-					<h2 class="title is-4 mb-3 is-family-primary" class:has-text-left={titleIsLeft} class:has-text-centered={disableClosing && !titleIsLeft}>
+					<h2 class="title is-4 mb-3 is-family-primary is-capitalized-first-letter-only" class:has-text-left={titleIsLeft} class:has-text-centered={disableClosing && !titleIsLeft}>
 						<slot name="title" />
 					</h2>
 				{/if}
 				{#if !disableClosing}
-					<div class="icon" on:click={handleCloseOverlay}><img src={Close} alt="Close overlay icon" title="Close overlay" /></div>
+					<div class="icon" on:click={handleCloseOverlay}>
+						<img src={Close} alt="Close overlay icon" title={$_('overlay.icon_title', { default: 'Close overlay' })} />
+					</div>
 				{/if}
 			</div>
 			{#if subtitle}
-				<p class="subtitle is-5 is-primary has-text-weight-bold" class:has-text-left={titleIsLeft} class:has-text-centered={disableClosing && !titleIsLeft}>
+				<p class="subtitle is-5 is-primary has-text-weight-bold is-capitalized-first-letter-only" class:has-text-left={titleIsLeft} class:has-text-centered={disableClosing && !titleIsLeft}>
 					<slot name="subtitle" />
 				</p>
 			{/if}

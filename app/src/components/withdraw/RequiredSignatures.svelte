@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import Button from '../ui/Button.svelte';
 	import ButtonDropDown from '../ui/ButtonDropDown.svelte';
 
@@ -14,7 +15,7 @@
 	const trezorLogo = './img/logos/trezor.png';
 	const ledgerVerticalLogo = './img/logos/ledger-vertical.png';
 
-	let dropdownTextWalletDevice = 'Choose your device';
+	let dropdownTextWalletDevice = $_('withdraw.required_signatures.dropdown_choose', { default: 'Choose your device' });
 	let filteredcurrentConfigDevices = [];
 	let permanentcurrentConfigDevices = [];
 
@@ -68,9 +69,9 @@
 				{:else}
 					<div class="card-title">
 						<span class="icon is-primary is-normal has-no-hover"><img class="image-signature" src={signatureIcon} alt="Signature" /></span>
-						<h2 class="title is-5 has-subtitle-margin is-capitalized">Add Signature 1</h2>
+						<h2 class="title is-5 has-subtitle-margin">{$_('withdraw.required_signatures.title_1', { default: 'Add Signature 1' })}</h2>
 					</div>
-					<p class="mb-4">Sign with your first hardware device</p>
+					<p class="mb-4">{$_('withdraw.required_signatures.paragraph_1', { default: 'Sign with your first hardware device' })}</p>
 					<div class="card-bottom">
 						<div class="buttons is-centered">
 							<ButtonDropDown
@@ -103,17 +104,21 @@
 				{:else}
 					<div class="card-title">
 						<span class="icon is-primary is-normal has-no-hover"><img class="image-signature" src={signatureIcon} alt="Signature" /></span>
-						<h2 class="title is-5 has-subtitle-margin is-capitalized">Add Signature 2</h2>
+						<h2 class="title is-5 has-subtitle-margin">
+							{$_('withdraw.required_signatures.title_2', { default: 'Add Signature 2' })}
+						</h2>
 					</div>
-					<p class="mb-4">Sign with your second hardware device</p>
+					<p class="mb-4">{$_('withdraw.required_signatures.paragraph_2', { default: 'Sign with your second hardware device' })}</p>
 					<div class="card-bottom">
 						<div class="buttons is-centered">
 							{#if signedDevices.length < 1}
 								<Button
-									text="Sign with your second hardware"
+									text={$_('withdraw.required_signatures.button_sign_second', { default: 'Sign with your second hardware' })}
 									buttonClass="is-primary"
 									buttonDisabled
-									title={signedDevices.length === 0 ? 'Sign with your first hardware wallet before' : ''}
+									title={signedDevices.length === 0
+										? $_('withdraw.required_signatures.button_sign_second_title', { default: 'Sign with your first hardware wallet before' })
+										: ''}
 								/>
 							{:else}
 								<ButtonDropDown

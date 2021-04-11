@@ -1,4 +1,6 @@
 <script>
+	import { _ } from 'svelte-i18n';
+	import { applicationSettings } from '../../store';
 	export let hideLogo = false;
 
 	const duxLogoText = './img/logos/dux-text.svg';
@@ -10,10 +12,18 @@
 
 <footer class="footer has-text-centered">
 	<p class="is-size-7">
-		For the latest news, follow us on
-		<span class="is-link" on:click={() => openUrl('twitter')} title="https://twitter.com/duxreserve">Twitter</span>. Don't trust, verify on
-		<span class="is-link" on:click={() => openUrl('github')} title="https://github.com/dux-reserve">Github</span>. Get support on
-		<span class="is-link" on:click={() => openUrl('telegram')} title="https://t.me/DuxReserve">Telegram</span>.
+		{$_('footer.news', { default: 'For the latest news, follow us on' })}
+		<span class="is-link" on:click={() => openUrl('twitter')} title="https://twitter.com/duxreserve">Twitter</span>. {$_('footer.verify', {
+			default: `Don't trust, verify on`,
+		})}
+		<span class="is-link" on:click={() => openUrl('github')} title="https://github.com/dux-reserve">Github</span>. {$_('footer.support', {
+			default: 'Get support on',
+		})}
+		<span
+			class="is-link"
+			on:click={() => openUrl(`telegram${$applicationSettings.interfaceLanguage === 'fr' ? '-fr' : ''}`)}
+			title={$applicationSettings.interfaceLanguage === 'fr' ? 'https://t.me/DuxReserveFR' : 'https://t.me/DuxReserve'}>Telegram</span
+		>.
 	</p>
 
 	<div class="red-bar" />

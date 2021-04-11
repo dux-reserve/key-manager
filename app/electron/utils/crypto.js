@@ -1,20 +1,46 @@
 const CryptoJS = require('crypto-js');
 
-const baseKey = process.env.BASE_KEY;
-
-const encryptDataAES = (plainData, password) => {
-	return CryptoJS.AES.encrypt(plainData, password).toString();
+const hash256Digest = async (data, nonce = '') => {
+	try {
+		return await CryptoJS.SHA256(data + nonce).toString();
+	} catch (error) {
+		return new Error('Error on hashing data');
+	}
 };
 
-const decryptDataAES = (encryptedData, password) => {
-	return CryptoJS.AES.decrypt(encryptedData, password);
+const encryptDataAES = async (plainData, password) => {
+	try {
+		return await CryptoJS.AES.encrypt(plainData, password).toString();
+	} catch (error) {
+		return new Error('Error encrypting data');
+	}
 };
 
-const createEncryptedDuxConfig = configData => {
+const decryptDataAES = async (encryptedData, password) => {
+	try {
+		return await CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(encryptedData, password));
+	} catch (error) {
+		return new Error('Error decrypting data');
+	}
+};
+
+const createEncryptedJsonFile = async (settingsData, password, objectKey = 'encrypted_settings') => {
+	try {
+		const encryptedSettingsData = {
+			[objectKey]: await CryptoJS.AES.encrypt(JSON.stringify(settingsData), password).toString(),
+		};
+
+		return encryptedSettingsData;
+	} catch (error) {
+		return new Error('Error encrypting settings file');
+	}
+};
+
+const createEncryptedDuxFile = async (configData, password, customPassword = false) => {
 	try {
 		const encryptedConfigData = {
-			encrypted_config: CryptoJS.AES.encrypt(JSON.stringify(configData), baseKey).toString(),
-			withCustomPassword: false,
+			encrypted_config: await CryptoJS.AES.encrypt(JSON.stringify(configData), password).toString(),
+			withCustomPassword: customPassword,
 		};
 
 		return encryptedConfigData;
@@ -23,9 +49,9 @@ const createEncryptedDuxConfig = configData => {
 	}
 };
 
-const decryptEncryptedDuxConfig = encryptedConfigData => {
+const decryptEncryptedDuxFile = async (encryptedConfigData, password) => {
 	try {
-		const decryptedData = JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(encryptedConfigData, baseKey)));
+		const decryptedData = await JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(encryptedConfigData, password)));
 		return decryptedData;
 	} catch (error) {
 		return new Error('Error decrypting config file');
@@ -33,8 +59,10 @@ const decryptEncryptedDuxConfig = encryptedConfigData => {
 };
 
 module.exports = {
+	hash256Digest,
 	encryptDataAES,
 	decryptDataAES,
-	createEncryptedDuxConfig,
-	decryptEncryptedDuxConfig,
+	createEncryptedJsonFile,
+	createEncryptedDuxFile,
+	decryptEncryptedDuxFile,
 };

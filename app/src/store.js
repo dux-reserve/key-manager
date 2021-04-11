@@ -1,16 +1,16 @@
 import { writable } from 'svelte/store';
 
 // Application
-// TODO: Permanent local data
-export const userSettings = writable({
+export const applicationSettings = writable({
 	advancedUserInterface: false,
 	askForPasswordAfterSleep: true,
 	autoRefresh: true,
-	autoRefreshTimeout: 60421,
+	autoRefreshTimeout: 60000,
 	darkTheme: false,
 	disabledAnimation: false,
 	discreetMode: false,
 	dontShowReuseAddressesAlert: false,
+	interfaceLanguage: '',
 	keepLocalData: true,
 	keepLocalEncryptedConfig: true,
 	notification: true,
@@ -24,15 +24,26 @@ export const userSettings = writable({
 	satoshiUnit: false,
 	showTooltips: true,
 	sleepInterface: true,
-	sleepTimeout: 900421,
+	sleepMillisecondTimeout: 900000,
 	verifyForUpdate: true,
 	verifyForUpdateNotification: true,
 });
 
-// UI
+// UI Interface
 export const timeNow = writable({});
 
 export const disableScroll = writable(false);
+
+export const disableNetworkQuickSettings = writable(false);
+
+export const saveSettings = writable(false);
+
+export const saveData = writable(false);
+
+export const withCustomUserPassword = writable(false);
+
+// To use testnet by default change this value to true or set BITCOIN_NETWORK environment variables to 'testnet'
+export const bitcoinTestnetNetwork = writable(process.env.BITCOIN_NETWORK === 'testnet' ? true : false);
 
 // Bitcoin Data: Currency, Chart Price, Network
 export const selectedCurrency = writable('USD');
@@ -49,9 +60,6 @@ export const bitcoinMarketData = writable({});
 
 export const bitcoinNetworkBlockHeight = writable(0);
 
-// To use testnet by default change this value to true or load BITCOIN_NETWORK environment variables to 'testnet'
-export const bitcoinTestnetNetwork = writable(process.env.BITCOIN_NETWORK === 'testnet' ? true : false);
-
 // Config Data
 export const configsCurrentDataWalletsArray = writable([]);
 
@@ -62,5 +70,4 @@ export const configSelectedCurrentData = writable({});
 export const currentNetworkConfigData = writable({});
 
 // !! remove the data object for ANY public release of the source code !! //
-// In a development environment a workaround is set on reload (TODO: rephrase this comment)
 export const configData = writable({});

@@ -6,8 +6,8 @@
 	export let buttonDisabled = false;
 	export let buttonLink = '';
 	export let buttonLinkPushed = false;
-	export let loading = false;
 	export let icon = '';
+	export let loading = false;
 	export let text = 'OK';
 	export let title = '';
 
@@ -26,6 +26,7 @@
 	const uploadFile = './img/icons/ui/arrow-circle-up.svg';
 	const web = './img/icons/ui/web.svg';
 	const withdraw = './img/icons/ui/withdraw.svg';
+	const lock = './img/icons/ui/lock.svg';
 
 	const handleClick = () => {
 		// The replace(url) method navigates to a new page, but without adding a new entry in the browser's history stack
@@ -76,6 +77,18 @@
 				class:is-outlined={buttonClass.includes('is-outlined')}
 			>
 				<img src={unarchive} alt="Unarchive" />
+			</span>
+			<span class:mr-1={!buttonClass.includes('is-small')} />
+		{/if}
+		{#if icon === 'lock-left'}
+			<span
+				class="icon is-normal has-no-hover icon-padding-left"
+				class:is-small={buttonClass.includes('is-small')}
+				class:is-white={buttonClass.includes('is-primary') && !buttonClass.includes('is-outlined')}
+				class:is-primary={buttonClass.includes('is-primary') && buttonClass.includes('is-outlined')}
+				class:is-outlined={buttonClass.includes('is-outlined')}
+			>
+				<img src={lock} alt="Lock" />
 			</span>
 			<span class:mr-1={!buttonClass.includes('is-small')} />
 		{/if}
@@ -131,6 +144,18 @@
 			>
 				<img src={unarchive} alt="Unarchive" />
 			</span>
+		{/if}
+		{#if icon === 'lock-right'}
+			<span
+				class="icon is-normal has-no-hover icon-padding-left"
+				class:is-small={buttonClass.includes('is-small')}
+				class:is-white={buttonClass.includes('is-primary') && !buttonClass.includes('is-outlined')}
+				class:is-primary={buttonClass.includes('is-primary') && buttonClass.includes('is-outlined')}
+				class:is-outlined={buttonClass.includes('is-outlined')}
+			>
+				<img src={lock} alt="Lock" />
+			</span>
+			<span class:mr-1={!buttonClass.includes('is-small')} />
 		{/if}
 		{#if icon === 'arrowNext' || icon === 'arrowRight' || icon === 'next'}
 			<span class:ml-1={!buttonClass.includes('is-small')} />

@@ -1,9 +1,20 @@
 <script>
 	import { afterUpdate } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import dayjs from 'dayjs';
+	import 'dayjs/locale/fr';
 	import Line from 'svelte-chartjs/src/Line.svelte';
-	import { bitcoinChartArrayData, bitcoinCurrentPrices, bitcoinMarketData, chartLogarithmic, chartTimeScale, selectedCurrency } from '../../store';
-	import { formatNumberByThousands } from '../../utils/helpers';
+	import {
+		bitcoinChartArrayData,
+		bitcoinCurrentPrices,
+		bitcoinMarketData,
+		chartLogarithmic,
+		chartTimeScale,
+		selectedCurrency,
+		timeNow,
+		applicationSettings,
+	} from '../../store';
+	import { isObjectEmpty, formatNumberByThousands } from '../../utils/helpers';
 	import Loading from './Loading.svelte';
 
 	const fireIcon = './img/icons/ui/fire.svg';
@@ -38,13 +49,25 @@
 		$chartLogarithmic = !$chartLogarithmic;
 	};
 
-	afterUpdate(() => {
-		if ($bitcoinChartArrayData.length >= 1) {
+	const formatXAxes = tick => {
+		let tickFormat = '';
+		if (tick.includes('Feb')) tickFormat = tick.replace('Feb', 'Fev');
+		else if (tick.includes('Apr')) tickFormat = tick.replace('Apr', 'Avr');
+		else if (tick.includes('May')) tickFormat = tick.replace('May', 'Mai');
+		else if (tick.includes('Jun')) tickFormat = tick.replace('Jun', 'Jun');
+		else if (tick.includes('Jul')) tickFormat = tick.replace('Jul', 'Jul');
+		else if (tick.includes('Aug')) tickFormat = tick.replace('Aug', 'Aoû');
+		else tickFormat = tick;
+		return tickFormat;
+	};
+
+	const handleUpdateChart = () => {
+		if (!isObjectEmpty($bitcoinChartArrayData) && $bitcoinChartArrayData.length >= 1) {
 			let dateArray = [];
 			let priceArray = [];
 			let dataArrayFilteredSelectedTimeline = [];
 
-			dataArrayFilteredSelectedTimeline = $bitcoinChartArrayData.filter(data => data.timescale === $chartTimeScale)[0].data;
+			dataArrayFilteredSelectedTimeline = $bitcoinChartArrayData.filter(data => data.timescale == $chartTimeScale)[0].data;
 
 			for (let i = 0; i < dataArrayFilteredSelectedTimeline.length; i++) {
 				dateArray = [
@@ -69,7 +92,6 @@
 
 			loaded = true;
 
-			// TODO: add label x axis
 			chart = {
 				labels: [...dateArray],
 				datasets: [
@@ -114,6 +136,7 @@
 						intersect: true,
 						backgroundColor: 'rgb(21, 24, 28)',
 						displayColors: false,
+						// TODO: french date
 						callbacks: {
 							label: tooltipItem => {
 								return `Price: ${formatNumberByThousands(
@@ -129,9 +152,51 @@
 					scales: {
 						xAxes: [
 							{
+								type: 'time',
+								time: {
+									parser: 'dddd, MMMM DD, YYYY - HH:mm',
+									unit:
+										$chartTimeScale == 1
+											? 'hour'
+											: $chartTimeScale == 7
+											? 'day'
+											: $chartTimeScale == 31
+											? 'day'
+											: $chartTimeScale == 186
+											? 'month'
+											: $chartTimeScale == 365
+											? 'month'
+											: 'quarter',
+									displayFormats: {
+										minute: 'HH:mm:ss',
+										hour: 'HH:mm',
+										day: 'DD MMM',
+										week: 'DD MMM',
+										month: "MMM 'YY",
+										quarter: "MMM 'YY",
+										year: 'YYYY',
+									},
+								},
 								ticks: {
-									display: false,
+									display: true,
 									autoSkip: true,
+									maxTicksLimit:
+										$chartTimeScale == 1
+											? 12
+											: $chartTimeScale == 7
+											? 8
+											: $chartTimeScale == 31
+											? 6
+											: $chartTimeScale == 186
+											? 7
+											: $chartTimeScale == 365
+											? 12
+											: 24,
+									maxRotation: 0,
+									labelOffset: $chartTimeScale == 365 || $chartTimeScale == 1095 ? -8 : 0,
+									callback: tick => {
+										return formatXAxes(tick);
+									},
 								},
 								gridLines: { display: false, color: 'rgba(0, 0, 0, 0)' },
 							},
@@ -163,21 +228,26 @@
 				},
 			};
 		}
+	};
+
+	afterUpdate(() => {
+		handleUpdateChart();
 	});
 </script>
 
 {#if !loaded}
 	<div class="loading-container">
-		<Loading text="Fetching chart data" />
+		<Loading text={$_('price_chart.loading', { default: 'Fetching chart data' })} />
 	</div>
 {:else}
 	<div class="chart-content">
 		<div class="chart-menu">
 			<div class="chart-title">
-				<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">Bitcoin price</h5>
+				<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('price_chart.title', { default: 'Bitcoin price' })}</h5>
 				{#if showAllTimeHighAlert}
-					<span class="icon ath-icon is-normal has-no-hover is-primary is-inline-block ml-1" title="NEW ALL TIME HIGH"
-						><img src={fireIcon} alt="All Time High" /></span
+					<span
+						class="icon ath-icon is-normal has-no-hover is-primary is-inline-block ml-1"
+						title={$_('price_chart.ath_title', { default: 'NEW ALL TIME HIGH' })}><img src={fireIcon} alt="All Time High" /></span
 					>
 				{/if}
 				<h4
@@ -193,24 +263,55 @@
 						</span>
 					</span>
 				</h4>
+				<h6
+					class="last-time-updated title is-8 has-smaller-margin skeleton-block skeleton-title skeleton-small is-vertical-center absolute is-family-primary has-text-grey"
+					class:skeleton={!$bitcoinCurrentPrices[$selectedCurrency]}
+					title="Last price update"
+				>
+					<span class="is-capitalized"
+						>{dayjs($timeNow)
+							.locale($applicationSettings.interfaceLanguage === 'fr' ? 'fr' : 'en')
+							.format($applicationSettings.interfaceLanguage === 'fr' ? 'DD MMMM YYYY' : 'MMMM DD[,] YYYY')}</span
+					>
+					<span class="is-size-8-custom mr-1 ml-1 ml-1-custom">|</span>
+					{dayjs($timeNow)
+						.locale($applicationSettings.interfaceLanguage === 'fr' ? 'fr' : 'en')
+						.format('HH[:]mm[:]ss')}
+				</h6>
 			</div>
 			<div class="chart-timescale">
 				<ul class="chart-timescale-items is-uppercase">
-					<li class="list-item" class:is-active={$chartTimeScale === '1'} on:click={() => handleSelectedTimeScale('1')}>1D</li>
-					<li class="list-item" class:is-active={$chartTimeScale === '7'} on:click={() => handleSelectedTimeScale('7')}>7D</li>
-					<li class="list-item" class:is-active={$chartTimeScale === '31'} on:click={() => handleSelectedTimeScale('31')}>1M</li>
-					<li class="list-item" class:is-active={$chartTimeScale === '186'} on:click={() => handleSelectedTimeScale('186')}>6M</li>
-					<li class="list-item" class:is-active={$chartTimeScale === '365'} on:click={() => handleSelectedTimeScale('365')}>1Y</li>
-					<li class="list-item" class:is-active={$chartTimeScale === '1095'} on:click={() => handleSelectedTimeScale('1095')}>3Y</li>
-					<li class="list-item" class:is-active={$chartTimeScale === 'max'} on:click={() => handleSelectedTimeScale('max')}>ALL</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 1} on:click={() => handleSelectedTimeScale('1')}>
+						1{$_('price_chart.day', { default: 'D' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 7} on:click={() => handleSelectedTimeScale('7')}>
+						7{$_('price_chart.day', { default: 'D' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 31} on:click={() => handleSelectedTimeScale('31')}>
+						1{$_('price_chart.month', { default: 'M' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 186} on:click={() => handleSelectedTimeScale('186')}>
+						6{$_('price_chart.month', { default: 'M' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 365} on:click={() => handleSelectedTimeScale('365')}>
+						1{$_('price_chart.year', { default: 'Y' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 1095} on:click={() => handleSelectedTimeScale('1095')}>
+						3{$_('price_chart.year', { default: 'Y' })}
+					</li>
+					<li class="list-item" class:is-active={$chartTimeScale == 'max'} on:click={() => handleSelectedTimeScale('max')}>
+						{$_('price_chart.all', { default: 'ALL' })}
+					</li>
 					<li class="list-item log-bar">|</li>
 					<li
 						class="list-item"
 						class:is-active-log={$chartLogarithmic}
 						on:click={handleLogarithmicChart}
-						title={$chartLogarithmic ? 'Show linear chart' : 'Show logarithmic chart'}
+						title={$chartLogarithmic
+							? $_('price_chart.show_linear', { default: 'Show linear chart' })
+							: $_('price_chart.show_log', { default: 'Show logarithmic chart' })}
 					>
-						LOG
+						{$_('price_chart.log', { default: 'LOG' })}
 					</li>
 				</ul>
 			</div>
@@ -246,7 +347,7 @@
 	.chart-menu {
 		display: flex;
 		justify-content: space-between;
-		margin-bottom: 1.95rem;
+		margin-bottom: 2.625rem;
 
 		.chart-title .absolute {
 			position: absolute;
@@ -301,5 +402,17 @@
 		position: absolute;
 		top: 0;
 		left: 121.5px;
+	}
+
+	.last-time-updated {
+		top: 65px;
+	}
+
+	.is-size-8-custom {
+		font-size: 0.75rem;
+	}
+
+	.ml-1-custom {
+		margin-bottom: 0.1rem;
 	}
 </style>

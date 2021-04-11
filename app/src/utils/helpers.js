@@ -74,20 +74,20 @@ export const formatNumberByThousands = (amount, isFiat = false, currency = 'USD'
 	}
 };
 
-export const labelAmountValue = (amount, isFiat = false, currency = 'USD', decimalCount = 2) => {
+export const labelAmountValue = (amount, isFiat = false, currency = 'USD', decimalCount = 2, labels = { trillion: 'trillion', billion: 'billion', million: 'million' }) => {
 	try {
 		if (Math.abs(Number(amount)) >= 1.0e12) {
 			const value = Math.abs(Number(amount)) / 1.0e12;
 
-			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} trillion`;
+			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} ${labels.trillion}`;
 		} else if (Math.abs(Number(amount)) >= 1.0e9) {
 			const value = Math.abs(Number(amount)) / 1.0e9;
 
-			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} billion`;
+			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} ${labels.billion}`;
 		} else if (Math.abs(Number(amount)) >= 1.0e6) {
 			const value = Math.abs(Number(amount)) / 1.0e6;
 
-			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} million`;
+			return `${isFiat ? handleFiatSymbols(currency) : ''}${toFixedNoRounding(value, decimalCount)} ${labels.million}`;
 		} else {
 			return formatNumberByThousands(amount, isFiat, currency, false, decimalCount);
 		}
@@ -96,7 +96,7 @@ export const labelAmountValue = (amount, isFiat = false, currency = 'USD', decim
 	}
 };
 
-export const numberOrdinalSuffix = number => {
+export const numberEnglishOrdinalSuffix = number => {
 	const i = number % 10;
 	const j = number % 100;
 	if (i == 1 && j != 11) {
@@ -111,7 +111,7 @@ export const numberOrdinalSuffix = number => {
 	return number + 'th';
 };
 
-export const numberToOrdinalLabel = number => {
+export const numberToOrdinalEnglishLabel = number => {
 	if (number === 1) {
 		return 'first';
 	} else if (number === 2) {
@@ -152,6 +152,52 @@ export const numberToOrdinalLabel = number => {
 		return 'nineteenth';
 	} else if (number === 20) {
 		return 'twentieth';
+	} else {
+		return number;
+	}
+};
+
+export const numberToOrdinalFrenchLabel = (number, isFeminine = false) => {
+	if (number === 1) {
+		return isFeminine ? 'première' : 'premier';
+	} else if (number === 2) {
+		return 'deuxième';
+	} else if (number === 3) {
+		return 'troisième';
+	} else if (number === 4) {
+		return 'quatrième';
+	} else if (number === 5) {
+		return 'cinquième';
+	} else if (number === 6) {
+		return 'sixième';
+	} else if (number === 7) {
+		return 'septième';
+	} else if (number === 8) {
+		return 'huitième';
+	} else if (number === 9) {
+		return 'neuvième';
+	} else if (number === 10) {
+		return 'dixième';
+	} else if (number === 11) {
+		return 'onzième';
+	} else if (number === 12) {
+		return 'douzième';
+	} else if (number === 13) {
+		return 'treizième';
+	} else if (number === 14) {
+		return 'quatorzième';
+	} else if (number === 15) {
+		return 'quinzième';
+	} else if (number === 16) {
+		return 'seizième';
+	} else if (number === 17) {
+		return 'dix-septième';
+	} else if (number === 18) {
+		return 'dix-huitième';
+	} else if (number === 19) {
+		return 'dix-neuvième';
+	} else if (number === 20) {
+		return 'vingtième';
 	} else {
 		return number;
 	}

@@ -1,5 +1,6 @@
 <script>
-	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, selectedCurrency, userSettings } from '../../store';
+	import { _ } from 'svelte-i18n';
+	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, selectedCurrency, applicationSettings } from '../../store';
 	import { formatNumberByThousands, satoshisToBitcoins } from '../../utils/helpers';
 
 	export let currentBalanceWithdraw = 0;
@@ -16,51 +17,66 @@
 	<div class="card">
 		<div class="card-content">
 			<div class="card-title ">
-				<p class="subtitle is-5 is-primary has-text-weight-bold mb-4">Your signed transaction was broadcast</p>
+				<p class="subtitle is-5 is-primary has-text-weight-bold mb-4">
+					{$_('withdraw.broadcasted.title', { default: 'Your signed transaction was broadcast' })}
+				</p>
 			</div>
 			<div class="columns">
 				<div class="column is-7 is-selectable">
 					<div class="field">
-						<div class="label">Destination address</div>
+						<div class="label">{$_('withdraw.broadcasted.destination_address', { default: 'Destination address' })}</div>
 						<p class="has-text-weight-normal has-text-multiline">
 							{transactionDestinationAddress}
 						</p>
 					</div>
 					<div class="field is-selectable">
-						<div class="label">Amount</div>
+						<div class="label">{$_('withdraw.broadcasted.amount', { default: 'Amount' })}</div>
 						<p class="has-text-weight-normal has-text-multiline">
-							{$userSettings.satoshiUnit
+							{$applicationSettings.satoshiUnit
 								? formatNumberByThousands(finalTransactionAmount, false, '', false, 0)
 								: formatNumberByThousands(satoshisToBitcoins(finalTransactionAmount), false, '', false, 8)}
-							{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-							<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}>
+							{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+							<span
+								class="is-size-7"
+								title={`{${$_('withdraw.broadcasted.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.broadcasted.value', {
+									default: 'value',
+								})}`}
+							>
 								(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalTransactionAmount), true, $selectedCurrency)}
 								{$selectedCurrency})
 							</span>
 						</p>
 					</div>
 					<div class="field is-selectable">
-						<div class="label">Network fee</div>
+						<div class="label">{$_('withdraw.broadcasted.network_fee', { default: 'Network fee' })}</div>
 
 						<p class="has-text-weight-normal has-text-multiline">
-							{$userSettings.satoshiUnit
+							{$applicationSettings.satoshiUnit
 								? formatNumberByThousands(finalFee, false, '', false, 0)
 								: formatNumberByThousands(satoshisToBitcoins(finalFee), false, '', false, 8)}
-							{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-							<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}
+							{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+							<span
+								class="is-size-7"
+								title={`{${$_('withdraw.broadcasted.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.broadcasted.value', {
+									default: 'value',
+								})}`}
 								>(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalFee), true, $selectedCurrency)}
 								{$selectedCurrency})
 							</span>
 						</p>
 					</div>
 					<div class="field is-selectable">
-						<div class="label">New balance</div>
+						<div class="label">{$_('withdraw.broadcasted.new_balance', { default: 'New balance' })}</div>
 						<p class="has-text-weight-normal has-text-multiline">
-							{$userSettings.satoshiUnit
+							{$applicationSettings.satoshiUnit
 								? formatNumberByThousands(currentBalanceWithdraw - finalTransactionAmount - finalFee, false, '', false, 0)
 								: formatNumberByThousands(satoshisToBitcoins(currentBalanceWithdraw - finalTransactionAmount - finalFee), false, '', false, 8)}
-							{$bitcoinTestnetNetwork ? 't' : ''}{$userSettings.satoshiUnit ? 'sats' : 'BTC'}
-							<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}
+							{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+							<span
+								class="is-size-7"
+								title={`{${$_('withdraw.broadcasted.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.broadcasted.value', {
+									default: 'value',
+								})}`}
 								>(≈{formatNumberByThousands(
 									$bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(currentBalanceWithdraw - finalTransactionAmount - finalFee),
 									true,

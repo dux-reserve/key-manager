@@ -1,8 +1,8 @@
-const axios = require('axios');
 const BigNumber = require('bignumber.js');
 const bs58check = require('bs58check');
 const { networks, payments } = require('bitcoinjs-lib');
-const { blockExplorerAPIURL, deriveChildPublicKey, generateMultisigFromPublicKeys } = require('unchained-bitcoin');
+const { deriveChildPublicKey, generateMultisigFromPublicKeys } = require('unchained-bitcoin');
+const { getTransactionsFromAddressFromBlockstream, getUtxosAddressesFromBlockstream } = require('./network');
 
 const areBitcoinNetworkEqual = (a, b = networks.bitcoin) => a.bech32 === b.bech32;
 
@@ -14,6 +14,7 @@ const getBitcoinNetworkType = currentBitcoinNetwork => {
 	}
 };
 
+// TODO: handle multiple accounts
 const getDerivationPath = (addressType, bip32derivationPath, currentBitcoinNetwork) => {
 	if (addressType === 'multisig') {
 		return getMultisigDerivationPathForNetwork(currentBitcoinNetwork) + '/' + bip32derivationPath.replace('m/', '');
@@ -42,16 +43,6 @@ const getP2shDerivationPathForNetwork = currentBitcoinNetwork => {
 	} else {
 		// Testnet
 		return "m/49'/1'/0'";
-	}
-};
-
-const getP2pkhDerivationPathForNetwork = currentBitcoinNetwork => {
-	if (areBitcoinNetworkEqual(currentBitcoinNetwork, networks.bitcoin)) {
-		// Mainnet
-		return "m/44'/0'/0'";
-	} else {
-		// Testnet
-		return "m/44'/1'/0'";
 	}
 };
 
@@ -135,15 +126,6 @@ const createAddressMapFromAddressArray = addressArray => {
 	return addressMap;
 };
 
-const getTransactionsFromAddress = async (address, currentBitcoinNetwork) => {
-	try {
-		const response = await axios.get(blockExplorerAPIURL(`/address/${address}/txs`, getBitcoinNetworkType(currentBitcoinNetwork)));
-		return response.data;
-	} catch (error) {
-		return Promise.reject(new Error(error));
-	}
-};
-
 const scanForAddressesAndTransactions = async (account, currentBitcoinNetwork, limitGap) => {
 	const changeAddresses = [];
 	const receiveAddresses = [];
@@ -160,7 +142,7 @@ const scanForAddressesAndTransactions = async (account, currentBitcoinNetwork, l
 			const receiveAddress = getAddressFromAccount(account, `m/0/${i}`, currentBitcoinNetwork);
 
 			receiveAddresses.push(receiveAddress);
-			const receiveTxs = await getTransactionsFromAddress(receiveAddress.address, currentBitcoinNetwork);
+			const receiveTxs = await getTransactionsFromAddressFromBlockstream(receiveAddress.address, currentBitcoinNetwork);
 			if (!receiveTxs.length) {
 				unusedReceiveAddresses.push(receiveAddress);
 			} else {
@@ -169,7 +151,7 @@ const scanForAddressesAndTransactions = async (account, currentBitcoinNetwork, l
 
 			const changeAddress = getAddressFromAccount(account, `m/1/${i}`, currentBitcoinNetwork);
 			changeAddresses.push(changeAddress);
-			const changeTxs = await getTransactionsFromAddress(changeAddress.address, currentBitcoinNetwork);
+			const changeTxs = await getTransactionsFromAddressFromBlockstream(changeAddress.address, currentBitcoinNetwork);
 			if (!changeTxs.length) {
 				unusedChangeAddresses.push(changeAddress);
 			} else {
@@ -188,24 +170,6 @@ const scanForAddressesAndTransactions = async (account, currentBitcoinNetwork, l
 		return Promise.reject(new Error(error));
 	}
 	return { changeAddresses, receiveAddresses, transactions, unusedChangeAddresses, unusedReceiveAddresses };
-};
-
-const getUtxosAddressesFromBlockstreamAPI = async (addresses, currentBitcoinNetwork) => {
-	const availableUtxos = [];
-	try {
-		for (let i = 0; i < addresses.length; i++) {
-			const utxosFromBlockstream = await axios.get(blockExplorerAPIURL(`/address/${addresses[i].address}/utxo`, getBitcoinNetworkType(currentBitcoinNetwork)));
-			for (let j = 0; j < utxosFromBlockstream.data.length; j++) {
-				const utxo = utxosFromBlockstream.data[j];
-				utxo.address = addresses[i];
-				availableUtxos.push(utxo);
-			}
-		}
-
-		return availableUtxos;
-	} catch (error) {
-		return Promise.reject(new Error(error));
-	}
 };
 
 const arrangeTransactions = (transactionsFromBlockstream, addresses, changeAddresses) => {
@@ -279,7 +243,7 @@ const getDataFromXPub = async (account, currentBitcoinNetwork) => {
 			10,
 		);
 
-		const availableUtxos = await getUtxosAddressesFromBlockstreamAPI(receiveAddresses.concat(changeAddresses), currentBitcoinNetwork);
+		const availableUtxos = await getUtxosAddressesFromBlockstream(receiveAddresses.concat(changeAddresses), currentBitcoinNetwork);
 		const organizedTransactions = arrangeTransactions(transactions, receiveAddresses, changeAddresses);
 
 		return [receiveAddresses, availableUtxos, changeAddresses, organizedTransactions, unusedReceiveAddresses, unusedChangeAddresses];

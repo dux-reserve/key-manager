@@ -1,6 +1,5 @@
-const dayjs = require('dayjs');
 const { v4: uuidv4 } = require('uuid');
-const { getBitcoinNetworkType, getMultisigDerivationPathForNetwork } = require('./index');
+const { getBitcoinNetworkType } = require('./index');
 
 const createSinglesigConfig = (device, currentBitcoinNetwork) => {
 	const config = {
@@ -91,27 +90,7 @@ const createMultisigConfig = (devices, requiredSigners, currentBitcoinNetwork) =
 	return config;
 };
 
-const createColdCardSetupFile = (requiredSigners, totalSigners, accountName, importedDevices, currentBitcoinNetwork) => {
-	const derivationPath = getMultisigDerivationPathForNetwork(currentBitcoinNetwork);
-	return `# Coldcard Multisig setup file (created by Dux Reserve Desktop Key Manager Beta on ${dayjs(Date.now()).format('MM[/]DD[/]YYYY HH[:]mm')})
-#
-Name: ${accountName.substr(0, 20)}
-Policy: ${requiredSigners} of ${totalSigners}
-Derivation: ${derivationPath}
-Format: P2WSH
-${importedDevices.map(device => `\n${device.parentFingerprint}: ${device.xpub}`).join('')}
-`;
-};
-
-const formatFileName = (fileName, fileExtension, withNetwork = false, currentBitcoinNetwork = {}) =>
-	`${fileName}-${withNetwork ? getBitcoinNetworkType(currentBitcoinNetwork) + '-' : ''}${dayjs().format('DD[-]MMMM[-]YYYY[-]HHmmss').toLowerCase()}${fileExtension &&
-	fileExtension.length > 0
-		? '.' + fileExtension
-		: ''}`;
-
 module.exports = {
 	createSinglesigConfig,
 	createMultisigConfig,
-	createColdCardSetupFile,
-	formatFileName,
 };

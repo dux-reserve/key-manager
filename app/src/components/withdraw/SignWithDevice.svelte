@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher, onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import Button from '../../components/ui/Button.svelte';
 
@@ -11,10 +12,12 @@
 
 	export let deviceScanning = false;
 	export let extractedFromMicroSD = false;
+	export let signingReady = false;
 	export let scannedWalletData = {};
 	export let selectedWalletData = {};
 	export let showRetrySignWithDevice = false;
 	export let signingSucess = false;
+	export let signingInProgress = false;
 	export let vaultCompletedKeys = 0;
 	export let walletNeedPinSent = false;
 	export let walletType = 'single';
@@ -26,6 +29,12 @@
 
 	const handleCancelScanning = () => {
 		dispatch('cancelScanning');
+	};
+
+	const handleStartSigning = () => {
+		if (!signingInProgress) {
+			dispatch('startSigning');
+		}
 	};
 
 	const handleRetrySigning = () => {
@@ -52,7 +61,7 @@
 				<div class="card-content is-fullheight">
 					<div class="card-title has-text-left">
 						<h5 class="subtitle has-smaller-margin is-4 is-primary has-text-weight-bold">
-							Adding signature
+							{$_('withdraw.sign_with_device.adding_signature', { default: 'Adding signature' })}
 							{#if walletType === 'multi'}
 								{vaultCompletedKeys + 1}
 							{/if}
@@ -60,18 +69,23 @@
 						{#if !signingSucess}
 							{#if selectedWalletData.type === 'ledger'}
 								<h4 class="title is-family-primary is-5 has-smaller-margin">
-									Unlock your Ledger <span class="is-uppercase">({selectedWalletData.fingerprint})</span> & Open the Bitcoin App
+									{$_('withdraw.sign_with_device.unlock_ledger', { default: 'Unlock your Ledger' })}
+									<span class="is-uppercase">({selectedWalletData.fingerprint})</span>
+									{$_('withdraw.sign_with_device.unlock_ledger_open', { default: '& Open the Bitcoin App' })}
 								</h4>
 							{:else if selectedWalletData.type === 'coldcard'}
 								<h4 class="title is-family-primary is-5 has-smaller-margin">
-									Make sure your Coldcard <span class="is-uppercase">({selectedWalletData.fingerprint})</span> is unlocked
+									{$_('withdraw.sign_with_device.make_sure_coldcard', { default: 'Make sure your Coldcard' })}
+									<span class="is-uppercase">({selectedWalletData.fingerprint})</span>
+									{$_('withdraw.sign_with_device.make_sure_coldcard_unlock', { default: 'is unlocked' })}
 								</h4>
 							{:else if selectedWalletData.type === 'trezor'}
 								<h4 class="title is-family-primary is-5 has-smaller-margin">
-									Your Trezor {#if withdrawStep === 3}
+									{$_('withdraw.sign_with_device.your_trezor', { default: 'Your Trezor' })}
+									{#if withdrawStep === 3}
 										<span class="is-uppercase">({selectedWalletData.fingerprint})</span>
 									{/if}
-									PIN will be ask if needed
+									{$_('withdraw.sign_with_device.your_trezor_pin', { default: 'PIN will be ask if needed' })}
 								</h4>
 							{/if}
 						{:else}
@@ -100,34 +114,45 @@
 										{#if withdrawStep === 3}
 											{#if deviceScanning}
 												<p class="subtitle is-6">
-													Connect your <span class="is-capitalized">{selectedWalletData.model.split('_').join(' ')}</span> via USB
+													{$_('withdraw.sign_with_device.connect_your', { default: 'Connect your' })}
+													<span class="is-capitalized">{selectedWalletData.model.split('_').join(' ')}</span>
+													{$_('withdraw.sign_with_device.connect_your_via_usb', { default: 'via USB' })}
 												</p>
 											{:else}
 												<p class="subtitle is-6">
-													{selectedWalletData.model.split('_').join(' ')} <span class="is-uppercase">({selectedWalletData.fingerprint})</span> not detected. Please
-													try again
+													{selectedWalletData.model.split('_').join(' ')} <span class="is-uppercase">({selectedWalletData.fingerprint})</span>
+													{$_('withdraw.sign_with_device.not_detected', { default: 'not detected. Pleasetry again' })}
 												</p>
 											{/if}
 										{:else if withdrawStep === 4}
-											{#if !signingSucess && !showRetrySignWithDevice}
+											{#if !signingSucess && !showRetrySignWithDevice && signingReady}
 												{#if walletNeedPinSent && !scannedWalletData.fingerprint}
-													<p class="subtitle is-6">Unlock your <span class="is-capitalized">{selectedWalletData.model.split('_').join(' ')}</span></p>
+													<p class="subtitle is-6">
+														{$_('withdraw.sign_with_device.ready_to_unlock', { default: 'Ready to unlock your' })}
+														<span class="is-capitalized">{selectedWalletData.model.split('_').join(' ')}</span>
+													</p>
 												{:else}
 													<p class="subtitle is-6">
-														Signing your transaction {#if selectedWalletData.fingerprint}
-															with <span class="is-uppercase" title="Device unique fingerprint">{selectedWalletData.fingerprint}</span>
+														{$_('withdraw.sign_with_device.signing_transaction', { default: 'Signing your transaction' })}
+														{#if selectedWalletData.fingerprint}
+															{$_('withdraw.sign_with_device.signing_transaction_with', { default: 'with' })}
+															<span
+																class="is-uppercase"
+																title={$_('withdraw.sign_with_device.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+																>{selectedWalletData.fingerprint}</span
+															>
 														{/if}
 													</p>
 												{/if}
 											{:else if !signingSucess && showRetrySignWithDevice}
-												<p class="subtitle is-6">Failed to sign transaction</p>
-											{:else}
+												<p class="subtitle is-6">{$_('withdraw.sign_with_device.failed_to_sign', { default: 'Failed to sign transaction' })}</p>
+											{:else if signingSucess}
 												<p class="subtitle is-6">
-													You can now unplug your
+													{$_('withdraw.sign_with_device.you_can_now_unplug', { default: 'You can now unplug your' })}
 													{#if extractedFromMicroSD}
-														Micro SD
+														{$_('withdraw.sign_with_device.you_can_now_unplug_micro_sd', { default: 'Micro SD' })}
 													{:else}
-														device
+														{$_('withdraw.sign_with_device.you_can_now_unplug_device', { default: 'device' })}
 													{/if}
 												</p>
 											{/if}
@@ -137,27 +162,33 @@
 										{#if withdrawStep === 3}
 											{#if deviceScanning}
 												<Button
-													text="Cancel"
+													text={$_('withdraw.sign_with_device.button_cancel', { default: 'Cancel' })}
 													buttonClass="is-primary is-light is-outlined is-small has-no-minimun-width"
 													on:buttonClicked={handleCancelScanning}
 												/>
 											{:else}
 												<Button
-													text="Retry"
+													text={$_('withdraw.sign_with_device.button_retry', { default: 'Retry' })}
 													buttonClass="is-primary is-light is-outlined is-small has-no-minimun-width"
 													on:buttonClicked={handleReScanForDevice}
 												/>
 											{/if}
 										{:else if withdrawStep === 4}
-											{#if !signingSucess && !showRetrySignWithDevice}
+											{#if signingReady && !signingSucess && !signingInProgress}
 												<Button
-													text="Cancel signing"
+													text={$_('withdraw.sign_with_device.button_start_sign', { default: 'Start signing' })}
+													buttonClass="is-primary is-light is-outlined is-small has-no-minimun-width"
+													on:buttonClicked={handleStartSigning}
+												/>
+											{:else if !signingSucess && !showRetrySignWithDevice}
+												<Button
+													text={$_('withdraw.sign_with_device.button_cancel_sign', { default: 'Cancel signing' })}
 													buttonClass="is-primary is-light is-outlined is-small has-no-minimun-width"
 													on:buttonClicked={cancelSigning}
 												/>
 											{:else if !signingSucess && showRetrySignWithDevice}
 												<Button
-													text="Retry signing"
+													text={$_('withdraw.sign_with_device.button_retry_sign', { default: 'Retry signing' })}
 													buttonClass="is-primary is-light is-outlined is-small has-no-minimun-width"
 													on:buttonClicked={handleRetrySigning}
 												/>
@@ -170,10 +201,14 @@
 									<div class="loading"><progress class="progress is-primary is-small" max="100">0%</progress></div>
 								{:else if withdrawStep === 3 && !deviceScanning}
 									<div class="loading"><progress class="progress is-danger is-small" value={'100'} max="100">0%</progress></div>
+								{:else if withdrawStep === 4 && !signingSucess && !showRetrySignWithDevice && signingReady && !signingInProgress}
+									<div class="loading"><progress class="progress is-primary is-small" value={'100'} max="100">25%</progress></div>
+								{:else if withdrawStep === 4 && !signingSucess && !showRetrySignWithDevice && !signingReady && signingInProgress}
+									<div class="loading"><progress class="progress is-primary is-small" max="100">50%</progress></div>
 								{:else if withdrawStep === 4 && !signingSucess && showRetrySignWithDevice}
 									<div class="loading"><progress class="progress is-danger is-small" value={'100'} max="100">0%</progress></div>
 								{:else if withdrawStep === 4 && !signingSucess}
-									<div class="loading"><progress class="progress is-primary is-small" max="100">50%</progress></div>
+									<div class="loading"><progress class="progress is-primary is-small" max="100">75%</progress></div>
 								{:else if withdrawStep === 4 && signingSucess}
 									<div class="loading"><progress class="progress is-primary is-small" value={'100'} max="100">100%</progress></div>
 								{/if}
@@ -181,28 +216,33 @@
 								<div class="bottom-loading">
 									{#if withdrawStep === 3}
 										{#if deviceScanning}
-											<p class="is-size-8">In progress...</p>
+											<p class="is-size-8">{$_('withdraw.sign_with_device.in_progress', { default: 'In progress...' })}</p>
 										{:else}
-											<p class="is-size-8">Make sure your device is plugged in</p>
+											<p class="is-size-8">{$_('withdraw.sign_with_device.make_sure_plugged', { default: 'Make sure your device is plugged in' })}</p>
 										{/if}
 									{:else if withdrawStep === 4}
-										{#if !signingSucess && !showRetrySignWithDevice}
-											<p class="is-size-8">In progress, confirm on your device...</p>
+										{#if signingReady && !signingInProgress}
+											<p class="is-size-8">{$_('withdraw.sign_with_device.ready_to_sign', { default: 'Ready to sign' })}</p>
+										{:else if !signingSucess && !showRetrySignWithDevice && signingInProgress}
+											<p class="is-size-8">{$_('withdraw.sign_with_device.signing_in_progress', { default: 'In progress, confirm on your device...' })}</p>
 										{:else if !signingSucess && showRetrySignWithDevice}
 											<p class="is-size-8 has-text-multiline">
 												Error during the signing
 												{selectedWalletData.type === 'coldcard'
-													? 'make sure you have imported your setup file into your Coldcard. If you haven’t done it already, you can do it from your vault settings'
-													: '- Please try again'}
+													? $_('withdraw.sign_with_device.please_try_again_coldcard', {
+															default:
+																'make sure you have imported your setup file into your Coldcard. If you haven’t done it already, you can do it from the settings page',
+													  })
+													: $_('withdraw.sign_with_device.please_try_again', { default: 'Somethin' })}
 											</p>
 										{:else if signingSucess}
-											<p class="is-size-8">Transaction signed</p>
+											<p class="is-size-8">{$_('withdraw.sign_with_device.transaction_signed', { default: 'Transaction signed' })}</p>
 										{/if}
 									{/if}
 									{#if selectedWalletData.type === 'coldcard' && (withdrawStep === 3 || showRetrySignWithDevice)}
 										<div class="button-float">
 											<Button
-												text="Sign with Micro SD instead"
+												text={$_('withdraw.sign_with_device.button_sign_with_micro_sd', { default: 'Sign with Micro SD instead' })}
 												buttonClass="is-primary is-outlined has-no-minimun-width"
 												on:buttonClicked={handleExtractFromMicroSD}
 											/>

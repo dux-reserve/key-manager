@@ -8,53 +8,69 @@ const Store = require('secure-electron-store').default;
 
 const { enumerateConnectedHardWallet, getXPubFromHardWallet, promptPinOnHardWallet, sendPinToHardWallet, signPsbtWithHardWallet } = require('./bitcoin/HWIcommands');
 const { areBitcoinNetworkEqual, getDataFromXPub, getMultisigDerivationPathForNetwork, getP2shDerivationPathForNetwork, zpubToXpub } = require('./bitcoin/index');
-const { createColdCardSetupFile, createMultisigConfig, createSinglesigConfig, formatFileName } = require('./bitcoin/config');
+const { createMultisigConfig, createSinglesigConfig } = require('./bitcoin/config');
 const {
-	broadcastTransactionPsbt,
+	broadcastTransactionPsbtToBlockstream,
 	getBitcoinMarketData,
 	getCurrentBitcoinFeesEstimationFromMempoolSpace,
 	getCurrentBitcoinPrices,
 	getHistoricalBitcoinPrice,
-	getNetworkBlockHeight,
+	getNetworkBlockHeightFromBlockstream,
 } = require('./bitcoin/network');
 const { combinePsbts, createPsbt, finalizeAllInputs } = require('./bitcoin/psbt');
 
-const { createEncryptedDuxConfig, decryptEncryptedDuxConfig } = require('./utils/crypto');
+const { createEncryptedJsonFile, createEncryptedDuxFile, decryptEncryptedDuxFile } = require('./utils/crypto');
+const { encryptFeedbackMessageWithPGP, sendFeedBackForm } = require('./utils/email');
+const { createColdCardSetupFile, formatFileName } = require('./utils/file');
+
+const gpuDisabled = app.commandLine.hasSwitch('gpu-disabled');
+const userFilePath = app.getPath('userData');
 
 // !! Make sure the proper environment variables are set for public release !! //
-const isDevelopment = process.env.NODE_ENV === 'development' ? true : false; // DevTools deactivated by default
-let bitcoinTestnet = process.env.BITCOIN_NETWORK === 'testnet' ? true : false; // Mainnet by default
+// const isDevelopment = process.env.NODE_ENV === 'development'; // DevTools deactivated by default
+const isDevelopment = false; // !! UNCOMMENT FOR PRODUCTION !!
+
+// *** basePassword is the default Secret Password, DUX use its own Password, if you DIY the building process you will need to change it for your own. MINIMUM 8 CHARACTERS *** //
+const basePassword = process.env.BASE_KEY || 'THIS_IS_NOT_FOR_PRODUCTION';
+
+let bitcoinTestnet = process.env.BITCOIN_NETWORK === 'testnet'; // Mainnet by default
 let currentBitcoinNetwork = bitcoinTestnet ? networks.testnet : networks.bitcoin;
 
 // *** Main *** //
-// Render the colors accurately on all OS
+// Hardware acceleration may cause input lag, so we disable it if the GPU doesn't support it
+if (gpuDisabled) {
+	app.disableHardwareAcceleration();
+}
+
+// Render colors accurately on all OS
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
-// Hardware acceleration may cause input lag, so we disable it
-app.disableHardwareAcceleration();
+
+// Local user data
+const store = new Store({
+	filename: 'blob',
+	passkey: basePassword.substr(1, 5),
+	path: userFilePath,
+	extension: '.json',
+	reset: true,
+});
 
 // UI
 let appMainWindow;
 
-// Local user data
-const store = new Store({
-	filename: 'settings',
-	path: app.getPath('userData'),
-	reset: false,
-});
+// !! COMMENT FOR PRODUCTION !!
+// Hot reload for the developers only
+// if (isDevelopment) {
+// 	require('electron-reload')(__dirname, {
+// 		electron: path.join(__dirname, '../../node_modules', '.bin', 'electron'),
+// 		awaitWriteFinish: true,
+// 	});
 
-// Live reload for the developers only
-if (isDevelopment) {
-	require('electron-reload')(__dirname, {
-		electron: path.join(__dirname, '../../node_modules', '.bin', 'electron'),
-		awaitWriteFinish: true,
-	});
-
-	console.log(
-		bitcoinTestnet
-			? '\x1b[40m\x1b[32m\x1b[5m\x1b[4m * BITCOIN TESTNET — DUX RESERVE ALPHA VERSION * \x1b[0m'
-			: '\x1b[40m\x1b[33m\x1b[5m\x1b[4m *** BITCOIN MAINNET USE WITH CAUTION — DUX RESERVE ALPHA VERSION *** \x1b[0m',
-	);
-}
+// 	console.log(
+// 		bitcoinTestnet
+// 			? '\x1b[40m\x1b[32m\x1b[5m\x1b[4m * BITCOIN TESTNET — DUX RESERVE ALPHA VERSION * \x1b[0m'
+// 			: '\x1b[40m\x1b[33m\x1b[5m\x1b[4m *** BITCOIN MAINNET USE WITH CAUTION — DUX RESERVE ALPHA VERSION *** \x1b[0m',
+// 	);
+// }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -62,7 +78,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createMainWindow = () => {
-	// Remove FrameMenu for single window	and all/child windows, for the user only
+	// Remove FrameMenu for single window	and all/child windows (End-user only)
 	if (!isDevelopment) {
 		Menu.setApplicationMenu(null);
 	}
@@ -78,13 +94,14 @@ const createMainWindow = () => {
 		alwaysOnTop: true,
 		backgroundColor: '#181b20',
 		webPreferences: {
-			contextIsolation: true,
 			devTools: false,
+			contextIsolation: true,
 			enableRemoteModule: false,
 			nodeIntegration: false,
 			nodeIntegrationInSubFrames: false,
 			nodeIntegrationInWorker: false,
 			spellcheck: false,
+			disableBlinkFeatures: 'Auxclick',
 		},
 	});
 
@@ -109,7 +126,7 @@ const createMainWindow = () => {
 			nodeIntegrationInSubFrames: false,
 			nodeIntegrationInWorker: false,
 			spellcheck: false,
-			additionalArguments: [`storePath:${app.getPath('userData')}`], // IMPORTANT!
+			additionalArguments: [`storePath:${userFilePath}`], // IMPORTANT!
 			preload: path.join(__dirname, 'preload.js'), // Link window.api to ipcRenderer & local Store
 			disableBlinkFeatures: 'Auxclick',
 		},
@@ -125,21 +142,32 @@ const createMainWindow = () => {
 		appMainWindow.removeMenu();
 	}
 
-	// if main window is ready to show, then the splash window is destroyed and the main window is focus
+	// if main window is ready to show, then the splash window is destroyed and the main window is focused
 	appMainWindow.once('ready-to-show', () => {
-		setTimeout(() => {
-			appMainWindow.show();
-
-			if (isDevelopment) {
-				appMainWindow.webContents.openDevTools();
-			}
-
-			appMainWindow.maximize();
+		// Look up if the GPU doesn't support hardware acceleration
+		// Relaunch the app with hardware acceleration disabled
+		// The gpu-info-update event happen after app.on('ready) so we need this hack to handle incompatible GPU
+		if (!gpuDisabled && app.getGPUFeatureStatus().gpu_compositing.includes('disabled')) {
+			console.log('Disable hardware acceleration');
+			appMainWindow = null;
+			app.relaunch({ args: process.argv.slice(1).concat(['--gpu-disabled']) });
+			app.exit();
+		} else {
 			setTimeout(() => {
-				splashScreen.destroy();
-				appMainWindow.focus();
-			}, 444);
-		}, 444); // Too fast, need some delay
+				appMainWindow.show();
+
+				// !! COMMENT FOR PRODUCTION !!
+				// if (isDevelopment) {
+				// 	appMainWindow.webContents.openDevTools();
+				// }
+
+				appMainWindow.maximize();
+				setTimeout(() => {
+					splashScreen.destroy();
+					appMainWindow.focus();
+				}, 444);
+			}, 444); // Too fast, need some delay
+		}
 	});
 
 	appMainWindow.on('close', e => {
@@ -187,27 +215,35 @@ ipcMain.handle('os:open-url-with-browser', (_event, args) => {
 	const { url, txid } = args;
 	let link = 'https://duxreserve.com/';
 
-	if (url === 'homepage') {
-		link = 'https://duxreserve.com/';
-	} else if (url === 'twitter') {
-		link = 'https://twitter.com/duxreserve';
-	} else if (url === 'github') {
-		link = 'https://github.com/dux-reserve';
-	} else if (url === 'telegram') {
-		link = 'https://t.me/DuxReserve';
-	} else if (url === 'manifesto') {
-		link = 'https://duxreserve.com/manifesto';
-	} else if (url === 'blockstream-explorer') {
-		link = 'https://blockstream.info' + (bitcoinTestnet ? '/testnet' : '') + '/tx/' + txid;
-	} else if (url === 'coldcard-docs') {
-		link = 'https://coldcardwallet.com/docs/quick';
-	} else if (url === 'ledger-doc') {
-		link = 'https://www.ledger.com/start';
-	} else if (url === 'trezor-docs') {
-		link = 'https://wiki.trezor.io/User_manual:Setting_up_the_Trezor_device';
-	}
+	try {
+		if (url === 'homepage') {
+			link = 'https://duxreserve.com/';
+		} else if (url === 'twitter') {
+			link = 'https://twitter.com/duxreserve';
+		} else if (url === 'github') {
+			link = 'https://github.com/dux-reserve';
+		} else if (url === 'telegram') {
+			link = 'https://t.me/DuxReserve';
+		} else if (url === 'telegram-fr') {
+			link = 'https://t.me/DuxReserveFR';
+		} else if (url === 'manifesto') {
+			link = 'https://duxreserve.com/manifesto';
+		} else if (url === 'blockstream-explorer') {
+			link = 'https://blockstream.info' + (bitcoinTestnet ? '/testnet' : '') + '/tx/' + txid;
+		} else if (url === 'mempool-space-explorer') {
+			link = 'https://mempool.space' + (bitcoinTestnet ? '/testnet' : '') + '/tx/' + txid;
+		} else if (url === 'coldcard-docs') {
+			link = 'https://coldcardwallet.com/docs/quick';
+		} else if (url === 'ledger-doc') {
+			link = 'https://www.ledger.com/start';
+		} else if (url === 'trezor-docs') {
+			link = 'https://wiki.trezor.io/User_manual:Setting_up_the_Trezor_device';
+		}
 
-	shell.openExternal(link);
+		shell.openExternal(link);
+	} catch (error) {
+		console.log('Error on opening URL with default browser');
+	}
 });
 
 ipcMain.handle('os:copy-to-clipboard', (_event, args) => {
@@ -217,7 +253,7 @@ ipcMain.handle('os:copy-to-clipboard', (_event, args) => {
 	try {
 		clipboard.writeText(sanitize);
 	} catch (error) {
-		console.log(error);
+		console.log('Error on copying to clipboard');
 	}
 });
 
@@ -241,7 +277,46 @@ ipcMain.handle('os:desktop-notification', (_event, args) => {
 
 		notification.show();
 	} catch (error) {
-		console.log(error);
+		console.log('Error on notification creation');
+	}
+});
+
+// * Language * //
+ipcMain.handle('language:get-i18n-json-data', async (_event, _args) => {
+	try {
+		const enJSON = fs.readFileSync(path.resolve(path.join(__dirname, '../../public/lang/en.json')));
+		const frJSON = fs.readFileSync(path.resolve(path.join(__dirname, '../../public/lang/fr.json')));
+
+		const languagesJson = { en: JSON.parse(enJSON), fr: JSON.parse(frJSON) };
+
+		return Promise.resolve(languagesJson);
+	} catch (error) {
+		return Promise.reject(new Error('Error on getting locale language json'));
+	}
+});
+
+// * Email * //
+ipcMain.handle('email:encrypt-with-pgp-keys', async (_event, args) => {
+	const { feedback } = args;
+
+	try {
+		const encryptedMessage = await encryptFeedbackMessageWithPGP(feedback);
+
+		return Promise.resolve(encryptedMessage);
+	} catch (error) {
+		return Promise.reject(new Error('Error on encrypting feedback', error));
+	}
+});
+
+ipcMain.handle('email:send-encrypted-feedback', async (_event, args) => {
+	const { encryptedMessage } = args;
+
+	try {
+		const response = await sendFeedBackForm(encryptedMessage);
+
+		return Promise.resolve(response);
+	} catch (error) {
+		return Promise.reject(new Error('Error on sending encrypted feedback'));
 	}
 });
 
@@ -285,7 +360,7 @@ ipcMain.handle('data:get-historical-btc-price', async (_event, args) => {
 
 ipcMain.handle('data:get-bitcoin-network-block-height', async (_event, _args) => {
 	try {
-		const response = await getNetworkBlockHeight(currentBitcoinNetwork);
+		const response = await getNetworkBlockHeightFromBlockstream(currentBitcoinNetwork);
 		return Promise.resolve(response);
 	} catch (error) {
 		return Promise.reject(new Error(error));
@@ -339,7 +414,267 @@ ipcMain.handle('config:get-accounts-data', async (_event, args) => {
 	}
 });
 
+// * Local Data File * //
+// Data
+ipcMain.handle('data:check-for-file', async (_event, _args) => {
+	try {
+		const fileExist = fs.existsSync(path.resolve(path.join(userFilePath, 'local_data.json')));
+
+		if (fileExist) {
+			const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_data.json')));
+			const parsedFile = JSON.parse(rawdata);
+
+			if ('encrypted_data' in parsedFile) {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	} catch (error) {
+		return false;
+	}
+});
+
+ipcMain.handle('data:create-file', async (_event, args) => {
+	const { data } = args;
+	try {
+		const encryptedData = await createEncryptedJsonFile(data, basePassword + 'DATA', 'encrypted_data');
+
+		fs.writeFileSync(path.resolve(path.join(userFilePath, 'local_data.json')), JSON.stringify(encryptedData));
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('data:read-file', async (_event, _args) => {
+	try {
+		let data;
+		const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_data.json')));
+		const parsedFile = JSON.parse(rawdata);
+
+		if ('encrypted_data' in parsedFile) {
+			data = await decryptEncryptedDuxFile(parsedFile.encrypted_data, basePassword + 'DATA');
+		} else {
+			throw new Error('Local Data file is corrupted');
+		}
+
+		return Promise.resolve(data);
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+// Settings
+ipcMain.handle('settings:check-for-file', async (_event, _args) => {
+	try {
+		const fileExist = fs.existsSync(path.resolve(path.join(userFilePath, 'local_settings.json')));
+
+		if (fileExist) {
+			const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_settings.json')));
+			const parsedFile = JSON.parse(rawdata);
+
+			if ('encrypted_settings' in parsedFile) {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	} catch (error) {
+		return false;
+	}
+});
+
+ipcMain.handle('settings:create-file', async (_event, args) => {
+	const { settings } = args;
+	try {
+		const encryptedSettings = await createEncryptedJsonFile(settings, basePassword + 'SETTINGS', 'encrypted_settings');
+
+		fs.writeFileSync(path.resolve(path.join(userFilePath, 'local_settings.json')), JSON.stringify(encryptedSettings));
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('settings:read-file', async (_event, _args) => {
+	try {
+		let settings;
+		const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_settings.json')));
+		const parsedFile = JSON.parse(rawdata);
+
+		if ('encrypted_settings' in parsedFile) {
+			settings = await decryptEncryptedDuxFile(parsedFile.encrypted_settings, basePassword + 'SETTINGS');
+		} else {
+			throw new Error('Settings file is corrupted');
+		}
+
+		return Promise.resolve(settings);
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
 // * Config File * //
+ipcMain.handle('config:check-for-file', async (_event, _args) => {
+	try {
+		const fileExist = fs.existsSync(path.resolve(path.join(userFilePath, 'local_config.json')));
+
+		if (fileExist) {
+			const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_config.json')));
+			const parsedFile = JSON.parse(rawdata);
+
+			if ('encrypted_config' in parsedFile) {
+				return { exist: true, withCustomPassword: parsedFile.withCustomPassword };
+			}
+		} else {
+			return { exist: false };
+		}
+	} catch (error) {
+		return { exist: false };
+	}
+});
+
+ipcMain.handle('config:create-file', async (_event, args) => {
+	const { data, withCustomPassword, userPassword } = args;
+	try {
+		const encryptedConfig = await createEncryptedDuxFile(data, withCustomPassword ? userPassword : basePassword + 'CONFIG-DATA', withCustomPassword);
+
+		fs.writeFileSync(path.resolve(path.join(userFilePath, 'local_config.json')), JSON.stringify(encryptedConfig));
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config:read-file', async (_event, args) => {
+	const { userPassword } = args;
+	try {
+		let data;
+		const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_config.json')));
+		const parsedFile = JSON.parse(rawdata);
+
+		if ('encrypted_config' in parsedFile) {
+			if (userPassword) {
+				data = parsedFile.encrypted_config.toString();
+			} else {
+				data = await decryptEncryptedDuxFile(parsedFile.encrypted_config, basePassword + 'CONFIG-DATA');
+			}
+		} else {
+			throw new Error('Local config file is corrupted');
+		}
+
+		return Promise.resolve(data);
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config-data:check-for-file', async (_event, _args) => {
+	try {
+		const fileExist = fs.existsSync(path.resolve(path.join(userFilePath, 'local_config_data.json')));
+
+		if (fileExist) {
+			const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_config_data.json')));
+			const parsedFile = JSON.parse(rawdata);
+
+			if ('encrypted_config' in parsedFile) {
+				return { exist: true };
+			} else {
+				return { exist: false };
+			}
+		} else {
+			return { exist: false };
+		}
+	} catch (error) {
+		return { exist: false };
+	}
+});
+
+ipcMain.handle('config-data:create-file', async (_event, args) => {
+	const { data } = args;
+	try {
+		const encryptedConfig = await createEncryptedDuxFile(data, basePassword + 'CONFIG-DATA');
+
+		fs.writeFileSync(path.resolve(path.join(userFilePath, 'local_config_data.json')), JSON.stringify(encryptedConfig));
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config-data:read-file', async (_event, _args) => {
+	try {
+		let data;
+		const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_config_data.json')));
+		const parsedFile = JSON.parse(rawdata);
+
+		if ('encrypted_config' in parsedFile) {
+			data = await decryptEncryptedDuxFile(parsedFile.encrypted_config, basePassword + 'CONFIG-DATA');
+		} else {
+			throw new Error('Local config data file is corrupted');
+		}
+
+		return Promise.resolve(data);
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config-data:delete-file', async (_event, _args) => {
+	try {
+		const pathConfigFile = path.resolve(path.join(userFilePath, 'local_config.json'));
+		const pathConfigDataFile = path.resolve(path.join(userFilePath, 'local_config_data.json'));
+		const configFileExist = fs.existsSync(pathConfigFile);
+		const configDataFileExist = fs.existsSync(pathConfigDataFile);
+
+		if (configFileExist) {
+			fs.unlinkSync(pathConfigFile);
+		}
+
+		if (configDataFileExist) {
+			fs.unlinkSync(pathConfigDataFile);
+		}
+
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('app:reset', async (_event, _args) => {
+	try {
+		const pathConfigFile = path.resolve(path.join(userFilePath, 'local_config.json'));
+		const pathConfigDataFile = path.resolve(path.join(userFilePath, 'local_config_data.json'));
+		const pathSettingsFile = path.resolve(path.join(userFilePath, 'local_settings.json'));
+		const pathLocalDataFile = path.resolve(path.join(userFilePath, 'local_data.json'));
+		const configFileExist = fs.existsSync(pathConfigFile);
+		const configDataFileExist = fs.existsSync(pathConfigDataFile);
+		const settingsFileExist = fs.existsSync(pathSettingsFile);
+		const localDataExist = fs.existsSync(pathLocalDataFile);
+
+		if (configFileExist) {
+			fs.unlinkSync(pathConfigFile);
+		}
+
+		if (configDataFileExist) {
+			fs.unlinkSync(pathConfigDataFile);
+		}
+
+		if (settingsFileExist) {
+			fs.unlinkSync(pathSettingsFile);
+		}
+
+		if (localDataExist) {
+			fs.unlinkSync(pathLocalDataFile);
+		}
+
+		return Promise.resolve('Success');
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
 ipcMain.handle('config:create-singlesig', async (_event, args) => {
 	const { importedDevice, testnet } = args;
 	const config = createSinglesigConfig(importedDevice, testnet ? networks.testnet : networks.bitcoin);
@@ -354,11 +689,29 @@ ipcMain.handle('config:create-multisig', async (_event, args) => {
 	return Promise.resolve(config);
 });
 
+ipcMain.handle('config:verify-password-validity', async (_event, args) => {
+	const { password } = args;
+	try {
+		const rawdata = fs.readFileSync(path.resolve(path.join(userFilePath, 'local_config.json')));
+		const parsedFile = JSON.parse(rawdata);
+		const decryptedConfig = await decryptEncryptedDuxFile(parsedFile.encrypted_config, password);
+
+		if ('version' in decryptedConfig && 'name' in decryptedConfig && 'wallets' in decryptedConfig && 'vaults' in decryptedConfig) {
+			return Promise.resolve(true);
+		} else {
+			return Promise.resolve(false);
+		}
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
 ipcMain.handle('config:import-config-file-dialog', async (_event, _args) => {
 	let config;
+
 	try {
 		const file = await dialog.showOpenDialog({
-			title: 'Import your Dux Reserve config file',
+			title: 'Import Dux Reserve config file',
 			buttonLabel: 'Import',
 			properties: ['openFile'],
 			filters: [{ name: 'Dux secure config files', extensions: ['dux'] }, { name: 'Unsecured config files (json)', extensions: ['json'] }],
@@ -368,7 +721,11 @@ ipcMain.handle('config:import-config-file-dialog', async (_event, _args) => {
 			const rawdata = fs.readFileSync(path.resolve(String(file.filePaths[0])));
 			const parsedFile = JSON.parse(rawdata);
 			if ('encrypted_config' in parsedFile) {
-				config = decryptEncryptedDuxConfig(parsedFile.encrypted_config);
+				if (parsedFile.withCustomPassword) {
+					config = parsedFile;
+				} else {
+					config = await decryptEncryptedDuxFile(parsedFile.encrypted_config, basePassword);
+				}
 			} else {
 				config = parsedFile;
 			}
@@ -381,11 +738,73 @@ ipcMain.handle('config:import-config-file-dialog', async (_event, _args) => {
 	}
 });
 
+ipcMain.handle('config:decrypt-config-file-with-user-password', async (_event, args) => {
+	const { config, userPassword } = args;
+
+	try {
+		const decryptedConfig = await decryptEncryptedDuxFile(config, userPassword);
+		return Promise.resolve(decryptedConfig);
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config:export-unsecure-config-file-dialog', async (_event, args) => {
+	const { exported_config } = args;
+
+	try {
+		const response = await dialog.showSaveDialog({
+			title: 'Export unsecure config file',
+			buttonLabel: 'Export',
+			filters: [{ name: 'Unsecure config files (json)', extensions: ['json'] }],
+		});
+
+		if (!response.canceled) {
+			const fileName = `${response.filePath.split('.dux')[0].split('.json')[0]}.json`;
+
+			fs.writeFileSync(path.resolve(fileName), JSON.stringify(exported_config));
+			shell.showItemInFolder(path.resolve(fileName));
+			return Promise.resolve('Success');
+		} else {
+			throw new Error('Canceled');
+		}
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
+ipcMain.handle('config:export-encrypted-config-file-dialog', async (_event, args) => {
+	const { exported_config, userPassword } = args;
+
+	try {
+		const response = await dialog.showSaveDialog({
+			title: 'Export Dux Reserve config file',
+			buttonLabel: 'Export',
+			filters: [{ name: 'Dux secure config files', extensions: ['dux'] }],
+		});
+
+		if (!response.canceled) {
+			const encryptedConfig = await createEncryptedDuxFile(exported_config, userPassword ? userPassword : basePassword, userPassword ? true : false);
+
+			const fileName = `${response.filePath.split('.dux')[0]}.dux`;
+
+			fs.writeFileSync(path.resolve(fileName), JSON.stringify(encryptedConfig));
+			shell.showItemInFolder(path.resolve(fileName));
+			return Promise.resolve('Success');
+		} else {
+			throw new Error('Canceled');
+		}
+	} catch (error) {
+		return Promise.reject(error);
+	}
+});
+
 ipcMain.handle('config:import-coldcard-microsd-json-dialog', async (_event, args) => {
 	const { multi } = args;
+
 	try {
 		const file = await dialog.showOpenDialog({
-			title: `Import your Coldcard ` + (multi ? `'ccxp-XXXXXXXX.json'` : `'coldcard-export.json'`),
+			title: `Import Coldcard ` + (multi ? `'ccxp-XXXXXXXX.json'` : `'coldcard-export.json'`),
 			buttonLabel: 'Import',
 			properties: ['openFile'],
 			filters: [{ name: 'Coldcard JSON', extensions: ['json'] }],
@@ -403,24 +822,23 @@ ipcMain.handle('config:import-coldcard-microsd-json-dialog', async (_event, args
 	}
 });
 
-ipcMain.handle('config:export-encrypted-config-file-dialog', async (_event, args) => {
-	const { exported_config } = args;
+ipcMain.handle('config:export-coldcard-multisig-setup', async (_event, args) => {
+	const { requiredSigners, totalSigners, accountName, importedDevices } = args;
+	const colcardSetupFile = createColdCardSetupFile(requiredSigners, totalSigners, accountName, importedDevices, currentBitcoinNetwork);
 
 	try {
-		const response = await dialog.showSaveDialog({
-			title: 'Exporting your Dux Reserve config file',
-			buttonLabel: 'Export',
-			filters: [{ name: 'Dux secure config files', extensions: ['dux'] }],
-			dontAddToRecent: true,
+		const response = await dialog.showOpenDialog({
+			title: 'Export Coldcard Multisig setup file',
+			properties: ['openDirectory'],
+			buttonLabel: 'Export Coldcard setup file',
 		});
 
 		if (!response.canceled) {
-			const encryptedConfig = createEncryptedDuxConfig(exported_config);
-			const fileName = formatFileName(response.filePath.split('.dux')[0], 'dux', false);
+			const savePath = response.filePaths[0];
+			const fileName = formatFileName(`coldcard-setup-${accountName.replace(/\s+/g, '-').toLowerCase()}`, 'txt', true, currentBitcoinNetwork);
 
-			fs.writeFile(path.resolve(fileName), JSON.stringify(encryptedConfig), error => {
-				if (error) throw new Error('Canceled', error);
-			});
+			fs.writeFileSync(path.resolve(path.join(savePath, fileName)), colcardSetupFile);
+			shell.showItemInFolder(path.resolve(path.join(savePath, fileName)));
 			return Promise.resolve('Success');
 		} else {
 			throw new Error('Canceled');
@@ -430,31 +848,9 @@ ipcMain.handle('config:export-encrypted-config-file-dialog', async (_event, args
 	}
 });
 
-ipcMain.handle('config:export-coldcard-multisig-setup', async (_event, args) => {
-	const { requiredSigners, totalSigners, accountName, importedDevices } = args;
-	const colcardSetupFile = createColdCardSetupFile(requiredSigners, totalSigners, accountName, importedDevices, currentBitcoinNetwork);
-	return await dialog
-		.showOpenDialog({
-			title: 'Exporting your Coldcard Multisig setup file',
-			properties: ['openDirectory'],
-			buttonLabel: 'Export Coldcard setup file',
-			dontAddToRecent: true,
-		})
-		.then(response => {
-			if (!response.canceled) {
-				const savePath = response.filePaths[0];
-				const fileName = formatFileName(`coldcard-setup-${accountName.replace(/\s+/g, '-').toLowerCase()}`, 'txt', true, currentBitcoinNetwork);
-				fs.writeFile(path.resolve(path.join(savePath, fileName)), colcardSetupFile, error => {
-					if (error) return false;
-				});
-			} else {
-				return false;
-			}
-		});
-});
-
 ipcMain.handle('config:convert-zpub-to-xpub', async (_event, args) => {
 	const { zpub } = args;
+
 	try {
 		const xpub = zpubToXpub(zpub, areBitcoinNetworkEqual(currentBitcoinNetwork, networks.testnet));
 		return Promise.resolve(xpub);
@@ -465,6 +861,7 @@ ipcMain.handle('config:convert-zpub-to-xpub', async (_event, args) => {
 
 ipcMain.handle('config:switch-network', async (_event, args) => {
 	const { testnet } = args;
+
 	currentBitcoinNetwork = testnet ? networks.testnet : networks.bitcoin;
 	bitcoinTestnet = testnet;
 });
@@ -487,6 +884,7 @@ ipcMain.handle('hwi:enumerate', async (_event, _args) => {
 // TODO: refactor addressType selected by user
 ipcMain.handle('hwi:get-xpub-current-network', async (_event, args) => {
 	const { device, type } = args;
+
 	const response = JSON.parse(
 		await getXPubFromHardWallet(
 			device.type,
@@ -517,7 +915,7 @@ ipcMain.handle('hwi:get-xpub-all-network', async (_event, args) => {
 		),
 	);
 
-	await timer(2000);
+	await timer(1337);
 
 	const testnet = JSON.parse(
 		await getXPubFromHardWallet(
@@ -587,9 +985,9 @@ ipcMain.handle('withdraw:validate-address', async (_event, args) => {
 
 // * PSBT * //
 ipcMain.handle('psbt:create-psbt', async (_event, args) => {
-	const { txInputs, txOutputs, unusedChangeAddresses, config } = args;
+	const { txInputs, txOutputs, unusedChangeAddresses, config, isRBF } = args;
 	try {
-		const psbt = await createPsbt(txInputs, txOutputs, unusedChangeAddresses, config, currentBitcoinNetwork);
+		const psbt = await createPsbt(txInputs, txOutputs, unusedChangeAddresses, config, currentBitcoinNetwork, isRBF);
 		return Promise.resolve(psbt);
 	} catch (error) {
 		return Promise.reject(error);
@@ -601,19 +999,17 @@ ipcMain.handle('psbt:export-coldcard-unsigned-psbt-dialog', async (_event, args)
 
 	try {
 		const response = await dialog.showOpenDialog({
-			title: 'Exporting unsigned PSBT by Micro SD',
+			title: 'Export unsigned PSBT via Micro SD',
 			properties: ['openDirectory'],
 			buttonLabel: 'Export unsigned PSBT',
 			filters: [{ name: 'PSBT', extensions: ['psbt'] }],
-			dontAddToRecent: true,
 		});
 
 		if (!response.canceled) {
 			const fileName = formatFileName(response.filePath, 'psbt', false);
 
-			fs.writeFile(path.resolve(fileName), psbt, error => {
-				if (error) throw new Error('Canceled', error);
-			});
+			fs.writeFileSync(path.resolve(fileName), psbt);
+			shell.showItemInFolder(path.resolve(fileName));
 			return Promise.resolve('Success');
 		} else {
 			throw new Error('Canceled');
@@ -626,7 +1022,7 @@ ipcMain.handle('psbt:export-coldcard-unsigned-psbt-dialog', async (_event, args)
 ipcMain.handle('psbt:import-coldcard-signed-psbt-dialog', async (_event, _args) => {
 	try {
 		const file = await dialog.showOpenDialog({
-			title: 'Import your Coldcard signed PSBT from Micro SD',
+			title: 'Import Coldcard signed PSBT via Micro SD',
 			buttonLabel: 'Import',
 			properties: ['openFile'],
 			filters: [{ name: 'PSBT', extensions: ['psbt'] }, { name: 'All types', extensions: ['*'] }],
@@ -661,7 +1057,7 @@ ipcMain.handle('psbt:finalize', async (_event, args) => {
 ipcMain.handle('psbt:broadcast-transaction', async (_event, args) => {
 	const { broadcastPsbt } = args;
 	try {
-		const response = await broadcastTransactionPsbt(broadcastPsbt, currentBitcoinNetwork);
+		const response = await broadcastTransactionPsbtToBlockstream(broadcastPsbt, currentBitcoinNetwork);
 
 		return Promise.resolve(response);
 	} catch (error) {

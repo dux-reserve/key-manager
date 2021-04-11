@@ -49,6 +49,7 @@ duxreserve-config*.*
 duxreserve-config
 
 ## ! Exception ! ##
-# VSCode debugging
+# VSCodium/VSCode Assets
 !.vscode/extensions.json
 !.vscode/launch.json
+!.vscode/settings.json

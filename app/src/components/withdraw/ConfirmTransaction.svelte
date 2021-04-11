@@ -1,4 +1,5 @@
 <script>
+	import { _ } from 'svelte-i18n';
 	export let signedDevices = [];
 
 	const checkCircle = './img/icons/ui/check-circle.svg';
@@ -22,7 +23,10 @@
 						{#if signedDevices[0].type.toLowerCase() === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 					</div>
 					<div class="card-bottom">
-						<p class="is-uppercase has-text-weight-medium mt-5 mb-2">
+						<p
+							class="is-uppercase has-text-weight-medium mt-5 mb-2"
+							title={$_('withdraw.confirm_transaction.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+						>
 							{signedDevices[0].fingerprint}
 						</p>
 					</div>
@@ -43,7 +47,10 @@
 						{#if signedDevices[1].type.toLowerCase() === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 					</div>
 					<div class="card-bottom">
-						<p class="is-uppercase has-text-weight-medium mt-5 mb-2">
+						<p
+							class="is-uppercase has-text-weight-medium mt-5 mb-2"
+							title={$_('withdraw.confirm_transaction.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+						>
 							{signedDevices[1].fingerprint}
 						</p>
 					</div>
@@ -65,7 +72,10 @@
 					{#if signedDevices[0].type.toLowerCase() === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 				</div>
 				<div class="card-bottom">
-					<p class="is-uppercase has-text-weight-medium mt-5 mb-2">
+					<p
+						class="is-uppercase has-text-weight-medium mt-5 mb-2"
+						title={$_('withdraw.confirm_transaction.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+					>
 						{signedDevices[0].fingerprint}
 					</p>
 				</div>

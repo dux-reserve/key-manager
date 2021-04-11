@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher, onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import Button from '../../../ui/Button.svelte';
 	import ButtonDropDown from '../../../ui/ButtonDropDown.svelte';
@@ -15,19 +16,23 @@
 	const ledgerLogo = './img/logos/ledger-vertical.png';
 	const trezorLogo = './img/logos/trezor.png';
 
-	let dropdownTextWalletDevice =
+	let dropdownTextVaultDevice =
 		selectedWalletBrand === 'coldcard'
-			? 'Coldcard'
+			? $_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' })
 			: selectedWalletBrand === 'trezor'
-			? 'Trezor'
+			? $_('creation.dropdown_details.trezor', { default: 'Trezor' })
 			: selectedWalletBrand === 'ledger'
-			? 'Ledger'
-			: 'Choose your device';
+			? $_('creation.dropdown_details.ledger', { default: 'Ledger' })
+			: $_('creation.dropdown_details.choose', { default: 'Choose your device' });
 
 	const handleDeviceSelected = ({ detail }) => {
-		const devicesChoice = ['Coldcard', 'Trezor', 'Ledger'];
-		dropdownTextWalletDevice = devicesChoice[detail];
-		dispatch('walletDeviceChange', dropdownTextWalletDevice);
+		const devicesChoice = [
+			$_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' }),
+			$_('creation.dropdown_details.trezor', { default: 'Trezor' }),
+			$_('creation.dropdown_details.ledger', { default: 'Ledger' }),
+		];
+		dropdownTextVaultDevice = devicesChoice[detail];
+		dispatch('walletDeviceChange', dropdownTextVaultDevice);
 	};
 
 	onMount(async () => {
@@ -51,7 +56,10 @@
 							{#if importedDevices[0].type === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 						</div>
 						<div class="card-bottom">
-							<p class="is-uppercase has-text-weight-medium mt-5 mb-2" title="Device unique fingerprint">
+							<p
+								class="is-uppercase has-text-weight-medium mt-5 mb-2"
+								title={$_('creation.key_choice.device_fingerprint', { default: 'Device unique fingerprint' })}
+							>
 								{importedDevices[0].fingerprint}
 							</p>
 						</div>
@@ -60,20 +68,23 @@
 							<span class="icon is-prussian-blue is-normal has-no-hover">
 								<img class="image-key" src={keyIcon} alt="Key Icon" />
 							</span>
-							<h2 class="title is-4 has-subtitle-margin">Hardware device 1</h2>
+							<h2 class="title is-4 has-subtitle-margin">{$_('creation.key_choice.key_1_title', { default: 'Hardware device 1' })}</h2>
 						</div>
-						<p class="mb-6">Pick your first hardware device to add its key to your vault.</p>
+						<p class="mb-6">{$_('creation.key_choice.key_1_paragraph', { default: 'Pick your first hardware device to add its public key to your vault' })}.</p>
 						<div class="card-bottom">
 							<div class="buttons is-centered">
 								<ButtonDropDown
-									dropdownText={dropdownTextWalletDevice}
-									dropdownClass={'is-primary'}
+									dropdownText={dropdownTextVaultDevice}
+									dropdownClass="is-primary"
 									on:dropdownSelected={handleDeviceSelected}
 									fullWidth
 									options={[
-										{ name: 'Coldcard - Recommended', selected: selectedWalletBrand === 'coldcard' },
-										{ name: 'Trezor', selected: selectedWalletBrand === 'trezor' },
-										{ name: 'Ledger', selected: selectedWalletBrand === 'ledger' },
+										{
+											name: $_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' }),
+											selected: selectedWalletBrand === 'coldcard',
+										},
+										{ name: $_('creation.dropdown_details.trezor', { default: 'Trezor' }), selected: selectedWalletBrand === 'trezor' },
+										{ name: $_('creation.dropdown_details.ledger', { default: 'Ledger' }), selected: selectedWalletBrand === 'ledger' },
 									]}
 								/>
 							</div>
@@ -97,7 +108,10 @@
 							{#if importedDevices[1].type === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 						</div>
 						<div class="card-bottom">
-							<p class="is-uppercase has-text-weight-medium mt-5 mb-2">
+							<p
+								class="is-uppercase has-text-weight-medium mt-5 mb-2"
+								title={$_('creation.key_choice.device_fingerprint', { default: 'Device unique fingerprint' })}
+							>
 								{importedDevices[1].fingerprint}
 							</p>
 						</div>
@@ -106,23 +120,33 @@
 							<span class="icon is-prussian-blue is-normal has-no-hover">
 								<img class="image-key" src={keyIcon} alt="Key Icon" />
 							</span>
-							<h2 class="title is-4 has-subtitle-margin">Hardware device 2</h2>
+							<h2 class="title is-4 has-subtitle-margin">{$_('creation.key_choice.key_2_title', { default: 'Hardware device 2' })}</h2>
 						</div>
-						<p class="mb-6">Pick your second hardware device to add its key to your vault.</p>
+						<p class="mb-6">
+							{$_('creation.key_choice.key_2_paragraph', { default: 'Pick your second hardware device to add its public key to your vault' })}.
+						</p>
 						<div class="card-bottom">
 							<div class="buttons is-centered">
 								{#if importedDevices.length < 1}
-									<Button text="Add second hardware key" buttonClass="is-primary button-vault" buttonDisabled title="Add the first hardware key to proceed" />
+									<Button
+										text={$_('creation.key_choice.key_2_button', { default: 'Add second hardware key' })}
+										buttonClass="is-primary button-vault"
+										buttonDisabled
+										title="Add the first hardware key to proceed"
+									/>
 								{:else}
 									<ButtonDropDown
-										dropdownText={dropdownTextWalletDevice}
+										dropdownText={dropdownTextVaultDevice}
 										dropdownClass="is-primary"
 										on:dropdownSelected={handleDeviceSelected}
 										fullWidth
 										options={[
-											{ name: 'Coldcard - Recommended', selected: selectedWalletBrand === 'coldcard' },
-											{ name: 'Trezor', selected: selectedWalletBrand === 'trezor' },
-											{ name: 'Ledger', selected: selectedWalletBrand === 'ledger' },
+											{
+												name: $_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' }),
+												selected: selectedWalletBrand === 'coldcard',
+											},
+											{ name: $_('creation.dropdown_details.trezor', { default: 'Trezor' }), selected: selectedWalletBrand === 'trezor' },
+											{ name: $_('creation.dropdown_details.ledger', { default: 'Ledger' }), selected: selectedWalletBrand === 'ledger' },
 										]}
 									/>
 								{/if}
@@ -147,7 +171,10 @@
 							{#if importedDevices[2].type === 'trezor'}<img class="image-wallet" align="center" src={trezorLogo} alt="Trezor" />{/if}
 						</div>
 						<div class="card-bottom">
-							<p class="is-uppercase has-text-weight-medium mt-5 mb-2">
+							<p
+								class="is-uppercase has-text-weight-medium mt-5 mb-2"
+								title={$_('creation.key_choice.device_fingerprint', { default: 'Device unique fingerprint' })}
+							>
 								{importedDevices[2].fingerprint}
 							</p>
 						</div>
@@ -156,28 +183,31 @@
 							<span class="icon is-prussian-blue is-normal has-no-hover">
 								<img class="image-key" src={keyIcon} alt="Key Icon" />
 							</span>
-							<h2 class="title is-4 has-subtitle-margin">Hardware device 3</h2>
+							<h2 class="title is-4 has-subtitle-margin">{$_('creation.key_choice.key_3_title', { default: 'Hardware device 3' })}</h2>
 						</div>
-						<p class="mb-6">Pick your third hardware device to add its key to your vault.</p>
+						<p class="mb-6">{$_('creation.key_choice.key_3_paragraph', { default: 'Pick your third hardware device to add its public key to your vault' })}.</p>
 						<div class="card-bottom">
 							<div class="buttons is-centered">
 								{#if importedDevices.length < 2}
 									<Button
-										text="Add third hardware key"
+										text={$_('creation.key_choice.key_3_button', { default: 'Add third hardware key' })}
 										buttonClass="is-primary button-vault"
 										title={importedDevices.length === 1 ? 'add the second hardware key to proceed' : 'Add the first hardware key to proceed'}
 										buttonDisabled
 									/>
 								{:else}
 									<ButtonDropDown
-										dropdownText={dropdownTextWalletDevice}
+										dropdownText={dropdownTextVaultDevice}
 										dropdownClass="is-primary"
 										on:dropdownSelected={handleDeviceSelected}
 										fullWidth
 										options={[
-											{ name: 'Coldcard - Recommended', selected: selectedWalletBrand === 'coldcard' },
-											{ name: 'Trezor', selected: selectedWalletBrand === 'trezor' },
-											{ name: 'Ledger', selected: selectedWalletBrand === 'ledger' },
+											{
+												name: $_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' }),
+												selected: selectedWalletBrand === 'coldcard',
+											},
+											{ name: $_('creation.dropdown_details.trezor', { default: 'Trezor' }), selected: selectedWalletBrand === 'trezor' },
+											{ name: $_('creation.dropdown_details.ledger', { default: 'Ledger' }), selected: selectedWalletBrand === 'ledger' },
 										]}
 									/>
 								{/if}

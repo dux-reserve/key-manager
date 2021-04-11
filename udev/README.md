@@ -2,7 +2,7 @@
   <img src=../public/img/logos/dux-logo-with-text.svg width="350" title="Dux Reserve">
 </p>
 <h3 align="center">
-  Key Manager — 0.3.0-beta
+  Key Manager — 0.4.0-beta
 </h3>
 
 
@@ -23,8 +23,11 @@ Those rules are required for the hardwallet devices to be reachable on any **Lin
 
 ----
 
-
 ## Usage
+
+1. Download `udev.tar.xz`
+2. Extract
+3. Run the shell script or do it manually
 
 ### Shell script
 

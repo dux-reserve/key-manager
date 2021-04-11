@@ -5,6 +5,8 @@ $icon-dimensions-small: 1rem !default
 $icon-dimensions-normal: 1.375rem !default
 $icon-dimensions-medium: 2rem !default
 $icon-dimensions-large: 3rem !default
+$icon-dimension-exposant: 0.9625rem !default
+$icon-dimension-exposant-margin-bottom: 1.75rem !default
 
 .icon
   display: inline-flex
@@ -32,6 +34,10 @@ $icon-dimensions-large: 3rem !default
   &.is-large
     width: $icon-dimensions-large !important
     height: $icon-dimensions-large !important
+  &.is-exposant
+    width: $icon-dimension-exposant !important
+    height: $icon-dimension-exposant !important
+    margin-bottom: $icon-dimension-exposant-margin-bottom !important
   // Colors
   &.is-light
     img

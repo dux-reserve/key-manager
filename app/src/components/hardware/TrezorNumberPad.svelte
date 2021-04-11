@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher, onDestroy } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import Button from '../../components/ui/Button.svelte';
 
 	export let trezorError = false;
@@ -44,16 +45,31 @@
 		}
 	};
 
+	const handleKeydown = ({ key }) => {
+		if (
+			(key == '0' || key == '1' || key == '2' || key == '3' || key == '4' || key == '5' || key == '6' || key == '7' || key == '8' || key == '9') &&
+			currentPin.length < 9
+		) {
+			handlePinChange(key);
+		} else if (currentPin.length >= 1 && key === 'Enter') {
+			handleSendPin();
+		} else if (currentPin.length >= 1 && key === 'Backspace') {
+			handleBackspaceCurrentPin();
+		}
+	};
+
 	onDestroy(() => {
 		// That make sure the pin is empty when the view is destroy
 		currentPin;
 	});
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <div class="pin-text-container">
 	<div class="pin-text">
 		{#if currentPin.length < 1 && !trezorLockPinKey && !trezorError}
-			Please enter your PIN
+			{$_('trezor_number_pad.pin_text', { default: 'Please enter your Trezor PIN' })}
 		{:else if trezorError}
 			<span class="is-invisible">x</span>
 		{:else if currentPin.length < 1 && trezorLockPinKey}
@@ -68,34 +84,43 @@
 </div>
 <div class="pin-dial">
 	<div class="pin-dial-row">
-		<button class="button dial-button" on:click={() => handlePinChange(7)} disabled={trezorLockPinKey || trezorError}>●</button><button
+		<button class="button dial-button" on:click={() => handlePinChange('7')} disabled={trezorLockPinKey || trezorError}>●</button><button
 			class="button dial-button"
-			on:click={() => handlePinChange(8)}
+			on:click={() => handlePinChange('8')}
 			disabled={trezorLockPinKey || trezorError}>●</button
-		><button class="button dial-button" on:click={() => handlePinChange(9)} disabled={trezorLockPinKey || trezorError}>●</button>
+		><button class="button dial-button" on:click={() => handlePinChange('9')} disabled={trezorLockPinKey || trezorError}>●</button>
 	</div>
 
 	<div class="pin-dial-row">
-		<button class="button dial-button" on:click={() => handlePinChange(4)} disabled={trezorLockPinKey || trezorError}>●</button><button
+		<button class="button dial-button" on:click={() => handlePinChange('4')} disabled={trezorLockPinKey || trezorError}>●</button><button
 			class="button dial-button"
-			on:click={() => handlePinChange(5)}
+			on:click={() => handlePinChange('5')}
 			disabled={trezorLockPinKey || trezorError}>●</button
-		><button class="button dial-button" on:click={() => handlePinChange(6)} disabled={trezorLockPinKey || trezorError}>●</button>
+		><button class="button dial-button" on:click={() => handlePinChange('6')} disabled={trezorLockPinKey || trezorError}>●</button>
 	</div>
 
 	<div class="pin-dial-row">
-		<button class="button dial-button" on:click={() => handlePinChange(1)} disabled={trezorLockPinKey || trezorError}>●</button><button
+		<button class="button dial-button" on:click={() => handlePinChange('1')} disabled={trezorLockPinKey || trezorError}>●</button><button
 			class="button dial-button"
-			on:click={() => handlePinChange(2)}
+			on:click={() => handlePinChange('2')}
 			disabled={trezorLockPinKey || trezorError}>●</button
-		><button class="button dial-button" on:click={() => handlePinChange(3)} disabled={trezorLockPinKey || trezorError}>●</button>
+		><button class="button dial-button" on:click={() => handlePinChange('3')} disabled={trezorLockPinKey || trezorError}>●</button>
 	</div>
 </div>
 <div class="buttons is-centered mt-3">
 	{#if trezorError}
-		<Button text="I have unplugged and re-plugged my Trezor" buttonClass="button is-primary" on:buttonClicked={replugTrezorDevice} />
+		<Button
+			text={$_('trezor_number_pad.unplugged', { default: 'I have unplugged and re-plugged my Trezor' })}
+			buttonClass="button is-primary"
+			on:buttonClicked={replugTrezorDevice}
+		/>
 	{:else}
-		<Button text="Enter PIN" buttonClass="button is-primary" on:buttonClicked={handleSendPin} buttonDisabled={!showSendPin || trezorLockPinKey} />
+		<Button
+			text={$_('trezor_number_pad.enter_pin', { default: 'Enter Trezor PIN' })}
+			buttonClass="button is-primary"
+			on:buttonClicked={handleSendPin}
+			buttonDisabled={!showSendPin || trezorLockPinKey}
+		/>
 	{/if}
 </div>
 
@@ -109,8 +134,8 @@
 	}
 
 	.icon-backspace {
-		position: relative;
-		top: -22px;
+		position: absolute;
+		top: 144px;
 		left: 421px;
 
 		&:active {

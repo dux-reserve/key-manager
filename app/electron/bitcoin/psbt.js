@@ -1,25 +1,30 @@
 const { address, Psbt } = require('bitcoinjs-lib');
 const { multisigWitnessScript } = require('unchained-bitcoin');
 
-// !! TODO: refactor
+const getTransactionHex = async (txid, currentBitcoinNetwork, currentNetwork) => {
+	const { getTransactionHexFromBlockstream } = require('./network');
+
+	if (currentNetwork === 'blockstream') {
+		return await getTransactionHexFromBlockstream(txid, currentBitcoinNetwork);
+	}
+};
+
 const getNextChangeAddress = unusedChangeAddresses => {
 	return unusedChangeAddresses[0].address;
 };
 
-const createPsbt = async (txInputs, txOutputs, unusedChangeAddresses, config, currentBitcoinNetwork) => {
-	const { getTransactionHex } = require('./network');
+const createPsbt = async (txInputs, txOutputs, unusedChangeAddresses, config, currentBitcoinNetwork, isRBF = true, currentNetwork = 'blockstream') => {
 	const psbt = new Psbt({ network: currentBitcoinNetwork });
 	psbt.setVersion(2);
 	psbt.setLocktime(0);
 
-	// sequence: 0xffffffff,
 	for (let i = 0; i < txInputs.length; i++) {
 		const input = txInputs[i];
-		const prevTxHex = await getTransactionHex(input.txid, currentBitcoinNetwork);
+		const prevTxHex = await getTransactionHex(input.txid, currentBitcoinNetwork, currentNetwork);
 		const currentInput = {
 			hash: input.txid,
 			index: input.vout,
-			sequence: 0xfffffffd,
+			sequence: isRBF ? 0xfffffffd : 0xffffffff,
 			nonWitnessUtxo: Buffer.from(prevTxHex, 'hex'),
 			bip32Derivation: input.address.bip32derivation.map(derivation => ({
 				masterFingerprint: Buffer.from(Object.values(derivation.masterFingerprint)),
@@ -41,7 +46,7 @@ const createPsbt = async (txInputs, txOutputs, unusedChangeAddresses, config, cu
 	for (let i = 0; i < txOutputs.length; i++) {
 		const output = txOutputs[i];
 
-		const outputAddress = !output.address ? getNextChangeAddress(unusedChangeAddresses) : output.address;
+		const outputAddress = output.address ? output.address : getNextChangeAddress(unusedChangeAddresses);
 
 		const currentOutput = {
 			script: address.toOutputScript(outputAddress, currentBitcoinNetwork),
@@ -83,20 +88,20 @@ const finalizeAllInputs = finalPsbt => {
 	}
 };
 
-const getPsbtFromText = text => {
+const getPsbtFromString = string => {
 	try {
-		return Psbt.fromBase64(text);
+		return Psbt.fromBase64(string);
 	} catch (error) {
 		try {
 			// Trying to get hex
-			return Psbt.fromHex(text);
+			return Psbt.fromHex(string);
 		} catch (error) {
 			throw new Error('Invalid PSBT');
 		}
 	}
 };
 
-const psbtFromBase64 = psbt => {
+const getPsbtFromBase64 = psbt => {
 	if (typeof psbt === 'string') {
 		return Psbt.fromBase64(psbt);
 	} else {
@@ -108,6 +113,6 @@ module.exports = {
 	combinePsbts,
 	createPsbt,
 	finalizeAllInputs,
-	getPsbtFromText,
-	psbtFromBase64,
+	getPsbtFromString,
+	getPsbtFromBase64,
 };

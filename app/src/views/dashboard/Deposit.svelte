@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import QrCode from 'svelte-qrcode';
 	import * as animateScroll from 'svelte-scrollto';
 	import { configSelectedCurrentData, bitcoinTestnetNetwork } from '../../store';
+	import { isObjectEmpty } from '../../utils/helpers';
 	import Button from '../../components/ui/Button.svelte';
 	import Loading from '../../components/ui/Loading.svelte';
 	import WalletDetails from '../../components/config/CurrentConfigDetails.svelte';
@@ -18,7 +20,11 @@
 	let copyTooltip = false;
 	let loaded = false;
 
-	$: if ($configSelectedCurrentData.unusedAddresses && lastUnusedAddressData !== $configSelectedCurrentData.unusedAddresses[unusedAddressIndex].address) {
+	$: if (
+		!isObjectEmpty($configSelectedCurrentData) &&
+		$configSelectedCurrentData.unusedAddresses &&
+		lastUnusedAddressData !== $configSelectedCurrentData.unusedAddresses[unusedAddressIndex].address
+	) {
 		lastUnusedAddressData = $configSelectedCurrentData.unusedAddresses[unusedAddressIndex].address;
 
 		// Hack to rerender the QRCode
@@ -62,7 +68,7 @@
 <div class="columns">
 	<div class="column">
 		<h3 class="title is-4">
-			Receiving details
+			{$_('dashboard.receiving.title', { default: 'Receiving details' })}
 			{#if $bitcoinTestnetNetwork}
 				<span class="is-size-5">(TESTNET)</span>
 			{/if}
@@ -75,45 +81,59 @@
 			<div class="card-content">
 				{#if !loaded || !$configSelectedCurrentData.config}
 					<div class="loading-container">
-						<Loading text="Loading data" />
+						<Loading text={$_('dashboard.receiving.loading', { default: 'Loading data' })} />
 					</div>
 				{:else}
+					{#if copyTooltip}
+						<span class="floating-message title is-6 has-text-weight-medium is-primary"
+							>{$_('dashboard.receiving.clipboard', { default: 'Copied to clipboard' })} ✓</span
+						>
+					{/if}
 					<div class="columns is-multiline">
 						<div class="column is-4-widescreen is-5-desktop is-12-tablet">
-							<div class="qrcode-img mt-4">
+							<div class="qrcode-img mt-4" data-tooltip={$_('dashboard.receiving.tooltip', { default: 'Click to copy receiving address' })}>
 								{#if qrCodeData}
-									<div class="is-clickable" on:click={handleCopyAddress} title="Click to copy address">
-										<QrCode size="242" value={qrCodeData} background={'#fefefe'} />
+									<div class="is-clickable" on:click={handleCopyAddress}>
+										<QrCode size="242" value={qrCodeData} background="#fefefe" />
 									</div>
 								{/if}
 							</div>
 						</div>
 						<div class="column is-8-widescreen is-7-desktop is-12-tablet has-text-left">
 							<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">
-								Destination address
-								<span class="icon is-prussian-blue is-inline-block ml-3" data-tooltip="Copy receiving address" on:click={handleCopyAddress}>
-									<img src={contentCopy} alt="Copy to clipboard" title="Click to copy address" />
+								{$_('dashboard.receiving.subtitle', { default: 'Destination address' })}
+								<span
+									class="icon is-prussian-blue is-inline-block ml-3"
+									title={$_('dashboard.receiving.tooltip', { default: 'Click to copy receiving address' })}
+									on:click={handleCopyAddress}
+								>
+									<img src={contentCopy} alt="Copy to clipboard" />
 								</span>
-								{#if copyTooltip}
-									<span class="tooltip-copy is-family-primary ml-1">Copied to clipboard ✓</span>
-								{/if}
 							</h5>
-							<p class="is-size-5 is-clickable has-text-multiline mb-4 is-selectable" on:click={handleCopyAddress} title="Click to copy address">
+							<p
+								class="is-size-5 is-clickable has-text-multiline mb-4 is-selectable"
+								on:click={handleCopyAddress}
+								title={$_('dashboard.receiving.tooltip', { default: 'Click to copy receiving address' })}
+							>
 								{$configSelectedCurrentData.unusedAddresses
 									? $configSelectedCurrentData.unusedAddresses[unusedAddressIndex].address
-									: 'error on generating address'}
+									: $_('dashboard.receiving.error_1', { default: 'error on generating address' })}
 							</p>
-							<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">Receive to</h5>
+							<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('dashboard.receiving.receive_to', { default: 'Receive to' })}</h5>
 							<p class="is-size-5 is-capitalized has-text-multiline mb-4">{$configSelectedCurrentData.name}</p>
 						</div>
 					</div>
 					<div class="buttons is-right">
 						<Button
-							text="View transactions history"
+							text={$_('dashboard.receiving.button_cta_2', { default: 'View transactions history"' })}
 							buttonClass="is-primary is-outlined"
 							buttonLink={'/dashboard?view=transactions,id=' + $configSelectedCurrentData.config.id}
 						/>
-						<Button text="Generate new address" buttonClass="is-primary" on:buttonClicked={handleGenerateNewAddress} />
+						<Button
+							text={$_('dashboard.receiving.button_cta', { default: 'Generate new address' })}
+							buttonClass="is-primary"
+							on:buttonClicked={handleGenerateNewAddress}
+						/>
 					</div>
 				{/if}
 			</div>
@@ -148,6 +168,7 @@
 				}
 			}
 		}
+
 		.tooltip-copy {
 			margin-left: 0.21rem;
 			// color: #fafafa;
@@ -173,6 +194,17 @@
 			margin-top: 2rem;
 			margin-bottom: 0.15rem;
 		}
+	}
+
+	.floating-message {
+		position: absolute;
+		top: 2.5rem;
+		right: 2.5rem;
+	}
+
+	[data-tooltip]::before {
+		bottom: 107.75%;
+		width: 250px;
 	}
 
 	@media screen and (min-width: 1011px) {

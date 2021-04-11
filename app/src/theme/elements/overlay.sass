@@ -1,0 +1,26 @@
+$overlay-circle-color: $text-white !default
+$overlay-circle-background-color: $dark-theme-forground !default
+$overlay-circle-shadow: 0 0.42rem 1rem 0.25rem rgba($light-theme-shadow, 0.0529), 0 0 0 1px rgba($scheme-main, 0.015) !default
+$overlay-circle-radius: $radius-rounded !default
+$overlay-circle-overflow: hidden !default
+$overlay-circle-z: 5 !default
+
+.overlay-circle
+  position: fixed
+  right: 32px
+  bottom: 32px
+  z-index: $overlay-circle-z
+  display: flex
+  overflow: $overlay-circle-overflow
+  justify-content: center
+  align-items: center
+  width: 48px
+  height: 48px
+  box-shadow: $overlay-circle-shadow
+  background-color: $overlay-circle-background-color
+  color: $overlay-circle-color
+  &.is-rounded
+    border-radius: $overlay-circle-radius
+  &:hover
+    background-color: lighten($overlay-circle-background-color, 6.92%)
+    cursor: pointer

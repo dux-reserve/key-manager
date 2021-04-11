@@ -1,10 +1,11 @@
 <script>
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import coinSelect from 'coinselect';
 	import coinSelectSplit from 'coinselect/split';
 
-	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency, userSettings } from '../../store';
+	import { bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency, applicationSettings } from '../../store';
 	import { bitcoinsToSatoshis, formatNumberByThousands, satoshisToBitcoins, toFixedNoRounding } from '../../utils/helpers';
 
 	import Button from '../../components/ui/Button.svelte';
@@ -14,19 +15,19 @@
 	import WalletDetails from '../../components/config/CurrentConfigDetails.svelte';
 	import WithdrawSteps from '../../components/withdraw/WithdrawSteps.svelte';
 
-	export let currentAvailableAmount = -1;
+	export let currentAvailableAmount = undefined;
 	export let currentPendingAmount = 0;
 
 	$: availableFiatAmount = currentAvailableAmount ? satoshisToBitcoins(currentAvailableAmount).toNumber() * $bitcoinCurrentPrices[$selectedCurrency] : 0;
 
 	$: amountUnitsChoice = useAllFunds
 		? [
-				{ name: 'bitcoin', selected: !$userSettings.satoshiUnit },
-				{ name: 'satoshi', selected: $userSettings.satoshiUnit },
+				{ name: 'bitcoin', selected: !$applicationSettings.satoshiUnit },
+				{ name: 'satoshi', selected: $applicationSettings.satoshiUnit },
 		  ]
 		: [
-				{ name: 'bitcoin', selected: !$userSettings.satoshiUnit },
-				{ name: 'satoshi', selected: $userSettings.satoshiUnit },
+				{ name: 'bitcoin', selected: !$applicationSettings.satoshiUnit },
+				{ name: 'satoshi', selected: $applicationSettings.satoshiUnit },
 				{ name: $selectedCurrency, selected: false },
 		  ];
 
@@ -36,16 +37,15 @@
 	let craftingPSBT = false;
 	let createdPsbt = null;
 	let desiredFee = 1;
-	let errorOverlay = false;
 	let estimatedFeeRates = { minimumFee: 1 };
 	let estimatingFee = false;
-	let feeDropdownText = 'Estimating... sats / vbyte';
+	let feeDropdownText = `${$_('withdraw.main.fee_dropdown.estimating', { default: 'Estimating' })}... sats / vbyte'`;
 	let finalFee = 1;
 	let finalTransactionAmount = 0;
 	let invalidAddressErrorMessage = '';
 	let notEnoughFee = false;
-	let notEnoughFeeOverlay = false;
 	let notEnoughFunds = false;
+	let enableRBF = true;
 	let selectedDropdownFee = 0;
 	let showCustomFeeInput = false;
 	let showWithdrawSteps = false;
@@ -53,7 +53,7 @@
 	let transactionDestinationAddress = '';
 	let txInputs = [];
 	let txOutputs = [];
-	let unitDropdownText = $userSettings.satoshiUnit ? 'satoshi' : 'bitcoin';
+	let unitDropdownText = $applicationSettings.satoshiUnit ? 'satoshi' : 'bitcoin';
 	let useAllFunds = false;
 	let validTransactionAddress = false;
 
@@ -95,6 +95,15 @@
 				validTransactionAddress = false;
 				// ? Remove legacy in the alert message
 				invalidAddressErrorMessage = isAddressValid.replace(/\.$/, '').replace(" '1',", '').replace(" 'm',", '').replace(" 'n',", '');
+
+				if (
+					$applicationSettings.interfaceLanguage === 'fr' &&
+					invalidAddressErrorMessage.includes("Address must start with one of 'tb1', or '2' followed by letters or digits")
+				) {
+					invalidAddressErrorMessage = "L'adresse doit commencer par «tb1» ou «2» suivi de lettres ou de chiffres";
+				} else if ($applicationSettings.interfaceLanguage === 'fr' && invalidAddressErrorMessage.includes('Address is invalid')) {
+					invalidAddressErrorMessage = "L'adresse n'est pas valide";
+				}
 			} else {
 				validTransactionAddress = true;
 				invalidAddressErrorMessage = '';
@@ -169,7 +178,7 @@
 		transactionAmount = useAllFunds ? currentAvailableAmount : undefined;
 		notEnoughFunds = false;
 		amountConverted = 0;
-		unitDropdownText = $userSettings.satoshiUnit ? 'satoshi' : 'bitcoin';
+		unitDropdownText = $applicationSettings.satoshiUnit ? 'satoshi' : 'bitcoin';
 	};
 
 	const handleEstimateFees = async () => {
@@ -194,11 +203,20 @@
 		}
 	};
 
+	const handleSwitchRBF = () => {
+		enableRBF = !enableRBF;
+	};
+
 	const handleFeeSelected = async ({ detail }) => {
 		selectedDropdownFee = detail;
 
 		if (estimatedFeeRates) {
-			const names = ['Slow ≈ 1 hour', 'Medium ≈ 30 mins', 'Fast ≈ Next block', 'Custom fee'];
+			const names = [
+				$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' }),
+				$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' }),
+				$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' }),
+				$_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }),
+			];
 
 			feeDropdownText = names[detail];
 			if (detail === 0) {
@@ -216,7 +234,7 @@
 		if (detail === 3 && !showCustomFeeInput) {
 			desiredFee = estimatedFeeRates.minimumFee ? estimatedFeeRates.minimumFee : 7;
 			showCustomFeeInput = true;
-			feeDropdownText = 'Custom fee';
+			feeDropdownText = $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' });
 		}
 
 		handleTransactionAmountChanged();
@@ -231,7 +249,7 @@
 
 		notEnoughFee = desiredFee < estimatedFeeRates.minimumFee;
 
-		if (!notEnoughFunds && !notEnoughFee && validTransactionAddress && transactionAmount > 0) {
+		if (!notEnoughFunds && !notEnoughFee && validTransactionAddress && (transactionAmount > 0 || transactionAmount === undefined)) {
 			// Convert the transaction value to satoshi
 			if (unitDropdownText === 'bitcoin') {
 				finalTransactionAmount = bitcoinsToSatoshis(transactionAmount).toNumber();
@@ -278,13 +296,11 @@
 					txOutputs: txOutputs,
 					unusedChangeAddresses: $configSelectedCurrentData.unusedChangeAddresses,
 					config: $configSelectedCurrentData.config,
+					isRBF: enableRBF,
 				});
 
 				dispatch('withdrawStepsStarted');
-				errorOverlay = false;
 				showWithdrawSteps = true;
-			} else {
-				errorOverlay = true;
 			}
 		} else {
 			notEnoughFunds = true;
@@ -296,11 +312,13 @@
 		dispatch('withdrawStepsEnded');
 		dispatch('reupdateAccountData');
 		desiredFee = 1;
+		estimatedFeeRates = { minimumFee: 1 };
 		showCustomFeeInput = false;
 		transactionAmount = undefined;
 		finalTransactionAmount = 0;
 		transactionDestinationAddress = '';
 		createdPsbt = null;
+		useAllFunds = false;
 		finalFee = 1;
 		txInputs = [];
 		txOutputs = [];
@@ -348,7 +366,7 @@
 	<div class="columns">
 		<div class="column">
 			<h3 class="title is-4">
-				Transaction details
+				{$_('withdraw.main.title', { default: 'Transaction details' })}
 				{#if $bitcoinTestnetNetwork}
 					<span class="is-size-5">(TESTNET)</span>
 				{/if}
@@ -362,11 +380,18 @@
 				<div class="card-content has-text-left">
 					{#if !$configSelectedCurrentData.config}
 						<div class="loading-container">
-							<Loading text="Loading data" />
+							<Loading text={$_('withdraw.main.loading', { default: 'Loading data' })} />
 						</div>
 					{:else}
+						<div class="tags">
+							<span class="tag has-text-weight-normal" on:click={handleSwitchRBF} title={$_('withdraw.main.rbf_title', { default: 'Replace by fee' })}
+								>RBF = <span class="ml-1 has-text-weight-semibold is-uppercase" class:has-text-success={enableRBF} class:has-text-danger={!enableRBF}
+									>{enableRBF ? $_('withdraw.main.rbf_on', { default: 'ON' }) : $_('withdraw.main.rbf_off', { default: 'OFF' })}</span
+								></span
+							>
+						</div>
 						<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">
-							Destination address
+							{$_('withdraw.main.destination_address', { default: 'Destination address' })}
 							<!-- <span class="icon is-white is-inline-block ml-3" on:click={handleInitQrCodeScanner}><img src={qrCodeScanner} /></span> -->
 							{#if invalidAddressErrorMessage}
 								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2">
@@ -390,17 +415,23 @@
 						</div>
 
 						<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">
-							Amount of
+							{$_('withdraw.main.amount', { default: 'Amount of' })}
 							<SelectionDropDown
 								dropdownText={unitDropdownText}
-								title={useAllFunds ? '' : 'Click to change the transaction unit'}
+								title={useAllFunds ? '' : $_('withdraw.main.amount_title', { default: 'Click to change the transaction unit' })}
 								options={amountUnitsChoice}
 								dropdownDisabled={craftingPSBT || useAllFunds}
 								on:dropdownSelected={handleUnitSelected}
 							/>
 
 							{#if !useAllFunds}
-								<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}>
+								<span
+									class="is-size-7"
+									title={`${$_('withdraw.main.current_value_title_1', { default: 'Current' })} ${$selectedCurrency} ${$_(
+										'withdraw.main.current_value_title_2',
+										{ default: 'value' },
+									)}`}
+								>
 									({amountConverted > 0 ? '≈' : ''}{formatNumberByThousands(
 										amountConverted,
 										unitDropdownText !== $selectedCurrency,
@@ -414,7 +445,7 @@
 
 							{#if notEnoughFunds && currentAvailableAmount !== -1}
 								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
-									>Not enough confirmed funds, please reduce desired fee or the desired amount</span
+									>{$_('withdraw.main.not_enough_funds', { default: 'Not enough confirmed funds, please reduce desired fee or the desired amount' })}</span
 								>
 							{/if}
 						</h5>
@@ -425,7 +456,11 @@
 										id="txAmount"
 										class="input"
 										type="text"
-										value={`Withdraw all funds from this ${$configSelectedCurrentData.config.quorum.totalSigners > 1 ? 'vault' : 'wallet'}`}
+										value={`${$_('withdraw.main.withdraw_all_funds', { default: 'Withdraw all funds from this' })} ${
+											$configSelectedCurrentData.config.quorum.totalSigners > 1
+												? $_('withdraw.main.vault', { default: 'vault' })
+												: $_('withdraw.main.wallet', { default: 'wallet' })
+										}`}
 										disabled
 									/>
 								{:else}
@@ -441,8 +476,8 @@
 											? satoshisToBitcoins($configSelectedCurrentData.currentBalance).toNumber()
 											: $configSelectedCurrentData.currentBalance}
 										step={unitDropdownText === $selectedCurrency ? '0.0001' : unitDropdownText === 'bitcoin' ? '0.00000001' : '1'}
-										placeholder={currentAvailableAmount === -1
-											? 'Scanning for confirmed funds'
+										placeholder={currentAvailableAmount == undefined
+											? $_('withdraw.main.scanning_for_confirmed_funds', { default: 'Scanning for confirmed funds' })
 											: $configSelectedCurrentData.currentBalance > 0
 											? (unitDropdownText === $selectedCurrency
 													? formatNumberByThousands(availableFiatAmount, true, $selectedCurrency, false, 2)
@@ -455,45 +490,75 @@
 															8,
 													  ) + ($bitcoinTestnetNetwork ? ' tBTC' : ' BTC')
 													: (currentAvailableAmount !== -1 ? currentAvailableAmount : 0) + ' sats') +
-											  (currentAvailableAmount === $configSelectedCurrentData.currentBalance || currentAvailableAmount === -1 ? '' : ' confirmed')
-											: 'No fund available'}
+											  (currentAvailableAmount === $configSelectedCurrentData.currentBalance || currentAvailableAmount == undefined ? '' : ' confirmed')
+											: $_('withdraw.main.no_fund_available', { default: 'No fund available' })}
 										bind:value={transactionAmount}
 										on:input={handleTransactionAmountChanged}
-										disabled={craftingPSBT || currentAvailableAmount === -1}
+										disabled={craftingPSBT}
 									/>
 								{/if}
 								{#if currentAvailableAmount > 0}
 									<span
 										class="is-link input-inner-text"
 										class:is-primary={useAllFunds}
-										title={useAllFunds ? 'Edit Amount' : 'Use all confirmed funds'}
+										title={useAllFunds
+											? $_('withdraw.main.edit_title', { default: 'Edit Amount' })
+											: $_('withdraw.main.max_title', { default: 'Use all confirmed funds' })}
 										on:click={handleMaximumAmount}
 									>
-										{useAllFunds ? 'EDIT' : 'MAX'}
+										{useAllFunds ? $_('withdraw.main.edit', { default: 'EDIT' }) : $_('withdraw.main.max', { default: 'MAX' })}
 									</span>
 								{/if}
 							</div>
 						</div>
 						<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">
-							Network fee
+							{$_('withdraw.main.network_fee', { default: 'Network fee' })}
 							{#if desiredFee > 421 && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2">(Insane amount, are your sure?)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
+									>({$_('withdraw.main.fee_error.insane', { default: 'Insane amount, are your sure?' })})</span
+								>
 							{:else if desiredFee > estimatedFeeRates.fastestFee + 21 && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2">(Overpaying)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
+									>({$_('withdraw.main.fee_error.overpaying', { default: 'Overpaying' })})</span
+								>
 							{:else if desiredFee >= estimatedFeeRates.fastestFee && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2">(Fast ≈ Next block)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
+									>({$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' })})</span
+								>
 							{:else if desiredFee >= estimatedFeeRates.halfHourFee && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2">(Medium ≈ 30 mins)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
+									>({$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' })})</span
+								>
 							{:else if desiredFee >= estimatedFeeRates.hourFee && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2">(Slow ≈ 1 hour)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
+									>({$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' })})</span
+								>
 							{:else if desiredFee < estimatedFeeRates.hourFee && desiredFee >= estimatedFeeRates.minimumFee && showCustomFeeInput}
-								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2">(More than 1 hours)</span>
+								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
+									>({$_('withdraw.main.fee_error.more_than', { default: 'More than' })} 1 {$_('withdraw.main.fee_error.hours', { default: 'hours' })})</span
+								>
 							{/if}
 							{#if notEnoughFee || (estimatedFeeRates.minimumFee && desiredFee < estimatedFeeRates.minimumFee) || desiredFee < 1}
 								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
-									>Fee need to be equal or more than {estimatedFeeRates.minimumFee}
-									{$bitcoinTestnetNetwork ? 't' : ''}sat{estimatedFeeRates.minimumFee > 1 ? 's' : ''} / vbyte to not be purge from the mempool</span
+									>{$_('withdraw.main.fee_error.purge_1', { default: 'Fee needs to be at least' })}
+									{estimatedFeeRates.minimumFee}
+									{$bitcoinTestnetNetwork ? 't' : ''}sat{estimatedFeeRates.minimumFee > 1 ? 's' : ''} / vbyte {$_('withdraw.main.fee_error.purge_2', {
+										default: 'to not be purge from the mempool',
+									})}</span
 								>
+								{#if !enableRBF}
+									<div
+										class="subtitle is-6 has-text-weight-normal is-danger is-family-primary custom-width"
+										data-tooltip={`${$_('withdraw.main.fee_error.purge_rbf_tooltips', {
+											default:
+												'Replace-by-fee (RBF) is a method that allows to replace an unconfirmed transaction with a the same transaction but with higher transaction fee',
+										})}.`}
+									>
+										<u>
+											{$_('withdraw.main.fee_error.purge_rbf', { default: 'Activate Replace-by-fee (RBF) so you can bump your transaction later on' })}
+										</u>
+									</div>
+								{/if}
 							{/if}
 						</h5>
 						<div class="fee-selector">
@@ -506,16 +571,16 @@
 										dropdownDisabled={craftingPSBT}
 										fullWidth
 										options={[
-											{ name: 'Slow ≈ 1 hour', selected: true },
+											{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' }), selected: true },
 											{
-												name: 'Medium ≈ 30 mins',
+												name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' }),
 												selected: false,
 											},
 											{
-												name: 'Fast ≈ Next block',
+												name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' }),
 												selected: false,
 											},
-											{ name: 'Custom fee', selected: false },
+											{ name: $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }), selected: false },
 										]}
 									/>
 								</div>
@@ -533,11 +598,10 @@
 						</div>
 						<div class="buttons is-right">
 							<Button
-								text="Preview Transaction"
-								icon={'arrowRight'}
+								text={$_('withdraw.main.preview_transaction', { default: 'Preview Transaction' })}
+								icon="arrowRight"
 								buttonClass="is-primary"
 								buttonDisabled={notEnoughFunds ||
-									notEnoughFee ||
 									!validTransactionAddress ||
 									!transactionAmount > 0 ||
 									!currentAvailableAmount > 0 ||
@@ -564,8 +628,8 @@
 		{txInputs}
 		{transactionDestinationAddress}
 		{useAllFunds}
-		txInputsTotal={txInputs.reduce((prev, cur) => {
-			return prev + cur.value;
+		txInputsTotal={txInputs.reduce((previous, current) => {
+			return previous + current.value;
 		}, 0)}
 		on:onCancelTransaction={handleTransactionCancel}
 		on:onTransactionDone={handleTransactionCompleted}
@@ -589,6 +653,24 @@
 			width: 100%;
 			max-width: 569px;
 		}
+	}
+
+	.tags {
+		position: absolute;
+		top: 2rem;
+		right: 2rem;
+
+		.tag {
+			width: 84px;
+		}
+	}
+
+	.custom-width {
+		width: 550px;
+	}
+
+	[data-tooltip]::before {
+		width: 375px;
 	}
 
 	// .icon.is-normal {

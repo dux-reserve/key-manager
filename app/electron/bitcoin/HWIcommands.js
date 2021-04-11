@@ -23,14 +23,14 @@ const execute = async command => {
 };
 
 const displayAddressOnHardWallet = async (deviceType, devicePath, bip32derivationPath, testnet) => {
-	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--testnet', 'displayaddress', bip32derivationPath]);
+	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--chain', 'test', 'displayaddress', bip32derivationPath]);
 	else return await execute(['-t', deviceType, '-d', devicePath, 'displayaddress', bip32derivationPath]);
 };
 
 const enumerateConnectedHardWallet = async () => await execute(['enumerate']);
 
 const getXPubFromHardWallet = async (deviceType, devicePath, bip32derivationPath, testnet) => {
-	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--testnet', 'getxpub', bip32derivationPath]);
+	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--chain', 'test', 'getxpub', bip32derivationPath]);
 	else return await execute(['-t', deviceType, '-d', devicePath, 'getxpub', bip32derivationPath]);
 };
 
@@ -39,7 +39,7 @@ const promptPinOnHardWallet = async (deviceType, devicePath) => await execute(['
 const sendPinToHardWallet = async (deviceType, devicePath, pin) => await execute(['-t', deviceType, '-d', devicePath, 'sendpin', pin]);
 
 const signPsbtWithHardWallet = async (deviceType, devicePath, psbt, testnet) => {
-	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--testnet', 'signtx', psbt]);
+	if (testnet) return await execute(['-t', deviceType, '-d', devicePath, '--chain', 'test', 'signtx', psbt]);
 	else return await execute(['-t', deviceType, '-d', devicePath, 'signtx', psbt]);
 };
 

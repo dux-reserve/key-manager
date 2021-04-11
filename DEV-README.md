@@ -3,7 +3,7 @@
 </p>
 
 <h3 align="center">
-  Key Manager — 0.3.0-beta
+  Key Manager — 0.4.0-beta
 </h3>
 
 
@@ -34,32 +34,32 @@ For more information see: [udev/README.md](udev/README.md)
 ```
 NODE_ENV=production
 BITCOIN_NETWORK=mainnet
-BASE_KEY=THIS_IS_NOT_FOR_PRODUCTION
 ```
 
 #### Production Testnet
 ```
 NODE_ENV=production
 BITCOIN_NETWORK=testnet
-BASE_KEY=THIS_IS_NOT_FOR_PRODUCTION
 ```
 
 #### Development Mainnet
 ```
 NODE_ENV=development
 BITCOIN_NETWORK=mainnet
-BASE_KEY=THIS_IS_NOT_FOR_PRODUCTION
 NODE_OPTIONS=--trace-warnings
 ELECTRON_ENABLE_SECURITY_WARNINGS
+ELECTRON_ENABLE_LOGGING
+ELECTRON_ENABLE_STACK_DUMPING
 ```
 
 #### Development Testnet
 ```
 NODE_ENV=development
 BITCOIN_NETWORK=testnet
-BASE_KEY=THIS_IS_NOT_FOR_PRODUCTION
 NODE_OPTIONS=--trace-warnings
 ELECTRON_ENABLE_SECURITY_WARNINGS
+ELECTRON_ENABLE_LOGGING
+ELECTRON_ENABLE_STACK_DUMPING
 ```
 
 
