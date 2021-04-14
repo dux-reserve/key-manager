@@ -66,7 +66,16 @@
 						</p>
 					</div>
 					<div class="field is-selectable">
-						<div class="label">{$_('withdraw.broadcasted.new_balance', { default: 'New balance' })}</div>
+						<div class="label">
+							{#if $applicationSettings.interfaceLanguage === 'en'}
+								{`${$_('withdraw.broadcasted.new', { default: 'new' })} ${
+									walletType === 'single' ? $_('withdraw.broadcasted.wallet', { default: 'wallet' }) : $_('withdraw.broadcasted.vault', { default: 'vault' })
+								} ${$_('withdraw.broadcasted.new_balance', { default: 'balance' })}`}
+							{:else if $applicationSettings.interfaceLanguage === 'fr'}
+								{`${$_('withdraw.broadcasted.new', { default: 'new' })} ${$_('withdraw.broadcasted.new_balance', { default: 'balance' })}`} du
+								{walletType === 'single' ? $_('withdraw.broadcasted.wallet', { default: 'wallet' }) : $_('withdraw.broadcasted.vault', { default: 'vault' })}
+							{/if}
+						</div>
 						<p class="has-text-weight-normal has-text-multiline">
 							{$applicationSettings.satoshiUnit
 								? formatNumberByThousands(currentBalanceWithdraw - finalTransactionAmount - finalFee, false, '', false, 0)

@@ -12,11 +12,13 @@
 	import ButtonDropDown from '../../components/ui/ButtonDropDown.svelte';
 	import Loading from '../../components/ui/Loading.svelte';
 	import SelectionDropDown from '../../components/ui/SelectionDropDown.svelte';
-	import WalletDetails from '../../components/config/CurrentConfigDetails.svelte';
+	import CurrentConfigDetails from '../../components/config/CurrentConfigDetails.svelte';
 	import WithdrawSteps from '../../components/withdraw/WithdrawSteps.svelte';
 
 	export let currentAvailableAmount = undefined;
 	export let currentPendingAmount = 0;
+	export let configDropdownArray = [];
+	export let configurationDropDownSelectedChoice = 0;
 
 	$: availableFiatAmount = currentAvailableAmount ? satoshisToBitcoins(currentAvailableAmount).toNumber() * $bitcoinCurrentPrices[$selectedCurrency] : 0;
 
@@ -37,9 +39,10 @@
 	let craftingPSBT = false;
 	let createdPsbt = null;
 	let desiredFee = 1;
+	let feeInterval;
 	let estimatedFeeRates = { minimumFee: 1 };
 	let estimatingFee = false;
-	let feeDropdownText = `${$_('withdraw.main.fee_dropdown.estimating', { default: 'Estimating' })}... sats / vbyte'`;
+	let feeDropdownText = `${$_('withdraw.main.fee_dropdown.estimating', { default: 'Estimating' })}... sats / vbyte`;
 	let finalFee = 1;
 	let finalTransactionAmount = 0;
 	let invalidAddressErrorMessage = '';
@@ -212,9 +215,9 @@
 
 		if (estimatedFeeRates) {
 			const names = [
-				$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' }),
-				$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' }),
-				$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' }),
+				$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' }),
+				$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' }),
+				$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' }),
 				$_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }),
 			];
 
@@ -337,11 +340,15 @@
 	};
 
 	const setIntervalEstimateFees = () => {
-		setInterval(() => {
+		feeInterval = setInterval(() => {
 			if (!craftingPSBT && !showWithdrawSteps && !estimatingFee) {
 				handleEstimateFees();
 			}
 		}, 69421);
+	};
+
+	const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
+		dispatch('dropdownSelected', detail);
 	};
 
 	onMount(async () => {
@@ -357,11 +364,17 @@
 		transactionDestinationAddress;
 		txInputs;
 		txOutputs;
+		clearInterval(feeInterval);
 	});
 </script>
 
 {#if !showWithdrawSteps}
-	<WalletDetails {currentPendingAmount} />
+	<CurrentConfigDetails
+		{currentPendingAmount}
+		{configDropdownArray}
+		{configurationDropDownSelectedChoice}
+		on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
+	/>
 
 	<div class="columns">
 		<div class="column">
@@ -502,7 +515,7 @@
 										class="is-link input-inner-text"
 										class:is-primary={useAllFunds}
 										title={useAllFunds
-											? $_('withdraw.main.edit_title', { default: 'Edit Amount' })
+											? $_('withdraw.main.edit_title', { default: 'Edit amount' })
 											: $_('withdraw.main.max_title', { default: 'Use all confirmed funds' })}
 										on:click={handleMaximumAmount}
 									>
@@ -523,15 +536,15 @@
 								>
 							{:else if desiredFee >= estimatedFeeRates.fastestFee && showCustomFeeInput}
 								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
-									>({$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' })})</span
+									>({$_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' })})</span
 								>
 							{:else if desiredFee >= estimatedFeeRates.halfHourFee && showCustomFeeInput}
 								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
-									>({$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' })})</span
+									>({$_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' })})</span
 								>
 							{:else if desiredFee >= estimatedFeeRates.hourFee && showCustomFeeInput}
 								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
-									>({$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' })})</span
+									>({$_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' })})</span
 								>
 							{:else if desiredFee < estimatedFeeRates.hourFee && desiredFee >= estimatedFeeRates.minimumFee && showCustomFeeInput}
 								<span class="subtitle is-6 has-text-weight-normal is-family-primary ml-2"
@@ -544,7 +557,7 @@
 									{estimatedFeeRates.minimumFee}
 									{$bitcoinTestnetNetwork ? 't' : ''}sat{estimatedFeeRates.minimumFee > 1 ? 's' : ''} / vbyte {$_('withdraw.main.fee_error.purge_2', {
 										default: 'to not be purge from the mempool',
-									})}</span
+									})}.</span
 								>
 								{#if !enableRBF}
 									<div
@@ -555,7 +568,7 @@
 										})}.`}
 									>
 										<u>
-											{$_('withdraw.main.fee_error.purge_rbf', { default: 'Activate Replace-by-fee (RBF) so you can bump your transaction later on' })}
+											{$_('withdraw.main.fee_error.purge_rbf', { default: 'Activate Replace-by-fee (RBF) so you can bump your transaction later on' })}.
 										</u>
 									</div>
 								{/if}
@@ -571,13 +584,13 @@
 										dropdownDisabled={craftingPSBT}
 										fullWidth
 										options={[
-											{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ≈ 1 hour' }), selected: true },
+											{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' }), selected: true },
 											{
-												name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ≈ 30 mins' }),
+												name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' }),
 												selected: false,
 											},
 											{
-												name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ≈ Next block' }),
+												name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' }),
 												selected: false,
 											},
 											{ name: $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }), selected: false },
@@ -666,7 +679,7 @@
 	}
 
 	.custom-width {
-		width: 550px;
+		width: 555px;
 	}
 
 	[data-tooltip]::before {

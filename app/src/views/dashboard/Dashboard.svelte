@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import dayjs from 'dayjs';
 	import { location, querystring, replace } from 'svelte-spa-router';
@@ -10,6 +10,8 @@
 		bitcoinMarketData,
 		bitcoinNetworkBlockHeight,
 		bitcoinTestnetNetwork,
+		chartLogarithmic,
+		chartTimeScale,
 		configData,
 		configsCurrentDataVaultsArray,
 		configsCurrentDataWalletsArray,
@@ -18,6 +20,7 @@
 		saveData,
 		selectedCurrency,
 		timeNow,
+		withCustomUserPassword,
 	} from '../../store';
 	import { formatNumberByThousands, isObjectEmpty, isAudioPlaying, satoshisToBitcoins, timer } from '../../utils/helpers';
 
@@ -50,11 +53,14 @@
 	let navigatorOnline = navigator.onLine;
 
 	let accountDataLoaded = false;
+	let dashboardLoaded = false;
 	let allArray = [];
 	let allArrayForChangePage = [];
 	let allConfigArray = [];
 	let allPendingAmount = [];
 	let configDropdownArray = [];
+	let accountDataInterval;
+	let bitcoinPriceDataInterval;
 	let configurationDropDownSelectedChoice = 0;
 	let currentAvailableAmount = undefined;
 	let currentPendingAmount = 0;
@@ -76,10 +82,31 @@
 		hideTopActionForWithdraw = false;
 	}
 
+	// TODO: preselect dropdown
 	$: if (newAdded && $querystring.includes('updatedconfig=true')) {
 		newAdded = false;
+
+		filterNetworkConfigData();
+		handleConfigDropdown();
+		updateCurrentAccountData();
+
 		replace('/dashboard');
 	}
+
+	const handleConfigDropdown = () => {
+		configDropdownArray = [];
+
+		for (let i = 0; i <= $currentNetworkConfigData.vaults.length - 1; i++) {
+			configDropdownArray.push({ name: $currentNetworkConfigData.vaults[i].name, selected: i === configurationDropDownSelectedChoice });
+		}
+
+		for (let i = 0; i <= $currentNetworkConfigData.wallets.length - 1; i++) {
+			configDropdownArray.push({
+				name: $currentNetworkConfigData.wallets[i].name,
+				selected: i === configurationDropDownSelectedChoice - $currentNetworkConfigData.vaults.length,
+			});
+		}
+	};
 
 	const handleAllPendingAmount = () => {
 		allPendingAmount = [];
@@ -108,14 +135,19 @@
 
 	const handleChangePage = link => {
 		if (!hideTopActionForWithdraw) {
-			if (link.includes('id=') && link.split('id=')[1] !== $querystring.split('id=')[1]) {
+			if ((link.includes('id=') && link.split('id=')[1] !== $querystring.split('id=')[1]) || link === 'dropdownChange') {
 				currentAvailableAmount = undefined;
 				allConfigArray = [...$currentNetworkConfigData.vaults, ...$currentNetworkConfigData.wallets];
-				configurationDropDownSelectedChoice = allConfigArray.findIndex(config => config.id === link.split('id=')[1]);
+				if (link !== 'dropdownChange') {
+					configurationDropDownSelectedChoice = allConfigArray.findIndex(config => config.id === link.split('id=')[1]);
+				}
+
 				$configSelectedCurrentData = !isObjectEmpty(allArrayForChangePage[configurationDropDownSelectedChoice])
 					? allArrayForChangePage[configurationDropDownSelectedChoice]
 					: !isObjectEmpty(allArray[configurationDropDownSelectedChoice])
 					? allArray[configurationDropDownSelectedChoice]
+					: allConfigArray[configurationDropDownSelectedChoice]
+					? allConfigArray[configurationDropDownSelectedChoice]
 					: {};
 
 				if ($configSelectedCurrentData.availableUtxos && accountDataLoaded) {
@@ -139,7 +171,7 @@
 				if (forcedWalletType !== link.split('creationtype=')[1]) {
 					showAlertCreation = true;
 				}
-			} else {
+			} else if (link !== 'dropdownChange') {
 				if (link.includes('creationtype=')) {
 					forcedStep = 1;
 					forcedWalletType = link.split('creationtype=')[1];
@@ -389,17 +421,15 @@
 				const configDatafromFile = await window.api.ipcRenderer.invoke('config-data:read-file');
 
 				if ($bitcoinTestnetNetwork === configDatafromFile.testnet) {
+					refreshingAccountData = true;
 					$configsCurrentDataVaultsArray = configDatafromFile.config_data_vault;
 					$configsCurrentDataWalletsArray = configDatafromFile.config_data_wallet;
 
+					allConfigArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
+					allArrayForChangePage = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
+
 					$configSelectedCurrentData = allConfigArray[configurationDropDownSelectedChoice];
 
-					accountDataLoaded = true;
-
-					filterNetworkConfigData();
-
-					allConfigArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
-					allArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
 					handleAllPendingAmount();
 					calculatedTotalAmount();
 				}
@@ -429,7 +459,7 @@
 
 	const updateCurrentAccountData = async (notification = true, filterNetwork = true) => {
 		try {
-			if (navigatorOnline && !configFileChanging) {
+			if (navigatorOnline && !configFileChanging && dashboardLoaded) {
 				getNetworkBlockHeight();
 
 				if (filterNetwork) {
@@ -471,7 +501,7 @@
 
 				const currentOldConfig = $configSelectedCurrentData;
 
-				if ($configSelectedCurrentData.availableUtxos && (!accountDataLoaded || currentOldConfig !== $configSelectedCurrentData)) {
+				if ((!accountDataLoaded || currentOldConfig !== $configSelectedCurrentData) && $configSelectedCurrentData.availableUtxos) {
 					let currentAvailableAmountCopy = 0;
 					for (let i = 0; i < $configSelectedCurrentData.availableUtxos.length; i++) {
 						if (
@@ -490,12 +520,15 @@
 		} catch (error) {
 			console.log('Error on updating account data', error);
 			await timer(6666);
-			await updateCurrentAccountData();
+			if (dashboardLoaded) {
+				await updateCurrentAccountData();
+			}
 		} finally {
 			accountDataLoaded = true;
 			handleAllPendingAmount();
 			calculatedTotalAmount();
-			// handleSaveCurrentNetworkConfigLocally();
+			handleSaveCurrentNetworkConfigLocally();
+			refreshingAccountData = false;
 		}
 	};
 
@@ -588,16 +621,20 @@
 		refreshingAccountData = true;
 		handleSyncPriceData();
 
-		await updateCurrentAccountData();
+		if (accountDataLoaded) {
+			await updateCurrentAccountData();
+		}
+
 		setTimeout(() => {
 			refreshingAccountData = false;
 		}, 333);
 	};
 
 	const setIntervalAccountData = () => {
-		setInterval(async () => {
+		accountDataInterval = setInterval(async () => {
 			if ($applicationSettings.autoRefresh && navigatorOnline && accountDataLoaded && !isUpdating && !refreshingAccountData && !hideTopActionForWithdraw) {
 				accountDataLoaded = false;
+
 				await updateCurrentAccountData();
 			}
 		}, 60001);
@@ -619,13 +656,65 @@
 	};
 
 	const setIntervalHistoricalBitcoinPrice = () => {
-		setInterval(() => {
+		bitcoinPriceDataInterval = setInterval(() => {
 			handleSyncPriceData();
 		}, 60421); //  rate limits with up to 100 requests/minute but only refresh every 60 secondes
 	};
 
 	const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
 		configurationDropDownSelectedChoice = detail;
+		handleChangePage('dropdownChange');
+	};
+
+	const handleResetApp = () => {
+		dashboardLoaded = false;
+		clearInterval(accountDataInterval);
+		clearInterval(bitcoinPriceDataInterval);
+
+		$configData = {};
+		$configsCurrentDataWalletsArray = [];
+		$configsCurrentDataVaultsArray = [];
+		$configSelectedCurrentData = {};
+		$currentNetworkConfigData = {};
+		$withCustomUserPassword = false;
+		$bitcoinChartArrayData = [];
+		$bitcoinCurrentPrices = {};
+		$selectedCurrency = 'USD';
+		$bitcoinMarketData = {};
+		$bitcoinNetworkBlockHeight = 0;
+		$chartTimeScale = '186';
+		$chartLogarithmic = false;
+		$bitcoinTestnetNetwork = process.env.BITCOIN_NETWORK === 'testnet' ? true : false;
+		$timeNow = {};
+		$applicationSettings = {
+			advancedUserInterface: false,
+			askForPasswordAfterSleep: true,
+			autoRefresh: true,
+			autoRefreshTimeout: 60000,
+			darkTheme: false,
+			disabledAnimation: false,
+			discreetMode: false,
+			dontShowReuseAddressesAlert: false,
+			interfaceLanguage: 'en',
+			keepLocalData: true,
+			keepLocalEncryptedConfig: true,
+			notification: true,
+			notificationBlockfound: false,
+			notificationIncognito: false,
+			notificationReceive: true,
+			notificationReceiveConfirm: true,
+			notificationSound: true,
+			notificationWithdrawConfirm: true,
+			refreshDelay: true,
+			satoshiUnit: false,
+			showTooltips: true,
+			sleepInterface: true,
+			sleepMillisecondTimeout: 900000,
+			verifyForUpdate: true,
+			verifyForUpdateNotification: true,
+		};
+
+		replace('/');
 	};
 
 	filterNetworkConfigData();
@@ -640,15 +729,9 @@
 			navigatorOnline = false;
 		});
 
-		// if ($configsCurrentDataVaultsArray.length > 1) {
-		// 	allArray = [...$configsCurrentDataVaultsArray];
-		// }
+		dashboardLoaded = true;
 
-		// if ($configsCurrentDataWalletsArray.length > 1) {
-		// 	allArray = [...allArray, ...$configsCurrentDataWalletsArray];
-		// }
-
-		// calculatedTotalAmount();
+		handleConfigDropdown();
 
 		if (navigatorOnline) {
 			getCurrentBitcoinPrices();
@@ -658,7 +741,7 @@
 			getNetworkBlockHeight();
 		}
 
-		// await checkForCurrentNetworkLocalConfigFile();
+		await checkForCurrentNetworkLocalConfigFile();
 		// console.time('First');
 		await updateCurrentAccountData(false, true);
 		// console.timeEnd('First');
@@ -667,6 +750,12 @@
 		setIntervalHistoricalBitcoinPrice();
 
 		handleSyncPriceData();
+	});
+
+	onDestroy(() => {
+		dashboardLoaded = false;
+		clearInterval(accountDataInterval);
+		clearInterval(bitcoinPriceDataInterval);
 	});
 </script>
 
@@ -705,7 +794,7 @@
 		</li>
 
 		<li>
-			<a class="is-disabled" title="Subscribe to our newsletter for updates or follow us on twitter">
+			<a class="is-disabled" title={$_('dashboard.menu.button_buy_sell_title', { default: 'Subscribe to our newsletter for updates or follow us on twitter' })}>
 				<span class="icon is-small has-no-hover is-grey bitcoin-icon"><img src={bitcoinLetter} alt="icon" /></span>{$_('dashboard.menu.buy', {
 					default: 'Buy',
 				})}
@@ -790,7 +879,20 @@
 			{:else if $location === '/dashboard' && $querystring.includes('view=transactions')}
 				<div class="column is-9">
 					<h3 class="title is-3 is-capitalized">
-						{allConfigArray.length >= 1 ? allConfigArray[configurationDropDownSelectedChoice].name : ''}
+						{#if configDropdownArray.length <= 1}
+							{configDropdownArray.length <= 1 && configDropdownArray[configurationDropDownSelectedChoice]
+								? configDropdownArray[configurationDropDownSelectedChoice].name
+								: ''}
+						{:else if configDropdownArray.length >= 2 && configDropdownArray[configurationDropDownSelectedChoice] && configDropdownArray[configurationDropDownSelectedChoice].name}
+							<SelectionDropDown
+								dropdownText={configDropdownArray[configurationDropDownSelectedChoice].name}
+								dropdownClass={'is-primary'}
+								on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
+								options={configDropdownArray}
+							/>
+						{:else}
+							...
+						{/if}
 					</h3>
 				</div>
 			{:else if $location === '/dashboard' && $querystring.includes('view=settings')}
@@ -814,7 +916,7 @@
 			{#if $querystring.includes('view=settings')}
 				<div class="column">
 					<div class="buttons is-right">
-						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>{$_('settings.version', { default: 'Version' })}:</b> 0.4.0-beta</h6>
+						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>{$_('settings.version', { default: 'Version' })}:</b> 0.4.1-beta</h6>
 					</div>
 				</div>
 			{/if}
@@ -824,11 +926,19 @@
 	{#if $location === '/dashboard' && $querystring === ''}
 		<Welcome {totalCurrentBalance} on:changeCurrentConfigFile={handleChangeCurrentConfigFile} {allPendingAmount} {totalCurrentPendingAmount} />
 	{:else if $location === '/dashboard' && $querystring === 'view=deposit'}
-		<Deposit {currentPendingAmount} on:changeCurrentConfigFile={handleChangeCurrentConfigFile} />
+		<Deposit
+			{configDropdownArray}
+			{configurationDropDownSelectedChoice}
+			{currentPendingAmount}
+			on:changeCurrentConfigFile={handleChangeCurrentConfigFile}
+			on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
+		/>
 	{:else if $location === '/dashboard' && $querystring === 'view=widthdraw'}
 		<Withdraw
-			{currentPendingAmount}
+			{configDropdownArray}
+			{configurationDropDownSelectedChoice}
 			{currentAvailableAmount}
+			{currentPendingAmount}
 			on:reupdateAccountData={reupdateCurrentAccountData}
 			on:withdrawStepsStarted={() => {
 				hideTopActionForWithdraw = true;
@@ -837,6 +947,7 @@
 				hideTopActionForWithdraw = false;
 			}}
 			on:changeCurrentConfigFile={handleChangeCurrentConfigFile}
+			on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
 		/>
 	{:else if $location === '/dashboard' && $querystring.includes('view=transactions')}
 		<Transactions {currentPendingAmount} {endShowLoadingTransaction} on:reupdateAccountData={reupdateCurrentAccountData} />
@@ -845,6 +956,7 @@
 			on:configFileChanged={handleConfigFileChanged}
 			on:currencyChanged={handleCurrencyChangedUpdateBitcoinData}
 			on:networkChanged={handleNetworkChange}
+			on:resetApp={handleResetApp}
 		/>
 	{:else if $location === '/dashboard' && $querystring.includes('view=newCreation')}
 		<Creation step={forcedStep} walletType={forcedWalletType} on:showAlertCreation={handleShowAlertCreation} newAdded />
@@ -881,7 +993,9 @@
 
 {#if showAlertCreation}
 	<Overlay
-		title={`${$_('dashboard.overlay.alert_creation.title_1', { default: 'Cancel this' })} ${forcedWalletType === 'single' ? 'wallet' : 'vault'}?`}
+		title={`${$_('dashboard.overlay.alert_creation.title_1', { default: 'Cancel this' })} ${forcedWalletType === 'single' ? 'wallet' : 'vault'}${
+			$applicationSettings.interfaceLanguage === 'fr' ? ' ' : ''
+		}?`}
 		subtitle={`${$_('dashboard.overlay.alert_creation.subtitle_your', { default: 'Your' })} ${
 			forcedWalletType === 'single'
 				? $_('dashboard.overlay.alert_creation.wallet', { default: 'wallet' })
@@ -898,7 +1012,7 @@
 				default: 'It will not be saved and you will have to start over',
 			})}.
 		</p>
-		<p class="mb-5">Are you sure you want to continue?</p>
+		<p class="mb-5">{$_('dashboard.overlay.alert_creation.paragraph_2', { default: 'Are you sure you want to continue' })}</p>
 		<div class="buttons is-centered mt-6">
 			<Button
 				text={$_('dashboard.overlay.alert_creation.button_continue', { default: 'Continue' })}

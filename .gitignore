@@ -48,6 +48,9 @@ yarn-error.log*
 duxreserve-config*.*
 duxreserve-config
 
+# Bitcoin PSBT file
+*.psbt
+
 ## ! Exception ! ##
 # VSCodium/VSCode Assets
 !.vscode/extensions.json

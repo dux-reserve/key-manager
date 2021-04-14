@@ -276,7 +276,7 @@
 	const initScanning = async () => {
 		$disableNetworkQuickSettings = true;
 		await timer(1111);
-		for (let i = 0; i <= 30; i++) {
+		for (let i = 0; i <= 120; i++) {
 			if (!deviceScanning) break;
 			await enumerate();
 			if (scannedDevices.length >= 1) {
@@ -303,13 +303,13 @@
 					}
 				}
 			}
-			if (i > 10 && scannedDevices.length >= 1 && deviceScanning) {
+			if (i > 20 && scannedDevices.length >= 1 && deviceScanning) {
 				scannedWalletData = { ...scannedDevices[scannedDevices.length - 1] };
 				handleScanningStop();
 				wrongDeviceDetected = true;
 				break;
 			}
-			if (i === 30) handleScanningStop();
+			if (i === 120) handleScanningStop();
 			await timer(1000);
 		}
 	};
@@ -320,7 +320,7 @@
 		exportingInProgress = true;
 		$disableNetworkQuickSettings = true;
 		await timer(1000);
-		for (let i = 0; i <= 30; i++) {
+		for (let i = 0; i <= 120; i++) {
 			if (!deviceScanning) break;
 			await enumerate();
 			if (scannedDevices.length >= 1) {
@@ -345,13 +345,13 @@
 					}
 				}
 			}
-			if (i > 10 && scannedDevices.length >= 1) {
+			if (i > 20 && scannedDevices.length >= 1) {
 				scannedWalletData = { ...scannedDevices[scannedDevices.length - 1] };
 				handleScanningStop();
 				wrongDeviceDetected = true;
 				break;
 			}
-			if (i === 30) handleScanningStop();
+			if (i === 120) handleScanningStop();
 			await timer(1000);
 		}
 	};
@@ -506,8 +506,8 @@
 				deviceScanning = true;
 				$disableNetworkQuickSettings = true;
 				await timer(1000);
-				for (let i = 0; i <= 20; i++) {
-					if (i === 60) {
+				for (let i = 0; i <= 120; i++) {
+					if (i === 120) {
 						handleScanningStop();
 						handleCancelExtraction();
 					}
@@ -695,7 +695,6 @@
 			showMicroSDModel = false;
 			handleResetWalletData();
 			step = 5;
-			handleRetryExtraction();
 		}
 	};
 
@@ -714,6 +713,7 @@
 			importedDevices = [];
 			importedDevicesMirror = [];
 			$disableNetworkQuickSettings = false;
+			configName = '';
 			handleResetWalletData();
 			step = 2;
 		} else if (walletType === 'multi') {
@@ -728,6 +728,7 @@
 				importedDevicesMirror = [];
 				vaultCompletedKeys = 0;
 				$disableNetworkQuickSettings = false;
+				configName = '';
 				handleResetWalletData();
 				step = 1;
 			} else if (step === 7) {
@@ -736,6 +737,7 @@
 				vaultCompletedKeys = 0;
 				$disableNetworkQuickSettings = false;
 				handleResetWalletData();
+				configName = '';
 				step = 1;
 			}
 		}
@@ -996,7 +998,7 @@
 				{:else if step === 5}
 					<h1 class="title has-subtitle-margin">
 						{$_('creation.confirm_config.headline_your', { default: 'Your' })}
-						{$_('creation.confirm_config.vault', { default: 'vault' })}
+						{$_('creation.confirm_config.headline_wallet', { default: 'wallet' })}
 						{$_('creation.confirm_config.headline_single', { default: 'is now created' })}
 					</h1>
 					<p class="subtitle is-5">{$_('creation.confirm_config.subtitle_single', { default: 'Just one last thing before you’re done' })}</p>
@@ -1012,9 +1014,9 @@
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
-							{$_('creation.extraction.vault', { default: 'vault' })}
+							{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 						{:else if $applicationSettings.interfaceLanguage === 'fr'}
-							{$_('creation.extraction.vault', { default: 'vault' })}
+							{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
@@ -1029,9 +1031,9 @@
 								{requiredSigners}
 								{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 								{totalSigners}
-								{$_('creation.extraction.vault', { default: 'vault' })}
+								{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 							{:else if $applicationSettings.interfaceLanguage === 'fr'}
-								{$_('creation.extraction.vault', { default: 'vault' })}
+								{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 								{requiredSigners}
 								{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 								{totalSigners}
@@ -1051,15 +1053,15 @@
 								{requiredSigners}
 								{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 								{totalSigners}
-								{$_('creation.extraction.vault', { default: 'vault' })}
+								{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 								{$_('creation.extraction.subtitle_multi_2_vault_ready', { default: 'is ready' })}
 							{:else if $applicationSettings.interfaceLanguage === 'fr'}
-								{$_('creation.extraction.vault', { default: 'vault' })}
+								{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 								{requiredSigners}
 								{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 								{totalSigners}
 								{$_('creation.extraction.subtitle_multi_2_vault_ready', { default: 'is ready' })}
-							{/if}!
+							{/if}
 						</h1>
 						<p class="subtitle is-5">{$_('creation.extraction.review_details', { default: 'Review details' })}</p>
 					{/if}
@@ -1070,10 +1072,10 @@
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
-							{$_('creation.extraction.vault', { default: 'vault' })}
+							{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 						{:else if $applicationSettings.interfaceLanguage === 'fr'}
 							{$_('creation.extraction.subtitle_multi_2_your', { default: 'Your' })}
-							{$_('creation.extraction.vault', { default: 'vault' })}
+							{$_('creation.extraction.subtitle_multi_2_vault', { default: 'vault' })}
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
@@ -1091,12 +1093,12 @@
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
-							{$_('creation.confirm_config.vault', { default: 'vault' })}
-							{$_('creation.confirm_config.vault', { default: 'is now complete' })}
+							{$_('creation.confirm_config.headline_vault', { default: 'vault' })}
+							{$_('creation.confirm_config.headline_multi_completed', { default: 'is now complete' })}
 							{$_('creation.extraction.vault', { default: 'vault' })}
 						{:else if $applicationSettings.interfaceLanguage === 'fr'}
 							{$_('creation.extraction.subtitle_multi_2_your', { default: 'Your' })}
-							{$_('creation.confirm_config.vault', { default: 'vault' })}
+							{$_('creation.confirm_config.headline_vault', { default: 'vault' })}
 							{requiredSigners}
 							{$_('creation.extraction.subtitle_multi_2_of', { default: 'of' })}
 							{totalSigners}
@@ -1282,7 +1284,7 @@
 				{:else if (step === 3 || step === 4) && !showMicroSDModel}
 					<Button
 						text={$_('creation.buttons.confirm_wallet', { default: 'Confirm your wallet' })}
-						title={extractedXpub ? $_('creation.buttons.confirm_wallet_title', { default: 'Please wait for the extraction to be completed' }) : ''}
+						title={extractedXpub ? '' : $_('creation.buttons.confirm_wallet_title', { default: 'Please wait for the extraction to be completed' })}
 						buttonClass="is-primary"
 						icon="arrowRight"
 						on:buttonClicked={confirmSingleWallet}
@@ -1375,7 +1377,7 @@
 			</div>
 		</Overlay>
 	{:else if walletType === 'multi' && vaultCompletedKeys >= 1}
-		<Overlay title="Vault was not created just yet" titleIsLeft disableClosing>
+		<Overlay title={$_('creation.overlay.cancel_confirmation.title_vault', { default: 'Vault was not created just yet' })} titleIsLeft disableClosing>
 			<p class="mt-2 mb-6">
 				{$_('creation.overlay.cancel_confirmation.paragraph_vault_1', { default: 'Are you sure you want to cancel? Your current vault will not be saved' })}.<br
 				/>{$_('creation.overlay.cancel_confirmation.paragraph_vault_2', { default: 'You will have to add your hardware devices all over again' })}.
@@ -1394,7 +1396,7 @@
 			</div>
 		</Overlay>
 	{:else}
-		<Overlay title="Wallet was not created just yet" titleIsLeft disableClosing>
+		<Overlay title={$_('creation.overlay.cancel_confirmation.title_wallet', { default: 'Wallet was not created just yet' })} titleIsLeft disableClosing>
 			<p class="mt-2 mb-6">
 				{$_('creation.overlay.cancel_confirmation.paragraph_wallet_1', {
 					default: 'Are you sure you want to cancel? You will have to add another hardware device once again',
@@ -1681,7 +1683,7 @@
 		</div>
 	</OverlayV2>
 {/if}
-<!-- {$_('creation.overlay.config_file.title_hardware_device', { default: 'Hardware' })} -->
+
 {#if showConfigFileOverlay}
 	<Overlay
 		title={exportingDone
@@ -1695,33 +1697,33 @@
 	>
 		<div class="overlay-configfile">
 			{#if exportingDone}
-				<p class="mt-3 mb-2">
+				<p class="mt-3 mb-2 has-text-justified">
 					{$_('creation.overlay.config_file.paragraph_done', {
 						default:
 							"It's important to store your config file in a secure place with your key backups, for instance. It doesn't hold any private key, but is enough to give access to all account balances and transaction history",
 					})}.
 				</p>
 			{:else if newAdded}
-				<p class="mt-3 mb-2">
+				<p class="mt-3 mb-2 has-text-justified">
 					{$_('creation.overlay.config_file.paragraph_new_added_1', {
 						default:
 							"It's important to store your config file in a secure place with your key backups, for instance. It doesn't hold any private key, but is enough to give access to all account balances and transaction history. Your config file was updated with your new vault. Make sure that you download and securely  store your updated config file, which includes details from your previous setup with the new wallet or vault that you have just created",
 					})}.
 				</p>
-				<p class="mt-3 mb-2">
+				<p class="mt-3 mb-2 has-text-justified">
 					{$_('creation.overlay.config_file.paragraph_new_added_2', {
 						default:
 							'No account will be created with Dux Reserve for now, which means that you are 100% responsible for taking care of your config file. We do not keep any copy of it. For now, you will have to upload this file anytime you want to access your wallet(s) or vault(s)',
 					})}.
 				</p>
 			{:else}
-				<p class="mt-3 mb-2">
+				<p class="mt-3 mb-2 has-text-justified">
 					{$_('creation.overlay.config_file.paragraph_new_1', {
 						default:
 							"It's important to store your config file in a secure place with your key backups, for instance. It doesn't hold any private key, but is enough to give access to all account balances and transaction history",
 					})}.
 				</p>
-				<p class="mt-3 mb-2">
+				<p class="mt-3 mb-2 has-text-justified">
 					{$_('creation.overlay.config_file.paragraph_new_2_1', { default: 'You are only exporting your' })}
 					{walletType === 'single'
 						? $_('creation.overlay.config_file.wallet', { default: 'wallet' })

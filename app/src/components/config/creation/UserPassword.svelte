@@ -45,7 +45,7 @@
 			id: 4,
 			value: 'Strong',
 			minDiversity: 3,
-			minLength: 12,
+			minLength: 14,
 		},
 	];
 
@@ -144,7 +144,7 @@
 							<p class="mb-5">
 								{$_('creation.user_password.paragraph_confirm_password', {
 									default:
-										'Keep your Password safe. If you lose it, you will have to reset the Dux app and add your accounts all over again. It does not affect your bitcoin holdings.',
+										'If you lose it, you will have to reset the Dux app and add your accounts all over again. It does not affect your bitcoin holdings.',
 								})}
 							</p>
 						</div>
@@ -202,7 +202,7 @@
 							<p class="mb-5">
 								{$_('creation.user_password.paragraph_new_password', {
 									default:
-										'Keep your Password safe. If you lose it, you will have to reset the Dux app and add your accounts all over again. It does not affect your bitcoin holdings.',
+										'If you lose it, you will have to reset the Dux app and add your accounts all over again. It does not affect your bitcoin holdings.',
 								})}
 							</p>
 						</div>
@@ -214,7 +214,7 @@
 											>{$_('creation.user_password.enter_password', { default: 'Enter your Password' })}
 											{#if passwordTooWeak}
 												<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
-													>{$_('creation.user_password.weak_password', { default: 'Minimum of 4 characters.' })}</span
+													>{$_('creation.user_password.weak_password', { default: 'Minimum of 4 characters' })}</span
 												>
 											{/if}</label
 										>

@@ -1,16 +1,19 @@
 <script>
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import dayjs from 'dayjs';
 	import { applicationSettings, bitcoinCurrentPrices, bitcoinTestnetNetwork, configSelectedCurrentData, selectedCurrency } from '../../store';
-	import { formatNumberByThousands, satoshisToBitcoins } from '../../utils/helpers';
+	import { formatNumberByThousands, satoshisToBitcoins, isObjectEmpty } from '../../utils/helpers';
 	import Button from '../../components/ui/Button.svelte';
 	import SelectionDropDown from '../../components/ui/SelectionDropDown.svelte';
 
 	export let currentPendingAmount = 0;
 	export let dontshowWalletName = false;
 	export let showActionButtons = false;
-	// export let configDropdownArray = [];
+	export let configDropdownArray = [];
+	export let configurationDropDownSelectedChoice = 0;
+
+	const dispatch = createEventDispatcher();
 
 	const keyIcon = './img/icons/ui/single-key.svg';
 	const vaultIcon = './img/icons/ui/vault.svg';
@@ -18,8 +21,15 @@
 
 	let lastHealthCheckTime = [];
 	let currentConfigLoaded = false;
+	let healthCheckInterval;
 
-	$: if (!currentConfigLoaded && $configSelectedCurrentData && $configSelectedCurrentData.config) {
+	$: if (
+		!currentConfigLoaded &&
+		!isObjectEmpty($configSelectedCurrentData) &&
+		!isObjectEmpty($configSelectedCurrentData.config) &&
+		$configSelectedCurrentData &&
+		$configSelectedCurrentData.config
+	) {
 		calculateLastHealthCheck();
 		currentConfigLoaded = true;
 	}
@@ -33,23 +43,28 @@
 					months: dayjs().diff(extendedPublicKey.lastHealthCheck, 'month'),
 				});
 			}
+			console.log('extendedPublicKey', extendedPublicKey);
 		});
 	};
 
 	const setIntervalCalculateLastHealthCheck = () => {
-		setInterval(() => {
+		healthCheckInterval = setInterval(() => {
 			if ($configSelectedCurrentData && $configSelectedCurrentData.config) {
 				calculateLastHealthCheck();
 			}
 		}, 60001);
 	};
 
-	// const handleConfigReselected = ({ detail }) => {
-	// 	console.log('details', detail);
-	// };
+	const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
+		dispatch('dropdownSelected', detail);
+	};
 
 	onMount(() => {
 		setIntervalCalculateLastHealthCheck();
+	});
+
+	onDestroy(() => {
+		clearInterval(healthCheckInterval);
 	});
 </script>
 
@@ -63,7 +78,20 @@
 							class="title is-4-custom has-smaller-margin is-capitalized skeleton-block skeleton-title skeleton-small"
 							class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name}
 						>
-							{$configSelectedCurrentData ? $configSelectedCurrentData.name : ''}
+							{#if configDropdownArray.length <= 1}
+								{configDropdownArray.length <= 1 && configDropdownArray[configurationDropDownSelectedChoice]
+									? configDropdownArray[configurationDropDownSelectedChoice].name
+									: ''}
+							{:else if configDropdownArray.length >= 2 && configDropdownArray[configurationDropDownSelectedChoice] && configDropdownArray[configurationDropDownSelectedChoice].name}
+								<SelectionDropDown
+									dropdownText={configDropdownArray[configurationDropDownSelectedChoice].name}
+									dropdownClass={'is-primary'}
+									on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
+									options={configDropdownArray}
+								/>
+							{:else}
+								...
+							{/if}
 						</h2>
 						<h3 class="subtitle is-6 has-text-weight-normal is-family-primary is-vertical-center">
 							{#if $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners >= 2}
@@ -190,39 +218,45 @@
 						{$_('dashboard.current_config_details.last_check', { default: 'Last checked' })}
 					</h6>
 				</div>
-				{#if $configSelectedCurrentData && $configSelectedCurrentData.config && lastHealthCheckTime.length >= 1}
+				{#if !isObjectEmpty($configSelectedCurrentData) && !isObjectEmpty($configSelectedCurrentData.config) && $configSelectedCurrentData && $configSelectedCurrentData.config && lastHealthCheckTime.length >= 1}
 					{#each $configSelectedCurrentData.config.extendedPublicKeys as { device }, i}
 						<div class="key skeleton-block" class:skeleton={!$configSelectedCurrentData.config}>
 							<span class="icon is-prussian-blue has-no-hover mr-4"><img src={keyIcon} alt="Key" /></span>
 							<p class="is-size-6 has-text-left is-capitalized ">
 								{device.model.replaceAll('_', ' ')} <span class="is-uppercase">({device.fingerprint})</span>
 							</p>
-							{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].months > 1}
+							{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].months && lastHealthCheckTime[i].months > 1}
 								<p class="is-size-6-custom has-text-right">
-									<span class:has-text-danger={lastHealthCheckTime[i].months >= 12}>
+									<span class:has-text-danger={lastHealthCheckTime[i] && lastHealthCheckTime[i].months && lastHealthCheckTime[i].months >= 12}>
 										{lastHealthCheckTime[i].months}
-										{$_('dashboard.current_config_details.month', { default: 'Month' })}{lastHealthCheckTime[i].months >= 1 &&
+										{$_('dashboard.current_config_details.month', { default: 'Month' })}{lastHealthCheckTime[i] &&
+										lastHealthCheckTime[i].months &&
+										lastHealthCheckTime[i].months >= 1 &&
 										$applicationSettings.interfaceLanguage !== 'fr'
 											? 's'
 											: ''}
 										{$_('dashboard.current_config_details.ago', { default: 'ago' })}
 									</span>
 								</p>
-							{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].week > 1}
+							{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].week && lastHealthCheckTime[i].week > 1}
 								<p class="is-size-6-custom has-text-right">
 									{lastHealthCheckTime[i].week}
-									{$_('dashboard.current_config_details.week', { default: 'Week' })}{lastHealthCheckTime[i].week > 1 ? 's' : ''}
+									{$_('dashboard.current_config_details.week', { default: 'Week' })}{lastHealthCheckTime[i] &&
+									lastHealthCheckTime[i].week &&
+									lastHealthCheckTime[i].week > 1
+										? 's'
+										: ''}
 									{$_('dashboard.current_config_details.ago', { default: 'ago' })}
 								</p>
 							{:else}
 								<p class="is-size-6-custom has-text-right">
-									{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day === 0}
+									{#if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day && lastHealthCheckTime[i].day === 0}
 										<span class="has-text-success">Today</span>
-									{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day === 1}Yesterday{:else}{lastHealthCheckTime.length >=
+									{:else if lastHealthCheckTime.length >= 1 && lastHealthCheckTime[i] && lastHealthCheckTime[i].day && lastHealthCheckTime[i].day === 1}Yesterday{:else}{lastHealthCheckTime.length >=
 											1 && lastHealthCheckTime[i]
 											? lastHealthCheckTime[i].day
 											: ''}
-										{$_('dashboard.current_config_details.days', { default: 'days ago' })}{lastHealthCheckTime[i].week > 1 ? 's' : ''}{/if}
+										{$_('dashboard.current_config_details.days', { default: 'days ago' })}{/if}
 								</p>
 							{/if}
 						</div>

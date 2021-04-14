@@ -188,7 +188,9 @@
 			<label class="label" for="Password"
 				>{$_('settings.overlay.change_password.enter_new_password', { default: 'Enter your new password' })}
 				{#if passwordTooWeak}
-					<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2">Minimum of 4 characters.</span>
+					<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
+						>{$_('settings.overlay.change_password.password_minimum', { default: 'Minimum of 4 characters' })}</span
+					>
 				{/if}
 			</label>
 

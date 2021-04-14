@@ -32,7 +32,7 @@
 				{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
 				<span
 					class="is-size-7"
-					title={`{${$_('withdraw.min_preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.min_preview.value', {
+					title={`${$_('withdraw.min_preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.min_preview.value', {
 						default: 'value',
 					})}`}
 				>
@@ -56,7 +56,7 @@
 					{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
 					<span
 						class="is-size-7"
-						title={`{${$_('withdraw.min_preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.min_preview.value', {
+						title={`${$_('withdraw.min_preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.min_preview.value', {
 							default: 'value',
 						})}`}
 						>(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalFee), true, $selectedCurrency)}
@@ -72,11 +72,11 @@
 				<div class="label">
 					{$_('withdraw.min_preview.change_address', { default: 'Change address' })} (output #2)<span
 						class="icon is-small ml-2 is-prussian-blue"
-						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })}} ${
+						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 							walletType === 'single' ? $_('withdraw.min_preview.wallet', { default: 'wallet' }) : $_('withdraw.min_preview.vault', { default: 'vault' })
 						}, ${$_('withdraw.min_preview.tooltip_2', {
 							default:
-								'the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address',
+								'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
 						})}`}><img src={helpIcon} alt="help" /></span
 					>
 				</div>
@@ -88,11 +88,11 @@
 				<div class="label">
 					{$_('withdraw.min_preview.change_amount', { default: 'Change amount' })}<span
 						class="icon is-small ml-2 is-prussian-blue"
-						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })}} ${
+						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 							walletType === 'single' ? $_('withdraw.min_preview.wallet', { default: 'wallet' }) : $_('withdraw.min_preview.vault', { default: 'vault' })
 						}, ${$_('withdraw.min_preview.tooltip_2', {
 							default:
-								'the specified amount of funds are sent to the intended bitcoin address and the remainder of the funds are sent back to your change address',
+								'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
 						})}`}><img src={helpIcon} alt="help" /></span
 					>
 				</div>
@@ -100,6 +100,22 @@
 					{$applicationSettings.satoshiUnit
 						? formatNumberByThousands(txInputsTotal - finalTransactionAmount - finalFee, false, '', false, 0)
 						: formatNumberByThousands(satoshisToBitcoins(txInputsTotal - finalTransactionAmount - finalFee), false, '', false, 8)}
+					{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+				</p>
+			</div>
+			<div class="field is-selectable">
+				<div class="label">
+					{$_('withdraw.min_preview.total_amount', { default: 'Total amount' })}<span
+						class="icon is-small ml-2 is-prussian-blue"
+						data-tooltip={$_('withdraw.min_preview.tooltip_total', { default: 'This includes the amount, the network fee and change amount' })}
+					>
+						<img src={helpIcon} alt="help" /></span
+					>
+				</div>
+				<p class="has-text-weight-normal has-text-multiline">
+					{$applicationSettings.satoshiUnit
+						? formatNumberByThousands(txInputsTotal, false, '', false, 0)
+						: formatNumberByThousands(satoshisToBitcoins(txInputsTotal), false, '', false, 8)}
 					{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
 				</p>
 			</div>
@@ -114,7 +130,11 @@
 						? formatNumberByThousands(finalFee, false, '', false, 0)
 						: formatNumberByThousands(satoshisToBitcoins(finalFee), false, '', false, 8)}
 					{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
-					<span class="is-size-7" title={'Current ' + $selectedCurrency + ' value'}
+					<span
+						class="is-size-7"
+						title={`${$_('withdraw.min_preview.current', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.min_preview.value', {
+							default: 'value',
+						})}`}
 						>(≈{formatNumberByThousands($bitcoinCurrentPrices[$selectedCurrency] * satoshisToBitcoins(finalFee), true, $selectedCurrency)}
 						{$selectedCurrency})
 					</span>
@@ -126,6 +146,6 @@
 
 <style>
 	[data-tooltip]::before {
-		width: 350px;
+		width: 430px;
 	}
 </style>

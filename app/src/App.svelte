@@ -1,10 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import dayjs from 'dayjs';
+	import { _ } from 'svelte-i18n';
 	import Router, { location, querystring, replace } from 'svelte-spa-router';
 	import { addMessages, getLocaleFromNavigator, init, locale } from 'svelte-i18n';
 	import { isObjectEmpty } from './utils/helpers';
-	import { _ } from 'svelte-i18n';
 	import {
 		applicationSettings,
 		bitcoinChartArrayData,
@@ -34,8 +34,8 @@
 	const settingsIcon = './img/icons/ui/settings.svg';
 
 	$: title = $bitcoinTestnetNetwork
-		? `Dux Reserve ${isDevelopment ? '— DEV TESTNET — 0.4.0-beta' : 'Beta'}`
-		: `Dux Reserve ${isDevelopment ? '— DEV MAINNET — 0.4.0-beta' : 'Beta'}`;
+		? `Dux Reserve ${isDevelopment ? '— DEV TESTNET — 0.4.1-beta' : 'Beta'}`
+		: `Dux Reserve ${isDevelopment ? '— DEV MAINNET — 0.4.1-beta' : 'Beta'}`;
 
 	$: scrollable = !$disableScroll;
 
@@ -273,9 +273,9 @@
 
 	// !! COMMENT FOR PRODUCTION !!
 	// Allow the developer to refresh the app with the testnet switch
-	// if (isDevelopment) {
-	// 	handleSwitchNetwork();
-	// }
+	if (isDevelopment) {
+		handleSwitchNetwork();
+	}
 </script>
 
 <svelte:window use:mouseWheel={{ scrollable }} />
@@ -314,14 +314,14 @@
 		{/if}
 
 		<!-- !! COMMENT FOR PRODUCTION !! -->
-		<!-- {#if isDevelopment && $location !== '/'}
+		{#if isDevelopment && $location !== '/'}
 			<div class="dev-infos is-size-7">
 				<div><strong class="mr-1">Present Path:</strong>{$location}</div>
 				{#if $querystring}
 					<div><strong class="ml-2 mr-1">Querystring:</strong>{$querystring}</div>
 				{/if}
 			</div>
-		{/if} -->
+		{/if}
 	</div>
 {/if}
 

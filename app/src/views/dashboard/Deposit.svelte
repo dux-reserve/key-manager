@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import QrCode from 'svelte-qrcode';
 	import * as animateScroll from 'svelte-scrollto';
@@ -7,10 +7,13 @@
 	import { isObjectEmpty } from '../../utils/helpers';
 	import Button from '../../components/ui/Button.svelte';
 	import Loading from '../../components/ui/Loading.svelte';
-	import WalletDetails from '../../components/config/CurrentConfigDetails.svelte';
+	import CurrentConfigDetails from '../../components/config/CurrentConfigDetails.svelte';
 
 	export let currentPendingAmount = 0;
-	// export let configDropdownArray = [];
+	export let configDropdownArray = [];
+	export let configurationDropDownSelectedChoice = 0;
+
+	const dispatch = createEventDispatcher();
 
 	const contentCopy = './img/icons/ui/content-copy.svg';
 
@@ -53,6 +56,10 @@
 		}
 	};
 
+	const handleCurrentConfigChangeFromDropdown = ({ detail }) => {
+		dispatch('dropdownSelected', detail);
+	};
+
 	onMount(() => {
 		animateScroll.scrollToTop();
 
@@ -63,7 +70,12 @@
 	});
 </script>
 
-<WalletDetails {currentPendingAmount} />
+<CurrentConfigDetails
+	{currentPendingAmount}
+	{configDropdownArray}
+	{configurationDropDownSelectedChoice}
+	on:dropdownSelected={handleCurrentConfigChangeFromDropdown}
+/>
 
 <div class="columns">
 	<div class="column">

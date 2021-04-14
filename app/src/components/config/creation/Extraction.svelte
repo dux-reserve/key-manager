@@ -236,7 +236,7 @@
 											</p>
 										{:else if extractedXpub}
 											<p class="is-size-8">
-												<span class="is-capitalized"
+												<span
 													>{walletType === 'single'
 														? $_('creation.extraction.wallet', { default: 'Wallet' })
 														: `${

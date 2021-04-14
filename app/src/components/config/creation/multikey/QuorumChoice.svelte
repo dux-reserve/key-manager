@@ -26,7 +26,7 @@
 					<p class="mb-6">
 						{$_('creation.quorum_choice.2of3_paragraph', {
 							default: 'Simple set of 3 hardware devices where only 2 are required to spend. For medium-sized holdings',
-						})}.
+						})}
 					</p>
 					<div class="card-bottom">
 						<div class="buttons is-centered">
@@ -51,7 +51,7 @@
 					<p class="mb-6">
 						{$_('creation.quorum_choice.3of5_paragraph', {
 							default: 'Set of 5 hardware devices where only 3 are required to spend. For large holdings or team sharing{',
-						})}.
+						})}
 					</p>
 					<div class="card-bottom">
 						<div class="buttons is-centered">
@@ -71,7 +71,7 @@
 					<p class="mb-6">
 						{$_('creation.quorum_choice.custom_paragraph', {
 							default: 'Create vaults with M of N hardware devices up to a maximum of 15. Only for advanced users',
-						})}.
+						})}
 					</p>
 					<div class="card-bottom">
 						<div class="buttons is-centered">

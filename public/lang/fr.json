@@ -18,7 +18,7 @@
   },
   "footer": {
     "news": "Pour rester informé suivez-nous sur",
-    "verify": "Restez sceptique, vérifiez notre code sur",
+    "verify": "Faites confiance mais vérifiez sur",
     "support": "Nous sommes là pour vous sur"
   },
   "trezor_number_pad": {
@@ -113,6 +113,7 @@
   },
   "settings": {
     "headline": "Paramètres",
+    "title": "Paramètres",
     "subtitle": "Application",
     "saved": "Sauvegardé",
     "language": "Langue",
@@ -195,7 +196,8 @@
         "show_plain_password_title_2": "Afficher le mot de passe",
         "confirm_password": "Confirmez votre mot de passe",
         "button_cancel": "Annuler",
-        "button_change": "Changer de mot de passe"
+        "button_change": "Changer de mot de passe",
+        "password_minimum": "Minimum de 4 caractères"
       },
       "add_password": {
         "title": "Ajoutez un mot de passe",
@@ -203,7 +205,7 @@
         "enter_new_password": "Entrez votre nouveau mot de passe",
         "enter_new_password_confirm": "Confirmez votre nouveau mot de passe",
         "password_dont_match": "Les mots de passe ne sont pas identiques",
-        "password_minimum": "4 caractères minimum",
+        "password_minimum": "Minimum de 4 caractères",
         "wrong_password": "Mot de passe erroné",
         "show_plain_password_title_1": "Cacher le mot de passe",
         "show_plain_password_title_2": "Afficher le mot de passe",
@@ -296,7 +298,7 @@
       "days": "jours avant",
       "today": "aujourd'hui",
       "pending": "en attente",
-      "button_receiving": "Depôt",
+      "button_receiving": "Dépôt",
       "button_withdraw": "Retrait"
     },
     "welcome": {
@@ -369,7 +371,7 @@
     "overlay": {
       "alert": {
         "title": "Annuler cette transaction ?",
-        "paragraph": "êtes-vous sûr de vouloir annuler cettre transaction ? Tous ses détails seront perdus. Vous devrez en recréer une",
+        "paragraph": "Êtes-vous sûr de vouloir annuler cettre transaction ? Tous ses détails seront perdus. Vous devrez en recréer une",
         "button_continue": "Poursuivre la transaction",
         "button_cancel": "Annuler le retrait"
       },
@@ -413,7 +415,7 @@
       "confirm_hardware_device_title": "Veuillez attendre que l'extraction soit terminée",
       "download": "Télécharger",
       "download_updated": "mis à jour",
-      "download_config": "fichier de configuration et accès au tableau de bord"
+      "download_config": "le fichier de configuration et accéder au tableau de bord"
     },
     "overlay": {
       "cancel_confirmation": {
@@ -500,13 +502,13 @@
         "title_download": "Téléchargez votre fichier de configuration",
         "title_new_added": "Téléchargez votre fichier de configuration mis à jour",
         "title_done": "Fichier de configuration exporté ✓",
-        "subtitle": "Votre fichier de configuration explique où se situent vos bitcoin.",
-        "paragraph_done": "Il est important de conserver votre fichier de configuration dans un endroit sécurisé avec vos clés de sauvegarde, par exemple. Il ne contient aucune clé privée, mais il peut donner accès aux soldes de vos comptes et à l'historique de transactions.",
+        "subtitle": "Votre fichier de configuration explique où se situent vos bitcoin",
+        "paragraph_done": "Il est important de conserver votre fichier de configuration dans un endroit sécurisé avec vos clés de sauvegarde, par exemple. Il ne contient aucune clé privée, mais il peut donner accès aux soldes de vos comptes et à l'historique de transactions",
         "paragraph_new_added_1": "Il est important de conserver votre fichier de configuration dans un endroit sécurisé avec vos clés de sauvegarde, par exemple. Il ne contient aucune clé privée, mais il peut donner accès aux soldes de vos comptes et à l'historique de transactions. VOtre fichier de configuration a été mis à jour avec votre nouveau coffre. Assurez-vous d'avoir téléchargé et sécurisé votre fichier de configuration mis à jour qui inclut les détails de votre configuration précédente.",
         "paragraph_new_added_2": "Aucun compte Dux Reserve n'est nécessaire pour le moment, ce qui signifie que vous êtes 100% responsable de la sûreté de votre fichier de configuration. Nous n'en conservons aucune copie. Vous devrez télécharger ce fichier à chaque fois que vous souhaiterez accéder à votre/vos portfeuille(s) ou coffre(s).",
-        "paragraph_new_1": "Il est important de conserver votre fichier de configuration dans un endroit sécurisé avec vos clés de sauvegarde, par exemple.",
+        "paragraph_new_1": "Il est important de conserver votre fichier de configuration dans un endroit sécurisé avec vos clés de sauvegarde, par exemple",
         "paragraph_new_2_1": "Vous exportez seulement",
-        "paragraph_new_2_2": "détails. Aucun compte Dux Reserve n'est nécessaire pour le moment, ce qui signifie que vous êtes 100% responsable de la sûreté de votre fichier de configuration. Nous n'en conservons aucune copie.",
+        "paragraph_new_2_2": "détails. Aucun compte Dux Reserve n'est nécessaire pour le moment, ce qui signifie que vous êtes 100% responsable de la sûreté de votre fichier de configuration. Nous n'en conservons aucune copie",
         "button_access": "Accéder à mon tableau de bord",
         "button_back": "Retour",
         "button_yes": "Oui, exporter mon fichier de configuration",
@@ -534,9 +536,9 @@
       "headline_confirm_password": "Confirmez votre mot de passe",
       "subtitle_confirm_password": "Requis pour l'ajout d'un nouvau compte",
       "title_new_password": "Mot de passe verrou (optionnel)",
-      "paragraph_new_password": "Sécurisez votre mot de passe. Si vous le perdez, vous devrez réinitialiser votre app Dux et votre configuration. Cela n'affectera pas vos clés privées, ni vos avoirs en bitcoin",
+      "paragraph_new_password": "Si vous le perdez, vous devrez réinitialiser votre app Dux et votre configuration. Cela n'affectera pas vos clés privées, ni vos avoirs en bitcoin",
       "title_confirm_password": "Mot de passe verrou (optionnel)",
-      "paragraph_confirm_password": "Sécurisez votre mot de passe. Si vous le perdez, vous devrez réinitialiser votre app Dux et votre configuration. Cela n'affectera pas vos clés privées, ni vos avoirs en bitcoin",
+      "paragraph_confirm_password": "Si vous le perdez, vous devrez réinitialiser votre app Dux et votre configuration. Cela n'affectera pas vos clés privées, ni vos avoirs en bitcoin",
       "enter_password": "Entrez votre mot de passe",
       "weak_password": "Minimum de 4 caractères",
       "show_plain_password_title_1": "Cacher le mot de passe",
@@ -568,15 +570,15 @@
       "headline_single_2": "Créez votre portefeuille",
       "subtitle_single_2": "Lecture de la clé depuis votre périphérique",
       "subtitle_single_2_extracted": "Ajout du périphérique matériel réussi",
-      "subtitle_multi_2": "Sécuriser l'accès à votre tableau de bord",
+      "subtitle_multi_2": "Prêt à lire la clé de votre périphérique matériel",
       "headline_multi_1": "Choisissez votre coffre multisig",
       "subtitle_multi_1": "Utilisez autant de clés que vous le souhaitez",
       "headline_multi_2": "Création de votre",
       "subtitle_multi_2_your": "Votre",
-      "subtitle_multi_2_of": "de",
+      "subtitle_multi_2_of": "sur",
       "subtitle_multi_2_vault": "coffre",
-      "subtitle_multi_2_vault_ready": "coffre prêt!",
-      "subtitle_multi_2_vault_extracted": "Périphérique matériel ajouté avec succès !",
+      "subtitle_multi_2_vault_ready": "coffre prêt",
+      "subtitle_multi_2_vault_extracted": "Périphérique matériel ajouté avec succès",
       "subtitle_multi_2_extracted": "Sécuriser l'accès à votre tableau de bord",
       "title_wallet": "Ajout de votre périphérique matériel",
       "title_vault": "Ajout de votre périphérique matériel",
@@ -589,7 +591,7 @@
       "connect_usd": "via USB",
       "no_device": "Aucun périphérique détecté. Essayez de nouveau",
       "unlock_device": "Déverrouillez votre",
-      "ready_to_read_key": "Prêt à lire la clé publique",
+      "ready_to_read_key": "Prête à lire la clé publique",
       "reading": "Lecture en cours",
       "reading_key": "de la clé publique",
       "reading_key_from": "clé publique de",
@@ -610,7 +612,7 @@
       "wallet": "Le portefeuille",
       "vault": "Coffre",
       "key": "clé",
-      "ready_confirmed": "est prêt pour confirmation",
+      "ready_confirmed": "est prête pour confirmation",
       "button_micro_sd": "Utlisez plutôt une Micro SD en mode air-gap",
       "review_details": "Revoir les détails"
     },
@@ -640,16 +642,16 @@
       "headline_creating": "Création de votre",
       "headline_of": "sur",
       "headline_vault": "coffre",
-      "subtitle": "C'est le moment de connecter votre périphérique",
+      "subtitle": "C'est le moment de connecter votre",
       "subtitle_device": "périphérique matériel",
       "device_fingerprint": "Empreinte numérique unique du périphérique ",
       "key_1_title": "Périphérique matériel 1",
-      "key_1_paragraph": "Choisissez votre premier périphérique matériel pour ajouter sa clé publique à votre coffre.",
+      "key_1_paragraph": "Choisissez votre premier périphérique matériel pour ajouter sa clé publique à votre coffre",
       "key_2_title": "Périphérique matériel 2",
-      "key_2_paragraph": "Choisissez votre second périphérique matériel pour ajouter sa clé publique à votre coffre.",
+      "key_2_paragraph": "Choisissez votre second périphérique matériel pour ajouter sa clé publique à votre coffre",
       "key_2_button": "Ajouter un second périphérique",
       "key_3_title": "Périphérique matériel 3",
-      "key_3_paragraph": "Choisissez votre troisième périphérique matériel pour ajouter sa clé publique à votre coffre.",
+      "key_3_paragraph": "Choisissez votre troisième périphérique matériel pour ajouter sa clé publique à votre coffre",
       "key_3_button": "Ajouter un troisième périphérique "
     },
     "micro_sd_coldcard": {
@@ -660,7 +662,7 @@
         "second_step": "Allumez et déverrouillez votre Coldcard",
         "third_step_go_to": "Allez dans",
         "third_step": "Advanced > Micro SD Card > Export Wallet > Generic JSON",
-        "fourth_step": "Entrez 0 par défaut dans le numéro de compte, sauf si vous savez ce que vous faites",
+        "fourth_step": "Entrez 0 en tant que Account number (par défaut)",
         "fifth_step": "Confirmez et terminez l'export",
         "sixth_step": "Insérez la carte Micro SD depuis votre Colcard vers votre ordinateur"
       },
@@ -676,8 +678,10 @@
     "confirm_config": {
       "headline_your": "Votre",
       "headline_single": "a été créé",
+      "headline_vault": "coffre",
       "headline_multi": "Votre",
-      "headline_multi_of": "de",
+      "headline_wallet": "portefeuille",
+      "headline_multi_of": "sur",
       "headline_multi_completed": "a été créé",
       "subtitle_multi": "Juste une dernière chose",
       "created_on": "Créé le",
@@ -732,7 +736,7 @@
     },
     "steps": {
       "headline": "Retrait depuis",
-      "headline_of": "de",
+      "headline_of": "sur",
       "headline_vault": "votre coffre",
       "headline_wallet": "votre portefeuille",
       "button_edit_transaction_details": "Éditer les détails de transaction",
@@ -753,21 +757,24 @@
       "trezor_something_went_wrong": "Un problème est survenu. Veuillez débrancher et rebrancher votre Trezor et réessayer",
       "trezor_pin_layout": "La disposition du code PIN s'affiche sur votre périphérique",
       "trezor_pin_verifying": "PIN Trezor en cours de vérification",
-      "trezor_pin_incorrect": "PIN incorrect - Veuillez réessayer"
+      "trezor_pin_incorrect": "PIN incorrect - Veuillez réessayer",
+      "trezor_unlocking_device": "Déverrouillage de votre Trezor"
     },
     "min_preview": {
       "destination_address": "Adresse de destination",
-      "amount": "Montant",
+      "amount": "Montant retiré",
       "network_fee": "Frais de réseau",
       "current": "actuelle",
       "value": "Valeur",
       "change_address": "Modifier l'adresse",
-      "change_amount": "Modifier le montant",
-      "tooltip_1": "Lorsque vous retirez des fonds depuis votre bitcoin",
-      "tooltip_2": "le montant spécifique des fonds sont l'adresse bitcoin destinée et le restant des fonds sont renvoyés à votre adresse de change.",
+      "change_amount": "Montant de change",
+      "tooltip_1": "Lorsque vous retirez des fonds depuis votre",
+      "tooltip_2": "le montant spécifique des fonds est envoyé vers l'adresse bitcoin destinée et le restant des fonds est renvoyé à votre adresse de change.",
+      "tooltip_total": "Ceci inclus le montant retiré, les frais de réseau et le montant de change",
       "wallet": "portefeuille",
       "vault": "coffre",
-      "network_fee_title": "Pourcentage de frais par rapport au montant de la transaction"
+      "network_fee_title": "Pourcentage de frais par rapport au montant de la transaction",
+      "total_amount": "Montant total"
     },
     "preview": {
       "title_review": "Revoir",
@@ -776,18 +783,21 @@
       "title_review_signed": "signée",
       "title_review_transaction": "transaction",
       "destination_address": "Adresse de destination",
-      "amount": "Montant",
+      "amount": "Montant retiré",
       "current": "actuel",
       "value": "Valeur",
       "network_fee": "Frais de réseau",
       "network_fee_title": "Pourcentage de frais relatif au montant de la transaction",
-      "new_balance": "Nouveau total",
       "change_address": "Adresse de change",
-      "change_amount": "Changer le montant",
-      "tooltip_1": "Lorsque vous retirez des fonds depuis votre bitcoin",
-      "tooltip_2": "le montant spécifique des fonds sont l'adresse bitcoin destinée et le restant des fonds sont renvoyés à votre adresse de change.",
+      "change_amount": "Montant de change",
+      "tooltip_1": "Lorsque vous retirez des fonds depuis votre",
+      "tooltip_2": "le montant spécifique des fonds est envoyé vers l'adresse bitcoin destinée et le restant des fonds est renvoyé à votre adresse de change.",
+      "tooltip_total": "Ceci inclus le montant retiré, les frais de réseau et le montant de change",
       "vault": "coffre",
-      "wallet": "portefeuille"
+      "wallet": "portefeuille",
+      "total_amount": "Montant total",
+      "new_balance": "total",
+      "new": "Nouveau"
     },
     "required_signatures": {
       "dropdown_choose": "Choisissez votre périphérique matériel",
@@ -826,7 +836,7 @@
       "error_on_signing": "Erreur pendant la signature",
       "please_try_again": "- Veuillez réessayer de nouveau",
       "please_try_again_coldcard": "assurez-vous d'avoir importer votre fichier de setup dans votre Coldcard. Si vous ne l'avez pas encore fait, vous pouvez le faire depuis la page des paramètres",
-      "transaction_signed": "Transction signée",
+      "transaction_signed": "Transaction signée",
       "button_cancel": "Annuler",
       "button_retry": "Réessayer",
       "button_start_sign": "Débuter la signature",
@@ -844,9 +854,9 @@
       "paragraph_5": "Revoir les détails de la transaction et signer",
       "paragraph_6": "Confirmez et terminez l'export de votre PSBT maintenant signé",
       "paragraph_7": "Inserrez la carte Micro SD depuis votre Coldcard dans votre ordinateur",
-      "paragraph_8": "Télécharger le nouveau PSBT signé dans l'application (file suffix: -part)",
+      "paragraph_8": "Charger le nouveau PSBT signé dans l'application (file suffix: -part)",
       "button_download": "Télécharger transaction pour signature",
-      "button_upload": "Télécharger la transaction signée"
+      "button_upload": "Charger la transaction signée"
     },
     "confirm_transaction": {
       "device_fingerprint_title": "Empreinte numérique unique du périphérique"
@@ -854,11 +864,14 @@
     "broadcasted": {
       "title": "Votre transaction signée a été diffusé",
       "destination_address": "Adresse de destination",
-      "amount": "Montant",
+      "amount": "Montant retiré",
       "network_fee": "Frais de réseau",
-      "new_balance": "Nouveau total",
       "current": "actuelle",
-      "value": "Valeur"
+      "value": "Valeur",
+      "new": "Nouveau",
+      "new_balance": "total",
+      "vault": "coffre",
+      "wallet": "portefeuille"
     },
     "buttons": {},
     "overlay": {

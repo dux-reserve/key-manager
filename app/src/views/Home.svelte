@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
-	import { bitcoinTestnetNetwork } from '../store';
+	import { applicationSettings, bitcoinTestnetNetwork } from '../store';
 	import Button from '../components/ui/Button.svelte';
 	import Overlay from '../components/ui/OverlayV2.svelte';
 	import HeroSocialFooter from '../components/ui/SocialFooter.svelte';
@@ -97,7 +97,7 @@
 								{$_('home.intro_body_line_1', { default: 'Add a wallet or create multisig vault to manage your bitcoin.' })}
 								<br />
 								{$_('home.intro_body_line_2', { default: 'All keys are held by your' })}
-								<u title={$_('home.intro_body_line_2_cta_title', { default: 'Currently compatible with Coldcard, Ledger & Trezor. More to come!' })}>
+								<u data-tooltip={$_('home.intro_body_line_2_cta_title', { default: 'Currently compatible with Coldcard, Ledger & Trezor. More to come!' })}>
 									{$_('home.intro_body_line_2_cta', { default: 'hardware devices' })}</u
 								>{$_('home.intro_body_line_2_1', { default: ', in your own control.' })}
 							</p>
@@ -133,7 +133,7 @@
 {#if showDisclamerOverlay}
 	<Overlay titleIsLeft disableClosing subtitle>
 		<span slot="title"
-			>{$_('disclaimer.title', { default: 'Beta version' })} (0.4.0)
+			>{$_('disclaimer.title', { default: 'Beta version' })} (0.4.1)
 			<div
 				class="field switch-testnet"
 				title={$_('settings.testnet_title', {
@@ -161,7 +161,11 @@
 				{$bitcoinTestnetNetwork ? 'mainnet' : 'testnet'}. {$_('disclaimer.paragraph_3', {
 					default: 'We will share updates on',
 				})}
-				<span class="is-link has-text-weight-normal" on:click={() => openUrl('twitter')} title="https://twitter.com/duxreserve">Twitter</span>
+				<span
+					class="is-link has-text-weight-normal"
+					on:click={() => openUrl(`twitter${$applicationSettings.interfaceLanguage === 'fr' ? '-fr' : ''}`)}
+					title={$applicationSettings.interfaceLanguage === 'fr' ? 'https://t.me/https://twitter.com/FR_DUX' : 'https://twitter.com/duxreserve'}>Twitter</span
+				>
 				{$_('disclaimer.paragraph_4', { default: 'as we make improvements and find bugs.' })}
 			</p>
 			<p class="mt-2">
@@ -238,5 +242,9 @@
 
 	.disclaimer-overlay {
 		max-width: 780px;
+	}
+
+	[data-tooltip]::before {
+		width: 250px;
 	}
 </style>

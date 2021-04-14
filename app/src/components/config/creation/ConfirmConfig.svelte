@@ -63,8 +63,7 @@
 											default: 'Vault',
 										})}
 									{:else}
-										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={walletIcon} alt="Wallet icon" /></span>{$_(
-											'creation.confirm_config.wallet',
+										<span class="icon is-prussian-blue has-no-hover mr-2"><img src={walletIcon} alt="Wallet icon" /></span>{$_('creation.confirm_config.wallet',
 											{ default: 'Wallet' },
 										)}
 									{/if}

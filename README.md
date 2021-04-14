@@ -2,7 +2,7 @@
   <img src="public/img/logos/dux-logo-with-text.svg" width="350" title="Dux Reserve">
 </p>
 <h3 align="center">
-  Key Manager — 0.4.0-beta
+  Key Manager — 0.4.1-beta
 </h3>
 
 ----

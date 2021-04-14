@@ -137,15 +137,11 @@
 				psbt: createdPsbt,
 			});
 
-			signingSucess = true;
-
-			// if (!showRetrySignWithDevice) {
 			if (response.psbt) {
 				signedPsbt = [...signedPsbt, response.psbt];
 				signedDevices = [...signedDevices, device];
 				signingSucess = true;
 			}
-			// }
 		} catch (error) {
 			signingReady = false;
 			signingInProgress = false;
@@ -157,18 +153,15 @@
 	const signWithMicroSD = async signedPsbtFromMicroSD => {
 		try {
 			showRetrySignWithDevice = false;
-			signingSucess = true;
 			walletNeedPinSent = false;
 			extractedFromMicroSD = true;
 			withdrawStep = 4;
 
-			// if (!showRetrySignWithDevice) {
 			if (signedPsbtFromMicroSD) {
 				signedPsbt = [...signedPsbt, signedPsbtFromMicroSD];
 				signedDevices = [...signedDevices, selectedWalletData];
 				signingSucess = true;
 			}
-			// }
 		} catch (error) {
 			console.log('Error for PSBT signature:', error);
 			showRetrySignWithDevice = true;
@@ -215,7 +208,7 @@
 		deviceScanning = true;
 		signingSucess = false;
 		scannedWalletData = {};
-		for (let i = 0; i <= 30; i++) {
+		for (let i = 0; i <= 120; i++) {
 			if (!deviceScanning) break;
 			await enumerate();
 			// Device matching selected device brand
@@ -239,7 +232,7 @@
 					}
 				}
 			}
-			if (i === 30) handleScanningStop();
+			if (i === 120) handleScanningStop();
 			await timer(1000);
 		}
 	};
@@ -370,7 +363,7 @@
 		trezorError = false;
 		lockClosingPinOverlay = true;
 		trezorLockPinKey = true;
-		trezorPinMessage = 'Unlocking device';
+		trezorPinMessage = $_('withdraw.steps.trezor_unlocking_device', { default: 'Unlocking device' });
 		try {
 			const response = await window.api.ipcRenderer.invoke('hwi:send-pin', {
 				device: scannedWalletData,
@@ -446,7 +439,12 @@
 
 	const handleExportFromMicroSD = async () => {
 		try {
-			await window.api.ipcRenderer.invoke('psbt:export-coldcard-unsigned-psbt-dialog', { psbt: createdPsbt });
+			await window.api.ipcRenderer.invoke('psbt:export-coldcard-unsigned-psbt-dialog', {
+				psbt: createdPsbt,
+				accountName: $configSelectedCurrentData.name,
+				isVault: $configSelectedCurrentData.config.quorum.totalSigners > 1,
+				isFrench: $applicationSettings.interfaceLanguage === 'fr',
+			});
 
 			// TODO: verify PSBT data validity
 
@@ -513,7 +511,7 @@
 						: `${$_('withdraw.steps.headline_vault', { default: 'vault' })} ${$configSelectedCurrentData.name}`}
 				{/if}
 				{#if $configSelectedCurrentData.config.quorum.requiredSigners > 1}
-					(2 of 3)
+					(2 {$_('withdraw.steps.headline_of', { default: 'of' })} 3)
 				{/if}
 			</h3>
 		</div>
@@ -570,9 +568,6 @@
 		{:else if withdrawStep === 5}
 			<ConfirmTransaction {signedDevices} />
 		{:else if withdrawStep === 6}
-			<!-- {desiredFee}
-		{txInputs}
-		{txInputsTotal} -->
 			<Broadcasted {currentBalanceWithdraw} {finalFee} {finalTransactionAmount} {transactionDestinationAddress} {useAllFunds} {walletType} />
 		{/if}
 	</div>

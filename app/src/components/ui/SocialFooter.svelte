@@ -13,7 +13,11 @@
 <footer class="footer has-text-centered">
 	<p class="is-size-7">
 		{$_('footer.news', { default: 'For the latest news, follow us on' })}
-		<span class="is-link" on:click={() => openUrl('twitter')} title="https://twitter.com/duxreserve">Twitter</span>. {$_('footer.verify', {
+		<span
+			class="is-link"
+			on:click={() => openUrl(`twitter${$applicationSettings.interfaceLanguage === 'fr' ? '-fr' : ''}`)}
+			title={$applicationSettings.interfaceLanguage === 'fr' ? 'https://t.me/https://twitter.com/FR_DUX' : 'https://twitter.com/duxreserve'}>Twitter</span
+		>. {$_('footer.verify', {
 			default: `Don't trust, verify on`,
 		})}
 		<span class="is-link" on:click={() => openUrl('github')} title="https://github.com/dux-reserve">Github</span>. {$_('footer.support', {

@@ -6,21 +6,11 @@
 	import { timer } from '../../utils/helpers';
 	import {
 		applicationSettings,
-		bitcoinChartArrayData,
-		bitcoinCurrentPrices,
-		bitcoinMarketData,
-		bitcoinNetworkBlockHeight,
 		bitcoinTestnetNetwork,
-		chartLogarithmic,
-		chartTimeScale,
 		configData,
 		configsCurrentDataVaultsArray,
-		configsCurrentDataWalletsArray,
-		configSelectedCurrentData,
-		currentNetworkConfigData,
 		saveSettings,
 		selectedCurrency,
-		timeNow,
 		withCustomUserPassword,
 	} from '../../store';
 	import Overlay from '../../components/ui/Overlay.svelte';
@@ -174,8 +164,8 @@
 	};
 
 	const handleLanguageChange = ({ detail }) => {
-		const currencyChoice = ['en', 'fr'];
-		$applicationSettings.interfaceLanguage = currencyChoice[detail];
+		const languageChoice = ['en', 'fr'];
+		$applicationSettings.interfaceLanguage = languageChoice[detail];
 		getLanguageName();
 		handleSaving();
 	};
@@ -310,51 +300,8 @@
 	const handleResetApp = async () => {
 		try {
 			await window.api.ipcRenderer.invoke('app:reset');
-
-			$configData = {};
-			$configsCurrentDataWalletsArray = [];
-			$configsCurrentDataVaultsArray = [];
-			$configSelectedCurrentData = {};
-			$currentNetworkConfigData = {};
-			$withCustomUserPassword = false;
-			$bitcoinChartArrayData = [];
-			$bitcoinCurrentPrices = {};
-			$selectedCurrency = 'USD';
-			$bitcoinMarketData = {};
-			$bitcoinNetworkBlockHeight = 0;
-			$chartTimeScale = '186';
-			$chartLogarithmic = false;
-			$bitcoinTestnetNetwork = process.env.BITCOIN_NETWORK === 'testnet' ? true : false;
-			$timeNow = {};
-			$applicationSettings = {
-				advancedUserInterface: false,
-				askForPasswordAfterSleep: true,
-				autoRefresh: true,
-				autoRefreshTimeout: 60000,
-				darkTheme: false,
-				disabledAnimation: false,
-				discreetMode: false,
-				dontShowReuseAddressesAlert: false,
-				interfaceLanguage: 'en',
-				keepLocalData: true,
-				keepLocalEncryptedConfig: true,
-				notification: true,
-				notificationBlockfound: false,
-				notificationIncognito: false,
-				notificationReceive: true,
-				notificationReceiveConfirm: true,
-				notificationSound: true,
-				notificationWithdrawConfirm: true,
-				refreshDelay: true,
-				satoshiUnit: false,
-				showTooltips: true,
-				sleepInterface: true,
-				sleepMillisecondTimeout: 900000,
-				verifyForUpdate: true,
-				verifyForUpdateNotification: true,
-			};
-			replace('/');
 			showForgetOverlay = false;
+			dispatch('resetApp');
 		} catch (error) {
 			console.log('error when deleting current config file');
 		}

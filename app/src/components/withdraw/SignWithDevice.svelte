@@ -85,14 +85,15 @@
 									{#if withdrawStep === 3}
 										<span class="is-uppercase">({selectedWalletData.fingerprint})</span>
 									{/if}
-									{$_('withdraw.sign_with_device.your_trezor_pin', { default: 'PIN will be ask if needed' })}
 								</h4>
 							{/if}
 						{:else}
 							<h4 class="title is-family-primary is-5 has-smaller-margin has-text-multiline">
 								<span class="is-capitalized">{selectedWalletData.model.split('_').join(' ')}</span>
 								{#if selectedWalletData.fingerprint}
-									(<span class="is-uppercase" title="Device unique fingerprint">{selectedWalletData.fingerprint}</span>)
+									(<span class="is-uppercase" title={$_('withdraw.sign_with_device.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+										>{selectedWalletData.fingerprint}</span
+									>)
 								{/if} ✓
 							</h4>
 						{/if}
@@ -227,13 +228,13 @@
 											<p class="is-size-8">{$_('withdraw.sign_with_device.signing_in_progress', { default: 'In progress, confirm on your device...' })}</p>
 										{:else if !signingSucess && showRetrySignWithDevice}
 											<p class="is-size-8 has-text-multiline">
-												Error during the signing
+												{$_('withdraw.sign_with_device.error_on_signing', { default: 'Error during the signing' })}
 												{selectedWalletData.type === 'coldcard'
 													? $_('withdraw.sign_with_device.please_try_again_coldcard', {
 															default:
 																'make sure you have imported your setup file into your Coldcard. If you haven’t done it already, you can do it from the settings page',
 													  })
-													: $_('withdraw.sign_with_device.please_try_again', { default: 'Somethin' })}
+													: $_('withdraw.sign_with_device.please_try_again', { default: '- Please try again' })}
 											</p>
 										{:else if signingSucess}
 											<p class="is-size-8">{$_('withdraw.sign_with_device.transaction_signed', { default: 'Transaction signed' })}</p>

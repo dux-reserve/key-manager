@@ -210,13 +210,13 @@
 
 								{#if $applicationSettings.interfaceLanguage === 'en'}
 									{quorum.requiredSigners}
-									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$_('dashboard.welcome.of', { default: 'of' })}
 									{quorum.totalSigners}
-									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+									{$_('dashboard.welcome.vault', { default: 'Vault' })}
 								{:else if $applicationSettings.interfaceLanguage === 'fr'}
-									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+									{$_('dashboard.welcome.vault', { default: 'Vault' })}
 									{quorum.requiredSigners}
-									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$_('dashboard.welcome.of', { default: 'of' })}
 									{quorum.totalSigners}
 								{/if}
 							</h3>
@@ -250,13 +250,13 @@
 								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={vaultIcon} alt="Vault icon" /></span>
 								{#if $applicationSettings.interfaceLanguage === 'en'}
 									{quorum.requiredSigners}
-									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$_('dashboard.welcome.of', { default: 'of' })}
 									{quorum.totalSigners}
-									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+									{$_('dashboard.welcome.vault', { default: 'Vault' })}
 								{:else if $applicationSettings.interfaceLanguage === 'fr'}
-									{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
+									{$_('dashboard.welcome.vault', { default: 'Vault' })}
 									{quorum.requiredSigners}
-									{$_('dashboard.current_config_details.of', { default: 'of' })}
+									{$_('dashboard.welcome.of', { default: 'of' })}
 									{quorum.totalSigners}
 								{/if}
 							</h3>
