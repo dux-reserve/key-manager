@@ -273,9 +273,9 @@
 
 	// !! COMMENT FOR PRODUCTION !!
 	// Allow the developer to refresh the app with the testnet switch
-	if (isDevelopment) {
-		handleSwitchNetwork();
-	}
+	// if (isDevelopment) {
+	// 	handleSwitchNetwork();
+	// }
 </script>
 
 <svelte:window use:mouseWheel={{ scrollable }} />
@@ -314,14 +314,14 @@
 		{/if}
 
 		<!-- !! COMMENT FOR PRODUCTION !! -->
-		{#if isDevelopment && $location !== '/'}
+		<!-- {#if isDevelopment && $location !== '/'}
 			<div class="dev-infos is-size-7">
 				<div><strong class="mr-1">Present Path:</strong>{$location}</div>
 				{#if $querystring}
 					<div><strong class="ml-2 mr-1">Querystring:</strong>{$querystring}</div>
 				{/if}
 			</div>
-		{/if}
+		{/if} -->
 	</div>
 {/if}
 
