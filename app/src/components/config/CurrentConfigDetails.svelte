@@ -43,7 +43,6 @@
 					months: dayjs().diff(extendedPublicKey.lastHealthCheck, 'month'),
 				});
 			}
-			console.log('extendedPublicKey', extendedPublicKey);
 		});
 	};
 
@@ -133,7 +132,7 @@
 				</div>
 				<h4
 					class="subtitle is-4 has-smaller-margin skeleton-block skeleton-title skeleton-small mb-2 is-family-primary has-text-weight-medium is-dark"
-					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name}
+					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || !$configSelectedCurrentData.currentBalance}
 					class:is-selectable={$configSelectedCurrentData && $configSelectedCurrentData.name}
 				>
 					{formatNumberByThousands(
@@ -145,7 +144,7 @@
 				</h4>
 				<p
 					class="is-size-6 skeleton-block skeleton-medium"
-					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name}
+					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || !$configSelectedCurrentData.currentBalance}
 					class:is-selectable={$configSelectedCurrentData && $configSelectedCurrentData.name}
 				>
 					{$applicationSettings.satoshiUnit

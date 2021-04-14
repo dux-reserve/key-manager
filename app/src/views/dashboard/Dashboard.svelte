@@ -86,11 +86,15 @@
 	$: if (newAdded && $querystring.includes('updatedconfig=true')) {
 		newAdded = false;
 
+		configurationDropDownSelectedChoice = 0;
+		currentAvailableAmount = undefined;
+		currentPendingAmount = 0;
 		filterNetworkConfigData();
-		handleConfigDropdown();
-		updateCurrentAccountData();
-
-		replace('/dashboard');
+		setTimeout(async () => {
+			handleConfigDropdown();
+			updateCurrentAccountData();
+			replace('/dashboard');
+		}, 0);
 	}
 
 	const handleConfigDropdown = () => {
