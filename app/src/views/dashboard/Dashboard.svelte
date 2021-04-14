@@ -90,7 +90,7 @@
 		currentAvailableAmount = undefined;
 		currentPendingAmount = 0;
 		filterNetworkConfigData();
-		setTimeout(async () => {
+		setTimeout(() => {
 			handleConfigDropdown();
 			updateCurrentAccountData();
 			replace('/dashboard');
