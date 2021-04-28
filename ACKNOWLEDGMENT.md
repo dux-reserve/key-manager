@@ -8,7 +8,7 @@
   Acknowledgements
 </h2>
 
-## These are the open source libraries and projects we use to make Dux Reserve key manager:
+### These are the open source libraries and projects we use to make Dux Reserve key manager:
 
 - [axios](https://github.com/axios/axios)
 - [babel-eslint](https://github.com/babel/babel-eslint)
@@ -42,6 +42,7 @@
 - [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte)
 - [prettier-stylelint](https://github.com/hugomrdias/prettier-stylelint)
 - [rollup](https://github.com/rollup/rollup)
+- [rollup/plugin-commonjs](https://github.com/rollup/plugins/tree/master/packages/commonjs)
 - [rollup-plugin-copy](https://github.com/vladshcherbin/rollup-plugin-copy)
 - [rollup-plugin-css-only](https://github.com/thgh/rollup-plugin-css-only)
 - [rollup-plugin-inject-process-env](https://github.com/badcafe/rollup-plugin-inject-process-env)
@@ -52,7 +53,7 @@
 - [rollup/plugin-typescript](https://github.com/rollup/plugins/tree/master/packages/typescript)
 - [secure-electron-store](https://github.com/reZach/secure-electron-store)
 - [sirv-cli](https://github.com/lukeed/sirv)
-- [stylelint](https://stylelint.io/)
+- [stylelint](https://github.com/stylelint/stylelint)
 - [stylelint-declaration-strict-value](https://github.com/AndyOGo/stylelint-declaration-strict-value)
 - [stylelint-order](https://github.com/hudochenkov/stylelint-order)
 - [stylelint-scss](https://github.com/kristerkari/stylelint-scss)
@@ -67,25 +68,25 @@
 - [svelte-spa-router](https://github.com/ItalyPaleAle/svelte-spa-router)
 - [tsconfig/svelte](https://github.com/tsconfig/bases)
 - [tslib](https://github.com/microsoft/tslib)
-- [typescript](https://www.typescriptlang.org/)
+- [typescript](https://github.com/microsoft/TypeScript)
 - [unchained-bitcoin](https://github.com/unchained-capital/unchained-bitcoin)
 - [uuid](https://github.com/uuidjs/uuid)
-- [rollup/plugin-commonjs](https://github.com/rollup/plugins/tree/master/packages/commonjs)
 
 
 ---
 
 
-## Attributions
+### Attributions
 
 The CSS of the project is a fork of [Bulma](https://github.com/jgthms/bulma) and is copyrighted by [Jeremy Thomas](https://github.com/jgthms) under the terms of the [MIT license](https://github.com/jgthms/bulma/blob/master/LICENSE).
+
+Portions of the project have been derived from [HWI](https://github.com/bitcoin-core/HWI) and is copyrighted by [Andrew Chow](https://github.com/achow101) under the terms of the [MIT license](https://github.com/bitcoin-core/HWI/blob/master/LICENSE).
 
 Portions of the project have been derived from [Lily Wallet](https://github.com/Lily-Technologies/lily-wallet) and is copyrighted by [Kevin Mulcrone](https://github.com/KayBeSee) under the terms of the [MIT license](https://github.com/Lily-Technologies/lily-wallet/blob/master/LICENSE).
 
 Portions of the project have been derived from [Secure Electron Template](https://github.com/reZach/secure-electron-template) and is copyrighted by [reZach](https://github.com/reZach) under the terms of the [MIT license](https://github.com/reZach/secure-electron-template/blob/master/LICENSE).
 
-
-Portions of the project have been derived from [Specter Desktop](https://github.com/cryptoadvance/specter-desktop) and is copyrighted by [Crypto Advance GmbH](https://github.com/cryptoadvance) under the terms of the [MIT license](https://github.com/cryptoadvance/specter-desktop/blob/master/LICENSE).
+Portions of the project have been derived from [Specter Desktop](https://github.com/cryptoadvance/specter-desktop) and is copyrighted by [Crypto Advance GmbH.](https://github.com/cryptoadvance) under the terms of the [MIT license](https://github.com/cryptoadvance/specter-desktop/blob/master/LICENSE).
 
 Portions of the project have been derived from [Unchained Bitcoin](https://github.com/unchained-capital/unchained-bitcoin) and is copyrighted by [Unchained Capital Inc.](https://github.com/unchained-capital) under the terms of the [MIT license](https://github.com/unchained-capital/unchained-bitcoin/blob/master/LICENSE).
 
