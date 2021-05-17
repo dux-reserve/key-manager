@@ -16,6 +16,8 @@
 	const showEye = './img/icons/ui/visibility.svg';
 	const hideEye = './img/icons/ui/visibility-off.svg';
 
+	// Move to PasswordStrengh component
+
 	const passwordStrengthOptions = [
 		{
 			id: 0,
@@ -139,6 +141,7 @@
 						<div class="card-title has-text-centered">
 							<span class="icon is-primary is-normal has-no-hover mr-3"><img class="image-key" src={lockIcon} alt="Key Icon" /></span>
 							<h2 class="title is-4 has-subtitle-margin is-vertical-center has-text-centered is-justify-content-center">
+								<!-- TODO: remove optionnel when newAdded -->
 								{$_('creation.user_password.title_confirm_password', { default: 'Password lock (optional)' })}
 							</h2>
 							<p class="mb-5">

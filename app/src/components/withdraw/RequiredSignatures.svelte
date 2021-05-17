@@ -23,26 +23,22 @@
 
 	$: if (currentConfigDevices.length >= 1 && selectableDevice.length < 1) {
 		permanentcurrentConfigDevices = [...currentConfigDevices];
+		console.log('currentConfigDevices', currentConfigDevices);
+		console.log('signedDevices', signedDevices);
 		for (let i = 0; i < currentConfigDevices.length; i++) {
-			if (
-				signedDevices.length < 1 ||
-				(currentConfigDevices[i].device.type !== signedDevices[0].type && currentConfigDevices[i].device.fingerprint !== signedDevices[0].fingerprint)
-			) {
+			if (signedDevices.length < 1 || currentConfigDevices[i].device.fingerprint.toLowerCase() !== signedDevices[0].fingerprint.toLowerCase()) {
 				selectableDevice = [
 					...selectableDevice,
 					{ name: currentConfigDevices[i].device.model.replaceAll('_', ' ') + ' (' + currentConfigDevices[i].device.fingerprint + ')' },
 				];
 			}
 		}
+		console.log('selectableDevice', selectableDevice);
 	}
 
 	const handleDeviceSelected = ({ detail }) => {
 		for (let i = 0; i < permanentcurrentConfigDevices.length; i++) {
-			if (
-				signedDevices.length < 1 ||
-				(permanentcurrentConfigDevices[i].device.type !== signedDevices[0].type &&
-					permanentcurrentConfigDevices[i].device.fingerprint !== signedDevices[0].fingerprint)
-			) {
+			if (signedDevices.length < 1 || permanentcurrentConfigDevices[i].device.fingerprint.toLowerCase() !== signedDevices[0].fingerprint.toLowerCase()) {
 				filteredcurrentConfigDevices = [...filteredcurrentConfigDevices, permanentcurrentConfigDevices[i]];
 			}
 		}

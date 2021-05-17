@@ -23,7 +23,7 @@
 
 	const handleDeviceSelected = ({ detail }) => {
 		const devicesChoice = [
-			$_('creation.dropdown_details.coldcard', { default: 'Coldcard - Recommended' }),
+			$_('creation.dropdown_details.coldcard_clean', { default: 'Coldcard' }),
 			$_('creation.dropdown_details.trezor', { default: 'Trezor' }),
 			$_('creation.dropdown_details.ledger', { default: 'Ledger' }),
 		];

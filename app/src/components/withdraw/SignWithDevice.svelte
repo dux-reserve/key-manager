@@ -137,9 +137,7 @@
 														{$_('withdraw.sign_with_device.signing_transaction', { default: 'Signing your transaction' })}
 														{#if selectedWalletData.fingerprint}
 															{$_('withdraw.sign_with_device.signing_transaction_with', { default: 'with' })}
-															<span
-																class="is-uppercase"
-																title={$_('withdraw.sign_with_device.device_fingerprint_title', { default: 'Device unique fingerprint' })}
+															<span class="is-uppercase" title={$_('withdraw.sign_with_device.device_fingerprint_title', { default: 'Device unique fingerprint' })}
 																>{selectedWalletData.fingerprint}</span
 															>
 														{/if}

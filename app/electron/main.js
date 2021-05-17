@@ -27,8 +27,8 @@ const gpuDisabled = app.commandLine.hasSwitch('gpu-disabled');
 const userFilePath = app.getPath('userData');
 
 // !! Make sure the proper environment variables are set for public release !! //
-// const isDevelopment = process.env.NODE_ENV === 'development'; // DevTools deactivated by default
-const isDevelopment = false; // !! UNCOMMENT FOR PRODUCTION !!
+const isDevelopment = process.env.NODE_ENV === 'development'; // DevTools deactivated by default
+// const isDevelopment = false; // !! UNCOMMENT FOR PRODUCTION !!
 
 // *** basePassword is the default Secret Password, DUX use its own Password, if you DIY the building process you will need to change it for your own. MINIMUM 8 CHARACTERS *** //
 const basePassword = process.env.BASE_KEY || 'THIS_IS_NOT_FOR_PRODUCTION';
@@ -59,18 +59,18 @@ let appMainWindow;
 
 // !! COMMENT FOR PRODUCTION !!
 // Hot reload for the developers only
-// if (isDevelopment) {
-// 	require('electron-reload')(__dirname, {
-// 		electron: path.join(__dirname, '../../node_modules', '.bin', 'electron'),
-// 		awaitWriteFinish: true,
-// 	});
+if (isDevelopment) {
+	require('electron-reload')(__dirname, {
+		electron: path.join(__dirname, '../../node_modules', '.bin', 'electron'),
+		awaitWriteFinish: true,
+	});
 
-// 	console.log(
-// 		bitcoinTestnet
-// 			? '\x1b[40m\x1b[32m\x1b[5m\x1b[4m * BITCOIN TESTNET — DUX RESERVE ALPHA VERSION * \x1b[0m'
-// 			: '\x1b[40m\x1b[33m\x1b[5m\x1b[4m *** BITCOIN MAINNET USE WITH CAUTION — DUX RESERVE ALPHA VERSION *** \x1b[0m',
-// 	);
-// }
+	console.log(
+		bitcoinTestnet
+			? '\x1b[40m\x1b[32m\x1b[5m\x1b[4m * BITCOIN TESTNET — DUX RESERVE ALPHA VERSION * \x1b[0m'
+			: '\x1b[40m\x1b[33m\x1b[5m\x1b[4m *** BITCOIN MAINNET USE WITH CAUTION — DUX RESERVE ALPHA VERSION *** \x1b[0m',
+	);
+}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -157,9 +157,9 @@ const createMainWindow = () => {
 				appMainWindow.show();
 
 				// !! COMMENT FOR PRODUCTION !!
-				// if (isDevelopment) {
-				// 	appMainWindow.webContents.openDevTools();
-				// }
+				if (isDevelopment) {
+					appMainWindow.webContents.openDevTools();
+				}
 
 				appMainWindow.maximize();
 				setTimeout(() => {
@@ -1008,14 +1008,14 @@ ipcMain.handle('psbt:export-coldcard-unsigned-psbt-dialog', async (_event, args)
 		});
 
 		if (!response.canceled) {
+			const savePath = response.filePaths[0];
 			const fileName = formatFileName(
-				`${accountName}-${isVault ? (isFrench ? 'coffre' : 'vault') : (isFrench ? 'portefeuille' : 'wallet')}-${currentBitcoinNetwork === networks.testnet ? 'testnet' : ''}`,
+				`${accountName}-${isVault ? (isFrench ? 'coffre' : 'vault') : isFrench ? 'portefeuille' : 'wallet'}-${currentBitcoinNetwork === networks.testnet ? 'testnet' : ''}`,
 				'psbt',
 				false,
 			);
-
-			fs.writeFileSync(path.resolve(fileName), psbt);
-			shell.showItemInFolder(path.resolve(fileName));
+			fs.writeFileSync(path.resolve(path.join(savePath, fileName)), psbt);
+			shell.showItemInFolder(path.resolve(path.join(savePath, fileName)));
 			return Promise.resolve('Success');
 		} else {
 			throw new Error('Canceled');

@@ -4,8 +4,6 @@
 	import * as animateScroll from 'svelte-scrollto';
 	import Button from '../../components/ui/Button.svelte';
 
-	export let microSDExportError = false;
-
 	const dispatch = createEventDispatcher();
 
 	const handleExportFromMicroSD = () => {
@@ -36,13 +34,11 @@
 							<div class="column">
 								<p class="has-text-weight-medium">
 									{$_('withdraw.coldcard_micro_sd.subtitle', {
-										default:
-											'Your previously imported your setup file into your Coldcard. If you haven’t done it already, you can do it from your vault settings',
+										default: 'Your previously imported your setup file into your Coldcard. If you haven’t done it already, you can do it from your vault settings',
 									})}
 								</p>
 								<p>
-									1. {$_('withdraw.coldcard_micro_sd.paragraph_1', { default: 'Download your partially signed bitcoin transaction (PSBT) into Coldcard' })}.<br
-									/>
+									1. {$_('withdraw.coldcard_micro_sd.paragraph_1', { default: 'Download your partially signed bitcoin transaction (PSBT) into Coldcard' })}.<br />
 									2. {$_('withdraw.coldcard_micro_sd.paragraph_2', { default: 'Insert a Micro SD card into your Coldcard (max 32 GB)' })}.<br />
 									3. {$_('withdraw.coldcard_micro_sd.paragraph_3', { default: 'Power up and unlock your Coldcard' })}.<br />
 									4. {$_('withdraw.coldcard_micro_sd.paragraph_4', { default: 'Select Ready to Sign' })}.<br />

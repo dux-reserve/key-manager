@@ -107,8 +107,10 @@
 									{$configSelectedCurrentData.config.quorum.totalSigners}
 								{/if}
 							{:else if $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners === 1}
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span
-								>{$_('dashboard.current_config_details.wallet', { default: 'Wallet' })}
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span>{$_(
+									'dashboard.current_config_details.wallet',
+									{ default: 'Wallet' },
+								)}
 							{/if}
 						</h3>
 					</div>
@@ -124,27 +126,28 @@
 								{$configSelectedCurrentData.config.quorum.totalSigners}
 								{$_('dashboard.current_config_details.vault', { default: 'Vault' })}
 							{:else if $configSelectedCurrentData && $configSelectedCurrentData.config && $configSelectedCurrentData.config.quorum.totalSigners === 1}
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span
-								>{$_('dashboard.current_config_details.wallet', { default: 'Wallet' })}
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Wallet icon" /></span>{$_(
+									'dashboard.current_config_details.wallet',
+									{ default: 'Wallet' },
+								)}
 							{/if}
 						</h3>
 					{/if}
 				</div>
 				<h4
 					class="subtitle is-4 has-smaller-margin skeleton-block skeleton-title skeleton-small mb-2 is-family-primary has-text-weight-medium is-dark"
-					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || !$configSelectedCurrentData.currentBalance}
+					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || $configSelectedCurrentData.currentBalance === undefined}
 					class:is-selectable={$configSelectedCurrentData && $configSelectedCurrentData.name}
 				>
 					{formatNumberByThousands(
-						satoshisToBitcoins($configSelectedCurrentData ? $configSelectedCurrentData.currentBalance : 0).toNumber() *
-							$bitcoinCurrentPrices[$selectedCurrency],
+						satoshisToBitcoins($configSelectedCurrentData ? $configSelectedCurrentData.currentBalance : 0).toNumber() * $bitcoinCurrentPrices[$selectedCurrency],
 						true,
 						$selectedCurrency,
 					)}<span class="is-size-5 ml-1">{$selectedCurrency}</span>
 				</h4>
 				<p
 					class="is-size-6 skeleton-block skeleton-medium"
-					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || !$configSelectedCurrentData.currentBalance}
+					class:skeleton={!$configSelectedCurrentData || !$configSelectedCurrentData.name || $configSelectedCurrentData.currentBalance === undefined}
 					class:is-selectable={$configSelectedCurrentData && $configSelectedCurrentData.name}
 				>
 					{$applicationSettings.satoshiUnit
@@ -158,7 +161,7 @@
 						  )}<span class="is-size-7 ml-1"> {$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
 				</p>
 				{#if currentPendingAmount}
-					<p class="is-size-7 pt-2 has-text-grey-dark" class:is-selectable={$configSelectedCurrentData.name}>
+					<p class="is-size-7 pt-1 has-text-grey-dark pending-amount" class:is-selectable={$configSelectedCurrentData.name}>
 						{$applicationSettings.satoshiUnit
 							? formatNumberByThousands(currentPendingAmount, false, '', false, 0)
 							: formatNumberByThousands(satoshisToBitcoins(currentPendingAmount).toNumber(), false, '', false, 8)}<span class="is-size-8-custom ml-1">
@@ -272,6 +275,7 @@
 	.columns {
 		.column .card {
 			height: 100%;
+			min-height: 219px;
 
 			.card-content {
 				height: 100%;
@@ -321,6 +325,11 @@
 				height: auto;
 			}
 		}
+	}
+
+	.pending-amount {
+		position: relative;
+		height: 0;
 	}
 
 	.is-4-custom {

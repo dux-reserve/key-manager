@@ -2,14 +2,12 @@
   <img src="public/img/logos/dux-logo-with-text.svg" width="350" title="Dux Reserve">
 </p>
 <h3 align="center">
-  Key Manager — 0.4.1-beta
+  Key Manager — 0.4.2-beta
 </h3>
 
 ----
 
-### Create wallets and multisig vaults. Have full control of your hardware devices. Easy and secure. Free and open-source. All your bitcoin in one place.
 
-----
 ## Installation MacOS & Windows
 1. Download
 2. Install

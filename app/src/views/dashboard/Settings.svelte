@@ -1,6 +1,5 @@
 <script>
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { replace } from 'svelte-spa-router';
 	import { _ } from 'svelte-i18n';
 	import * as animateScroll from 'svelte-scrollto';
 	import { timer } from '../../utils/helpers';
@@ -297,14 +296,9 @@
 		showForgetOverlay = false;
 	};
 
-	const handleResetApp = async () => {
-		try {
-			await window.api.ipcRenderer.invoke('app:reset');
-			showForgetOverlay = false;
-			dispatch('resetApp');
-		} catch (error) {
-			console.log('error when deleting current config file');
-		}
+	const handleResetApp = () => {
+		showForgetOverlay = false;
+		dispatch('resetApp');
 	};
 
 	onMount(async () => {
@@ -473,9 +467,7 @@
 						on:change={handleSettingsChangeNotification}
 						disabled={!$applicationSettings.notification}
 					/>
-					<label for="switchNotificationReceivedTxConfirmed"
-						>{$_('settings.transaction_received_confirmed', { default: 'Received transaction confirmed' })}</label
-					>
+					<label for="switchNotificationReceivedTxConfirmed">{$_('settings.transaction_received_confirmed', { default: 'Received transaction confirmed' })}</label>
 				</div>
 
 				<div class="field">
@@ -488,9 +480,7 @@
 						on:change={handleSettingsChangeNotification}
 						disabled={!$applicationSettings.notification}
 					/>
-					<label for="switchNotificationWithdrawTxConfirmed"
-						>{$_('settings.transaction_withdraw_confirmed', { default: 'Withdraw transaction confirmed' })}</label
-					>
+					<label for="switchNotificationWithdrawTxConfirmed">{$_('settings.transaction_withdraw_confirmed', { default: 'Withdraw transaction confirmed' })}</label>
 				</div>
 
 				<div class="field">
@@ -619,9 +609,7 @@
 
 <div class="mb-3" />
 
-{#if $configsCurrentDataVaultsArray && $configsCurrentDataVaultsArray.length >= 1 && $configsCurrentDataVaultsArray.some(vault =>
-		vault.config.extendedPublicKeys.some(key => key.device.type === 'coldcard'),
-	)}
+{#if $configsCurrentDataVaultsArray && $configsCurrentDataVaultsArray.length >= 1 && $configsCurrentDataVaultsArray.some( vault => vault.config.extendedPublicKeys.some(key => key.device.type === 'coldcard'), )}
 	<div class="columns">
 		<div class="column is-12">
 			<div class="card config">

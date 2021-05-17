@@ -69,20 +69,22 @@
 
 			dataArrayFilteredSelectedTimeline = $bitcoinChartArrayData.filter(data => data.timescale == $chartTimeScale)[0].data;
 
-			for (let i = 0; i < dataArrayFilteredSelectedTimeline.length; i++) {
-				dateArray = [
-					...dateArray,
-					dataArrayFilteredSelectedTimeline[i][0] ? dayjs(dataArrayFilteredSelectedTimeline[i][0]).format('dddd[,] MMMM DD[,] YYYY [-] HH[:]mm') : null,
-				];
-				priceArray = [
-					...priceArray,
-					dataArrayFilteredSelectedTimeline[i][1]
-						? dataArrayFilteredSelectedTimeline[i][1].toFixed($selectedCurrency === 'XAG' || $selectedCurrency === 'XAU' ? 4 : 2)
-						: null,
-				]; // There's sometimes data missing from the database
-			}
+			if (dataArrayFilteredSelectedTimeline) {
+				for (let i = 0; i < dataArrayFilteredSelectedTimeline.length; i++) {
+					dateArray = [
+						...dateArray,
+						dataArrayFilteredSelectedTimeline[i][0] ? dayjs(dataArrayFilteredSelectedTimeline[i][0]).format('dddd[,] MMMM DD[,] YYYY [-] HH[:]mm') : null,
+					];
+					priceArray = [
+						...priceArray,
+						dataArrayFilteredSelectedTimeline[i][1]
+							? dataArrayFilteredSelectedTimeline[i][1].toFixed($selectedCurrency === 'XAG' || $selectedCurrency === 'XAU' ? 4 : 2)
+							: null,
+					]; // There's sometimes data missing from the database
+				}
 
-			calculatedPercentageChange(priceArray[0], $bitcoinCurrentPrices[$selectedCurrency]);
+				calculatedPercentageChange(priceArray[0], $bitcoinCurrentPrices[$selectedCurrency]);
+			}
 
 			handleAllTimeHighAlert();
 
@@ -245,9 +247,8 @@
 			<div class="chart-title">
 				<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('price_chart.title', { default: 'Bitcoin price' })}</h5>
 				{#if showAllTimeHighAlert}
-					<span
-						class="icon ath-icon is-normal has-no-hover is-primary is-inline-block ml-1"
-						title={$_('price_chart.ath_title', { default: 'NEW ALL TIME HIGH' })}><img src={fireIcon} alt="All Time High" /></span
+					<span class="icon ath-icon is-normal has-no-hover is-primary is-inline-block ml-1" title={$_('price_chart.ath_title', { default: 'NEW ALL TIME HIGH' })}
+						><img src={fireIcon} alt="All Time High" /></span
 					>
 				{/if}
 				<h4

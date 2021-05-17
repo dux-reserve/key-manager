@@ -34,8 +34,8 @@
 	const settingsIcon = './img/icons/ui/settings.svg';
 
 	$: title = $bitcoinTestnetNetwork
-		? `Dux Reserve ${isDevelopment ? '— DEV TESTNET — 0.4.1-beta' : 'Beta'}`
-		: `Dux Reserve ${isDevelopment ? '— DEV MAINNET — 0.4.1-beta' : 'Beta'}`;
+		? `Dux Reserve ${isDevelopment ? '— DEV TESTNET — 0.4.2-beta' : 'Beta'}`
+		: `Dux Reserve ${isDevelopment ? '— DEV MAINNET — 0.4.2-beta' : 'Beta'}`;
 
 	$: scrollable = !$disableScroll;
 
@@ -273,9 +273,9 @@
 
 	// !! COMMENT FOR PRODUCTION !!
 	// Allow the developer to refresh the app with the testnet switch
-	// if (isDevelopment) {
-	// 	handleSwitchNetwork();
-	// }
+	if (isDevelopment) {
+		handleSwitchNetwork();
+	}
 </script>
 
 <svelte:window use:mouseWheel={{ scrollable }} />
@@ -314,14 +314,14 @@
 		{/if}
 
 		<!-- !! COMMENT FOR PRODUCTION !! -->
-		<!-- {#if isDevelopment && $location !== '/'}
+		{#if isDevelopment && $location !== '/'}
 			<div class="dev-infos is-size-7">
 				<div><strong class="mr-1">Present Path:</strong>{$location}</div>
 				{#if $querystring}
 					<div><strong class="ml-2 mr-1">Querystring:</strong>{$querystring}</div>
 				{/if}
 			</div>
-		{/if} -->
+		{/if}
 	</div>
 {/if}
 
@@ -331,15 +331,17 @@
 	</div>
 {/if}
 
-<div class="overlay-circle is-rounded" title="Feedback" on:click={handleShowFeedbackOverlay}>
-	<span class="icon is-white has-no-hover"><img src={feedbackIcon} alt="Feedback icon" /></span>
-</div>
+{#if process.env.FEEDBACK_BOX}
+	<div class="overlay-circle is-rounded" title="Feedback" on:click={handleShowFeedbackOverlay}>
+		<span class="icon is-white has-no-hover"><img src={feedbackIcon} alt="Feedback icon" /></span>
+	</div>
+{/if}
 
 {#if showQuickSettingsOverlay && $location !== '/dashboard'}
 	<QuickSettings on:closeOverlayClicked={handleHideQuickSettingsOverlay} />
 {/if}
 
-{#if showFeedbackOverlay}
+{#if showFeedbackOverlay && process.env.FEEDBACK_BOX}
 	<FeedbackOverlay on:closeOverlayClicked={handleHideFeedbackOverlay} />
 {/if}
 
@@ -355,7 +357,7 @@
 			flex-direction: column
 			justify-content: center
 			align-items: center
-			height: 100%;
+			height: 100%
 
 	.quick-settings
 		position: fixed

@@ -7,7 +7,6 @@
 	export let finalFee = 0;
 	export let finalTransactionAmount = 0;
 	export let transactionDestinationAddress = '';
-	export let useAllFunds = false;
 	export let walletType = 'single';
 
 	const checkCircle = './img/icons/ui/check-circle.svg';

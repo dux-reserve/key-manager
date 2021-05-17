@@ -32,7 +32,7 @@
 						<h2 class="title is-4 has-subtitle-margin is-vertical-center has-text-centered is-justify-content-center mb-6">
 							<span class="icon is-prussian-blue is-normal has-no-hover mr-3"><img class="image-key" src={walletIcon} alt="Wallet Icon" /></span
 							>{$_('creation.choice.wallet_title', { default: 'Wallet' })}<span
-								class="icon is-exposant ml-2 is-prussian-blue"
+								class="icon is-exposant ml-2 is-prussian-blue has-no-hover"
 								data-tooltip={$_('creation.choice.wallet_tooltips', { default: 'Wallet' })}><img src={helpIcon} alt="help" /></span
 							>
 						</h2>
@@ -62,7 +62,7 @@
 						<h2 class="title is-4 has-subtitle-margin is-vertical-center has-text-centered is-justify-content-center mb-6">
 							<span class="icon is-prussian-blue is-normal has-no-hover mr-3"><img class="image-key" src={vaultIcon} alt="Vault Icon" /></span
 							>{$_('creation.choice.vault_title', { default: 'Vault' })}<span
-								class="icon is-exposant ml-2 is-prussian-blue"
+								class="icon is-exposant ml-2 is-prussian-blue has-no-hover"
 								data-tooltip={$_('creation.choice.vault_tooltips', { default: 'Vault' })}><img src={helpIcon} alt="help" /></span
 							>
 						</h2>

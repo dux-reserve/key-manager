@@ -62,7 +62,7 @@
 								</p>
 							</div>
 							<div class="field is-selectable">
-								<div class="label">{$_('withdraw.preview.amount', { default: 'Amount' })}</div>
+								<div class="label">{$_('withdraw.preview.amount', { default: 'Amount withdrawn' })}</div>
 								<p class="has-text-weight-normal has-text-multiline">
 									{$applicationSettings.satoshiUnit
 										? formatNumberByThousands(finalTransactionAmount, false, '', false, 0)
@@ -78,6 +78,14 @@
 										{$selectedCurrency})
 									</span>
 								</p>
+								<!-- TODO: calculated unconfirmed funds used -->
+								<!-- <p class="has-text-weight-normal has-text-grey-dark has-text-multiline">
+									{$applicationSettings.satoshiUnit
+										? formatNumberByThousands(currentPendingAmount, false, '', false, 0)
+										: formatNumberByThousands(satoshisToBitcoins(currentPendingAmount), false, '', false, 8)}
+									{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}
+									<span class="is-size-7"> Unconfirmed funds* </span>
+								</p> -->
 							</div>
 							<div class="field is-selectable">
 								<div class="label">
@@ -138,7 +146,7 @@
 								<div class="field is-selectable">
 									<div class="label">
 										{$_('withdraw.preview.change_address', { default: 'Change address' })} (output #2)<span
-											class="icon is-small ml-2 is-prussian-blue"
+											class="icon is-small ml-2 is-prussian-blue has-no-hover"
 											data-tooltip={`${$_('withdraw.preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 												walletType === 'single' ? $_('withdraw.preview.wallet', { default: 'wallet' }) : $_('withdraw.preview.vault', { default: 'vault' })
 											}, ${$_('withdraw.preview.tooltip_2', {
@@ -154,7 +162,7 @@
 								<div class="field is-selectable">
 									<div class="label">
 										{$_('withdraw.preview.change_amount', { default: 'Change amount' })}<span
-											class="icon is-small ml-2 is-prussian-blue"
+											class="icon is-small ml-2 is-prussian-blue has-no-hover"
 											data-tooltip={`${$_('withdraw.preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 												walletType === 'single' ? $_('withdraw.preview.wallet', { default: 'wallet' }) : $_('withdraw.preview.vault', { default: 'vault' })
 											}, ${$_('withdraw.preview.tooltip_2', {
@@ -173,7 +181,7 @@
 								<div class="field is-selectable">
 									<div class="label">
 										{$_('withdraw.preview.total_amount', { default: 'Total amount' })}<span
-											class="icon is-small ml-2 is-prussian-blue"
+											class="icon is-small ml-2 is-prussian-blue has-no-hover"
 											data-tooltip={$_('withdraw.preview.tooltip_total', { default: 'This includes the amount, the network fee and change amount' })}
 										>
 											<img src={helpIcon} alt="help" /></span

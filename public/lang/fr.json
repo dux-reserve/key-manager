@@ -553,6 +553,7 @@
     "dropdown_details": {
       "choose": "Choisir votre périphérique",
       "coldcard": "Coldcard - Recommandé",
+      "coldcard_clean": "Coldcard",
       "trezor": "Trezor",
       "ledger": "Ledger"
     },
@@ -704,7 +705,7 @@
       "amount_title": "Cliquer pour changer l'unité de transaction",
       "current_value_title_1": "Valeur actuelle",
       "current_value_title_2": " ",
-      "not_enough_funds": "Fonds confirmés insuffisants, veuillez réduire les frais ou le montant souhaité",
+      "not_enough_funds": "Fonds insuffisants, veuillez réduire les frais ou le montant souhaité",
       "scanning_for_confirmed_funds": "Recherche de fonds confirmés",
       "no_fund_available": "Aucun fonds disponible",
       "withdraw_all_funds": "Retirez tous les fonds de ce",
@@ -732,7 +733,8 @@
         "fast": "Rapide ~ prochain bloc",
         "custom": "Frais personnalisé"
       },
-      "preview_transaction": "Revoir la transaction"
+      "preview_transaction": "Revoir la transaction",
+      "preview_transaction_title": "Complétez la transaction pour continuer"
     },
     "steps": {
       "headline": "Retrait depuis",

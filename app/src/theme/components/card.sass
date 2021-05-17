@@ -1,6 +1,6 @@
 $card-color: $text !default
 $card-background-color: $light-theme-forground !default
-$card-shadow: 0 0.4rem 0.9rem 0.2rem rgba($light-theme-shadow, 0.0375), 0 0 0 1px rgba($scheme-main, 0.01) !default
+$card-shadow: 0 0.4rem 0.9rem 0.2rem rgba($light-theme-shadow, 0.0625), 0 0 0 1px rgba($scheme-main, 0.0129) !default
 $card-radius-default: 10px !default
 $card-radius: 1.875rem !default
 $card-overflow: visible !default
@@ -31,6 +31,10 @@ $card-media-margin: $block-spacing !default
   color: $card-color
   &.is-rounded
     border-radius: $card-radius
+  &.is-background-color
+    background-color: $dark-theme-background
+  &.is-forground-color
+    background-color: $dark-theme-forground
 
 .card-header
   display: flex

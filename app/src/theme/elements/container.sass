@@ -25,3 +25,14 @@ $container-max-width: $fullhd !default
   +fullhd
     &:not(.is-max-desktop):not(.is-max-widescreen)
       max-width: min($fullhd, $container-max-width) - $container-offset
+
+.container-fluid
+  &.is-bold-background
+    background-color: $dark-theme-background
+
+.container-fluid.has-footer-card-overlay
+  padding-bottom: 180px
+
+@media screen and (max-width: $tablet)
+  .container-fluid.has-footer-card-overlay
+    padding-bottom: 200px !important

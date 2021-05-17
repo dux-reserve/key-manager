@@ -30,26 +30,26 @@
 		showForgetOverlay = false;
 	};
 
-	const handleForgetCurrentConfig = async () => {
+	const handleForgetCurrentConfig = () => {
 		try {
-			await window.api.ipcRenderer.invoke('config-data:delete-file');
+			setTimeout(async () => {
+				$configData = {};
+				$configsCurrentDataWalletsArray = {};
+				$configsCurrentDataVaultsArray = {};
+				$configSelectedCurrentData = {};
 
-			$configData = {};
-			$configsCurrentDataWalletsArray = {};
-			$configsCurrentDataVaultsArray = {};
-			$configSelectedCurrentData = {};
-			replace('/');
-			showForgetOverlay = false;
+				await window.api.ipcRenderer.invoke('config-data:delete-file');
+				replace('/');
+				showForgetOverlay = false;
+			}, 0);
 		} catch (error) {
 			console.log('error when deleting current config file');
 		}
 	};
 
 	const handlePasswordEnter = event => {
-		if (event && event.target.value) {
-			password = event.target.value;
-			if (password.length >= 1) wrongPassword = false;
-		}
+		password = event.target.value;
+		if (password.length >= 1 && wrongPassword) wrongPassword = false;
 	};
 
 	const handleShowPassword = () => {
@@ -62,8 +62,8 @@
 				config: $configData,
 				userPassword: password,
 			});
-			$configData = decryptedConfig;
-			if ('version' in $configData && 'name' in $configData && 'wallets' in $configData && 'vaults' in $configData) {
+			if ('version' in decryptedConfig && 'name' in decryptedConfig && 'wallets' in decryptedConfig && 'vaults' in decryptedConfig) {
+				$configData = decryptedConfig;
 				replace('/dashboard');
 			} else {
 				wrongPassword = true;
@@ -111,12 +111,7 @@
 										</div>
 
 										<div class="buttons is-centered mt-6">
-											<Button
-												text={$_('lockscreen.button_enter', { default: 'Enter now' })}
-												icon="arrowRight"
-												buttonClass="is-primary"
-												buttonLink="/dashboard"
-											/>
+											<Button text={$_('lockscreen.button_enter', { default: 'Enter now' })} icon="arrowRight" buttonClass="is-primary" buttonLink="/dashboard" />
 										</div>
 
 										<p class="has-text-weight-normal" on:click={handleShowForgetOverlay}>

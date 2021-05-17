@@ -214,6 +214,10 @@
 		right: 2.5rem;
 	}
 
+	[data-tooltip]:hover {
+		cursor: default !important;
+	}
+
 	[data-tooltip]::before {
 		bottom: 107.75%;
 		width: 250px;

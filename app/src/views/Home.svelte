@@ -104,12 +104,7 @@
 
 							<div class="card-bottom mt-4">
 								<div class="buttons is-centered mt-6">
-									<Button
-										text={$_('home.button', { default: 'Get started' })}
-										icon="arrowRight"
-										buttonClass="is-primary"
-										on:buttonClicked={handleShowDisclaimer}
-									/>
+									<Button text={$_('home.button', { default: 'Get started' })} icon="arrowRight" buttonClass="is-primary" on:buttonClicked={handleShowDisclaimer} />
 								</div>
 								<p class="has-space-after-button">
 									{$_('home.config', { default: 'Already have a vault or a wallet?' })}
@@ -133,21 +128,14 @@
 {#if showDisclamerOverlay}
 	<Overlay titleIsLeft disableClosing subtitle>
 		<span slot="title"
-			>{$_('disclaimer.title', { default: 'Beta version' })} (0.4.1)
+			>{$_('disclaimer.title', { default: 'Beta version' })} (0.4.2)
 			<div
 				class="field switch-testnet"
 				title={$_('settings.testnet_title', {
 					default: 'Only for testing and development using test bitcoin (tBTC) instead of actual bitcoin (BTC). Compatible with all hardware devices',
 				})}
 			>
-				<input
-					id="switchTestnet"
-					type="checkbox"
-					name="switchTestnet"
-					class="switch is-small is-rtl"
-					bind:checked={useTestnet}
-					on:change={handleChangeNetwork}
-				/>
+				<input id="switchTestnet" type="checkbox" name="switchTestnet" class="switch is-small is-rtl" bind:checked={useTestnet} on:change={handleChangeNetwork} />
 				<label for="switchTestnet">{$_('settings.testnet', { default: 'Use Testnet' })}</label>
 			</div>
 		</span>
@@ -155,8 +143,7 @@
 			<p>{$_('disclaimer.paragraph_1', { default: 'Only use with small amounts of bitcoin or use testnet.' })}</p>
 			<p class="mt-2 has-text-justified">
 				{$_('disclaimer.paragraph_2', {
-					default:
-						"This software is in beta. It's thoughtfully tested and secure, but expect hiccups here and there. You can also change the Bitcoin network to",
+					default: "This software is in beta. It's thoughtfully tested and secure, but expect hiccups here and there. You can also change the Bitcoin network to",
 				})}
 				{$bitcoinTestnetNetwork ? 'mainnet' : 'testnet'}. {$_('disclaimer.paragraph_3', {
 					default: 'We will share updates on',
@@ -175,11 +162,7 @@
 				>.
 			</p>
 			<div class="buttons is-right mt-6">
-				<Button
-					text={$_('disclaimer.button_back', { default: "I'll just wait" })}
-					buttonClass="is-primary is-outlined"
-					on:buttonClicked={handleCloseDisclaimer}
-				/>
+				<Button text={$_('disclaimer.button_back', { default: "I'll just wait" })} buttonClass="is-primary is-outlined" on:buttonClicked={handleCloseDisclaimer} />
 				<Button
 					text={$_('disclaimer.button_ok', { default: 'Ok, makes sense' })}
 					buttonClass="is-primary"

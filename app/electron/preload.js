@@ -10,5 +10,3 @@ contextBridge.exposeInMainWorld('api', {
 	ipcRenderer: ipcRenderer,
 	store: store.preloadBindings(ipcRenderer, fs),
 });
-
-// https://github.com/reZach/secure-electron-template/blob/master/app/electron/preload.js

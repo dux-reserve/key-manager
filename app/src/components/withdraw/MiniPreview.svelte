@@ -71,12 +71,11 @@
 			<div class="field is-selectable">
 				<div class="label">
 					{$_('withdraw.min_preview.change_address', { default: 'Change address' })} (output #2)<span
-						class="icon is-small ml-2 is-prussian-blue"
+						class="icon is-small ml-2 is-prussian-blue has-no-hover"
 						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 							walletType === 'single' ? $_('withdraw.min_preview.wallet', { default: 'wallet' }) : $_('withdraw.min_preview.vault', { default: 'vault' })
 						}, ${$_('withdraw.min_preview.tooltip_2', {
-							default:
-								'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
+							default: 'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
 						})}`}><img src={helpIcon} alt="help" /></span
 					>
 				</div>
@@ -87,12 +86,11 @@
 			<div class="field is-selectable">
 				<div class="label">
 					{$_('withdraw.min_preview.change_amount', { default: 'Change amount' })}<span
-						class="icon is-small ml-2 is-prussian-blue"
+						class="icon is-small ml-2 is-prussian-blue has-no-hover"
 						data-tooltip={`${$_('withdraw.min_preview.tooltip_1', { default: 'When you withdraw funds from your bitcoint' })} ${
 							walletType === 'single' ? $_('withdraw.min_preview.wallet', { default: 'wallet' }) : $_('withdraw.min_preview.vault', { default: 'vault' })
 						}, ${$_('withdraw.min_preview.tooltip_2', {
-							default:
-								'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
+							default: 'the specified amount of funds is sent to the intended bitcoin address and the remainder of the funds is sent back to your change address',
 						})}`}><img src={helpIcon} alt="help" /></span
 					>
 				</div>
@@ -106,7 +104,7 @@
 			<div class="field is-selectable">
 				<div class="label">
 					{$_('withdraw.min_preview.total_amount', { default: 'Total amount' })}<span
-						class="icon is-small ml-2 is-prussian-blue"
+						class="icon is-small ml-2 is-prussian-blue has-no-hover"
 						data-tooltip={$_('withdraw.min_preview.tooltip_total', { default: 'This includes the amount, the network fee and change amount' })}
 					>
 						<img src={helpIcon} alt="help" /></span

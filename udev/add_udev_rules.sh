@@ -9,5 +9,5 @@ echo 'Adding plugdev group for udev rules'
 sudo groupadd plugdev
 echo 'Adding' $USER 'to the plugdev group'
 sudo usermod -aG plugdev `whoami`
-echo 'Done! You can now use Dux Reserve key manager beta on your linux environment :)'
+echo 'Done! You can now run Dux Reserve key manager beta :)'
 echo 'Vires in Numeris'

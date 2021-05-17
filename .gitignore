@@ -37,6 +37,9 @@ yarn-error.log*
 .env
 .env.*
 
+# dotenv development environment ! exception !
+!.env.development
+
 # Local todo file
 *.todo
 

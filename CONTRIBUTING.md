@@ -3,7 +3,7 @@
 </p>
 
 <h3 align="center">
-  Key Manager — 0.4.1-beta
+  Key Manager — 0.4.2-beta
 </h3>
 
 

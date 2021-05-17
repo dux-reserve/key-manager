@@ -67,7 +67,7 @@
 					>
 				</h4>
 				<p
-					class="is-size-6 skeleton-block skeleton-medium"
+					class="is-size-6 skeleton-block skeleton-medium mb-6"
 					class:skeleton={totalCurrentBalance === undefined || totalCurrentBalance === -1}
 					class:is-selectable={totalCurrentBalance !== undefined && totalCurrentBalance !== -1}
 				>
@@ -79,7 +79,7 @@
 					<!-- of 21 million -->
 				</p>
 				{#if totalCurrentPendingAmount}
-					<p class="is-size-7 pt-2 has-text-grey-dark" class:is-selectable={$configSelectedCurrentData.name}>
+					<p class="is-size-7 pt-2 has-text-grey-dark pending-main" class:is-selectable={$configSelectedCurrentData.name}>
 						{$applicationSettings.satoshiUnit
 							? formatNumberByThousands(totalCurrentPendingAmount, false, '', false, 0)
 							: formatNumberByThousands(satoshisToBitcoins(totalCurrentPendingAmount).toNumber(), false, '', false, 8)}<span class="is-size-8-custom ml-1"
@@ -98,8 +98,7 @@
 						class:skeleton={!$bitcoinMarketData.circulating_supply}
 						title={$bitcoinTestnetNetwork ? 'Mainnet supply, not calculated for testnet' : ''}
 					>
-						{formatNumberByThousands($bitcoinMarketData.circulating_supply, false, '', false, 0)}<span class="is-size-7 ml-1 has-text-multiline-full-word"
-							>BTC</span
+						{formatNumberByThousands($bitcoinMarketData.circulating_supply, false, '', false, 0)}<span class="is-size-7 ml-1 has-text-multiline-full-word">BTC</span
 						>
 					</div>
 				</div>
@@ -285,7 +284,7 @@
 							>
 						</p>
 						{#if allPendingAmount.length >= 1 && allPendingAmount[i]}
-							<p class="is-size-7 pt-2 has-text-grey-dark" class:is-selectable={$configSelectedCurrentData.name}>
+							<p class="is-size-7 pt-2 has-text-grey-dark pending-account" class:is-selectable={$configSelectedCurrentData.name}>
 								{$applicationSettings.satoshiUnit
 									? formatNumberByThousands(allPendingAmount[i], false, '', false, 0)
 									: formatNumberByThousands(satoshisToBitcoins(allPendingAmount[i]).toNumber(), false, '', false, 8)}<span class="is-size-8-custom ml-1"
@@ -317,8 +316,10 @@
 								{name}
 							</h2>
 							<h3 class="subtitle is-6 has-text-weight-normal is-family-primary is-vertical-center">
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span
-								>{$_('dashboard.welcome.wallet', { default: 'Wallet' })}
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span>{$_(
+									'dashboard.welcome.wallet',
+									{ default: 'Wallet' },
+								)}
 							</h3>
 						</div>
 						<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('dashboard.welcome.balance', { default: 'Balance' })}</h5>
@@ -347,8 +348,10 @@
 								{$configsCurrentDataWalletsArray[i].name}
 							</h2>
 							<h3 class="subtitle is-6 has-text-weight-normal is-family-primary is-vertical-center">
-								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span
-								>{$_('dashboard.welcome.wallet', { default: 'Wallet' })}
+								<span class="icon is-normal is-prussian-blue has-no-hover mr-2 mb-1"><img src={walletIcon} alt="Vault icon" /></span>{$_(
+									'dashboard.welcome.wallet',
+									{ default: 'Wallet' },
+								)}
 							</h3>
 						</div>
 						<h5 class="subtitle has-smaller-margin is-5 has-text-weight-bold">{$_('dashboard.welcome.balance', { default: 'Balance' })}</h5>
@@ -375,16 +378,12 @@
 							>
 						</p>
 						{#if allPendingAmount.length >= 1 && allPendingAmount[$configsCurrentDataVaultsArray.length + i]}
-							<p class="is-size-7 pt-2 has-text-grey-dark" class:is-selectable={$configSelectedCurrentData.name}>
+							<p class="is-size-7 pt-2 has-text-grey-dark pending-account" class:is-selectable={$configSelectedCurrentData.name}>
 								{$applicationSettings.satoshiUnit
 									? formatNumberByThousands(allPendingAmount[$configsCurrentDataVaultsArray.length + i], false, '', false, 0)
-									: formatNumberByThousands(
-											satoshisToBitcoins(allPendingAmount[$configsCurrentDataVaultsArray.length + i]).toNumber(),
-											false,
-											'',
-											false,
-											8,
-									  )}<span class="is-size-8-custom ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span>
+									: formatNumberByThousands(satoshisToBitcoins(allPendingAmount[$configsCurrentDataVaultsArray.length + i]).toNumber(), false, '', false, 8)}<span
+									class="is-size-8-custom ml-1">{$bitcoinTestnetNetwork ? 't' : ''}{$applicationSettings.satoshiUnit ? 'sats' : 'BTC'}</span
+								>
 								{$_('dashboard.welcome.pending', { default: 'pending' })}*
 							</p>
 						{/if}
@@ -444,6 +443,16 @@
 				margin-top: -1px;
 			}
 		}
+	}
+
+	.pending-main {
+		position: absolute;
+		top: 122px;
+	}
+
+	.pending-account {
+		position: absolute;
+		top: 160px;
 	}
 
 	.market-data {

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { encrypt, Message, readKey } = require('openpgp');
+const { encrypt, createMessage, readKey } = require('openpgp');
 
 const serviceURL = process.env.EMAIL_SERVICE_URL || 'THIS_IS_NOT_FOR_PRODUCTION';
 const serviceID = process.env.EMAIL_SERVICE_ID || 'THIS_IS_NOT_FOR_PRODUCTION';
@@ -113,12 +113,12 @@ jw==
 const encryptFeedbackMessageWithPGP = async feedback => {
 	try {
 		const encryptedForCastlenine = await encrypt({
-			message: Message.fromText(feedback),
+			message: await createMessage({ text: feedback }),
 			publicKeys: await readKey({ armoredKey: castlenineArmoredKey }),
 		});
 
 		const encryptedForThibaud = await encrypt({
-			message: Message.fromText(feedback),
+			message: await createMessage({ text: feedback }),
 			publicKeys: await readKey({ armoredKey: thibaudArmoredKey }),
 		});
 

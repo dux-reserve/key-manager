@@ -16,7 +16,7 @@
 		<span
 			class="is-link"
 			on:click={() => openUrl(`twitter${$applicationSettings.interfaceLanguage === 'fr' ? '-fr' : ''}`)}
-			title={$applicationSettings.interfaceLanguage === 'fr' ? 'https://t.me/https://twitter.com/FR_DUX' : 'https://twitter.com/duxreserve'}>Twitter</span
+			title={$applicationSettings.interfaceLanguage === 'fr' ? 'https://twitter.com/FR_DUX' : 'https://twitter.com/duxreserve'}>Twitter</span
 		>. {$_('footer.verify', {
 			default: `Don't trust, verify on`,
 		})}

@@ -19,12 +19,12 @@
 	import Broadcasted from './Broadcasted.svelte'; // Step 6
 
 	export let createdPsbt = null;
+	export let desiredFee = 0; // sats / vbyte
 	export let finalFee = 1;
 	export let finalTransactionAmount = 0; // in satoshi
-	export let desiredFee = 0; // sats / vbyte
+	export let transactionDestinationAddress = '';
 	export let txInputs = null;
 	export let txInputsTotal = 0;
-	export let transactionDestinationAddress = '';
 	export let useAllFunds = false;
 
 	$: currentBalanceWithdraw = $configSelectedCurrentData.currentBalance ? $configSelectedCurrentData.currentBalance : 0;
@@ -44,6 +44,7 @@
 	let lockClosingPinOverlay = false;
 	let microSDImportError = false;
 	let psbtExported = false;
+	let psbtNotFromQuorum = false;
 	let scannedDevices = [];
 	let scannedWalletData = {};
 	let selectedWalletData = {};
@@ -54,8 +55,8 @@
 	let showRetrySignWithDevice = false;
 	let signedDevices = [];
 	let signedPsbt = [];
-	let signingReady = false;
 	let signingInProgress = false;
+	let signingReady = false;
 	let signingSucess = false;
 	let trezorError = false;
 	let trezorLockPinKey = false;
@@ -76,13 +77,14 @@
 		lockClosingPinOverlay = false;
 		microSDImportError = false;
 		psbtExported = false;
+		psbtNotFromQuorum = false;
 		scannedDevices = [];
 		scannedWalletData = {};
 		showCancelConfirmation = false;
 		showMicroSDModel = false;
 		showPinOverlay = false;
-		signingInProgress = false;
 		showRetrySignWithDevice = false;
+		signingInProgress = false;
 		signingReady = false;
 		signingSucess = false;
 		trezorError = false;
@@ -156,6 +158,8 @@
 			walletNeedPinSent = false;
 			extractedFromMicroSD = true;
 			withdrawStep = 4;
+
+			await timer(1210);
 
 			if (signedPsbtFromMicroSD) {
 				signedPsbt = [...signedPsbt, signedPsbtFromMicroSD];
@@ -282,6 +286,11 @@
 	};
 
 	const handleBacktoTransactionDetails = () => {
+		selectedWalletData = {};
+		withdrawStep = 1;
+	};
+
+	const handleCancelSignature = () => {
 		if (signingSucess && signedDevices.length >= 1 && signedPsbt.length >= 1) {
 			showCancelConfirmation = true;
 		} else {
@@ -446,8 +455,6 @@
 				isFrench: $applicationSettings.interfaceLanguage === 'fr',
 			});
 
-			// TODO: verify PSBT data validity
-
 			psbtExported = true;
 		} catch (error) {
 			console.log(error);
@@ -462,11 +469,14 @@
 		try {
 			const response = await window.api.ipcRenderer.invoke('psbt:import-coldcard-signed-psbt-dialog');
 
-			// TODO: !Verify PSBT data validity
-
-			withdrawStep = 3;
-			showMicroSDModel = false;
-			signWithMicroSD(response);
+			// TODO: !Verify PSBT data validity and if it's from the right transaction/quorum
+			if ((signedPsbt.length >= 1 && !signedPsbt.includes(response)) || createdPsbt !== response) {
+				withdrawStep = 3;
+				showMicroSDModel = false;
+				signWithMicroSD(response);
+			} else {
+				microSDImportError = true;
+			}
 		} catch (error) {
 			console.log(error);
 			if (!error.message.includes('Canceled')) {
@@ -478,15 +488,17 @@
 	const handleShowExtractFromMicroSD = async () => {
 		handleResetWalletData();
 		handleScanningStop();
-		withdrawStep = 3;
+		microSDImportError = false;
 		showMicroSDModel = true;
+		withdrawStep = 3;
 	};
 
 	const handleCancelImportingFromMicroSD = () => {
 		handleResetWalletData();
 		handleScanningStop();
-		withdrawStep = 3;
+		microSDImportError = false;
 		showMicroSDModel = false;
+		withdrawStep = 3;
 	};
 
 	onDestroy(() => {
@@ -563,12 +575,12 @@
 			</div>
 		{:else if (withdrawStep === 3 || withdrawStep === 4) && showMicroSDModel}
 			<div class="card-action">
-				<ColdCardMicroSD {microSDImportError} on:uploadFromMicroSD={handleImportPSBTFromMicroSD} on:exportPSBTForColdcard={handleExportFromMicroSD} />
+				<ColdCardMicroSD on:uploadFromMicroSD={handleImportPSBTFromMicroSD} on:exportPSBTForColdcard={handleExportFromMicroSD} />
 			</div>
 		{:else if withdrawStep === 5}
 			<ConfirmTransaction {signedDevices} />
 		{:else if withdrawStep === 6}
-			<Broadcasted {currentBalanceWithdraw} {finalFee} {finalTransactionAmount} {transactionDestinationAddress} {useAllFunds} {walletType} />
+			<Broadcasted {currentBalanceWithdraw} {finalFee} {finalTransactionAmount} {transactionDestinationAddress} {walletType} />
 		{/if}
 	</div>
 
@@ -616,10 +628,10 @@
 			{:else if withdrawStep === 3 || withdrawStep === 4}
 				<Button
 					text={signingSucess
-						? $_('withdraw.steps.button_cancel_signature', { default: 'Cancel this signature' })
+						? $_('withdraw.steps.button_cancel_signature', { default: 'Cancel signature' })
 						: $_('withdraw.steps.button_back_transaction_details', { default: 'Back to transaction details' })}
 					buttonClass="is-primary is-outlined"
-					on:buttonClicked={handleBacktoTransactionDetails}
+					on:buttonClicked={signingSucess ? handleCancelSignature : handleBacktoTransactionDetails}
 				/>
 				<Button
 					text={vaultCompletedKeys + 1 === $configSelectedCurrentData.config.quorum.requiredSigners
@@ -730,9 +742,10 @@
 
 {#if deviceAlreadySigned}
 	<Overlay
-		title={`${$_('withdraw.overlay.device_already_signed.title_1', { default: 'Your' })} ${scannedWalletData.model
-			.split('_')
-			.join(' ')} ${$_('withdraw.overlay.device_already_signed.title_2', { default: '"have already signed the transaction' })}`}
+		title={`${$_('withdraw.overlay.device_already_signed.title_1', { default: 'Your' })} ${scannedWalletData.model.split('_').join(' ')} ${$_(
+			'withdraw.overlay.device_already_signed.title_2',
+			{ default: '"have already signed the transaction' },
+		)}`}
 		titleIsLeft
 		disableClosing
 	>

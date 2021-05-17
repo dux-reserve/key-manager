@@ -20,6 +20,8 @@
 	export let configDropdownArray = [];
 	export let configurationDropDownSelectedChoice = 0;
 
+	const helpIcon = './img/icons/ui/help.svg';
+
 	$: availableFiatAmount = currentAvailableAmount ? satoshisToBitcoins(currentAvailableAmount).toNumber() * $bitcoinCurrentPrices[$selectedCurrency] : 0;
 
 	$: amountUnitsChoice = useAllFunds
@@ -43,6 +45,18 @@
 	let estimatedFeeRates = { minimumFee: 1 };
 	let estimatingFee = false;
 	let feeDropdownText = `${$_('withdraw.main.fee_dropdown.estimating', { default: 'Estimating' })}... sats / vbyte`;
+	let feedDropdownOptions = [
+		{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' }), selected: true },
+		{
+			name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' }),
+			selected: false,
+		},
+		{
+			name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' }),
+			selected: false,
+		},
+		{ name: $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }), selected: false },
+	];
 	let finalFee = 1;
 	let finalTransactionAmount = 0;
 	let invalidAddressErrorMessage = '';
@@ -162,9 +176,9 @@
 			if (
 				!useAllFunds &
 				((unitDropdownText === $selectedCurrency &&
-					bitcoinsToSatoshis(transactionAmount / $bitcoinCurrentPrices[$selectedCurrency]).toNumber() + desiredFee > currentAvailableAmount) ||
-					(unitDropdownText === 'bitcoin' && bitcoinsToSatoshis(transactionAmount).toNumber() + desiredFee > currentAvailableAmount) ||
-					(unitDropdownText === 'satoshi' && transactionAmount + desiredFee > currentAvailableAmount))
+					bitcoinsToSatoshis(transactionAmount / $bitcoinCurrentPrices[$selectedCurrency]).toNumber() + desiredFee > $configSelectedCurrentData.currentBalance) ||
+					(unitDropdownText === 'bitcoin' && bitcoinsToSatoshis(transactionAmount).toNumber() + desiredFee > $configSelectedCurrentData.currentBalance) ||
+					(unitDropdownText === 'satoshi' && transactionAmount + desiredFee > $configSelectedCurrentData.currentBalance))
 			) {
 				notEnoughFunds = true;
 			} else {
@@ -178,7 +192,7 @@
 
 	const handleMaximumAmount = () => {
 		useAllFunds = !useAllFunds;
-		transactionAmount = useAllFunds ? currentAvailableAmount : undefined;
+		transactionAmount = useAllFunds ? $configSelectedCurrentData.currentBalance : undefined;
 		notEnoughFunds = false;
 		amountConverted = 0;
 		unitDropdownText = $applicationSettings.satoshiUnit ? 'satoshi' : 'bitcoin';
@@ -240,6 +254,19 @@
 			feeDropdownText = $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' });
 		}
 
+		feedDropdownOptions = [
+			{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' }), selected: detail === 0 },
+			{
+				name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' }),
+				selected: detail === 1,
+			},
+			{
+				name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' }),
+				selected: detail === 2,
+			},
+			{ name: $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }), selected: detail === 3 },
+		];
+
 		handleTransactionAmountChanged();
 	};
 
@@ -252,7 +279,13 @@
 
 		notEnoughFee = desiredFee < estimatedFeeRates.minimumFee;
 
-		if (!notEnoughFunds && !notEnoughFee && validTransactionAddress && (transactionAmount > 0 || transactionAmount === undefined)) {
+		if (
+			!notEnoughFunds &&
+			!notEnoughFee &&
+			validTransactionAddress &&
+			transactionDestinationAddress &&
+			(transactionAmount > 0 || transactionAmount === undefined)
+		) {
 			// Convert the transaction value to satoshi
 			if (unitDropdownText === 'bitcoin') {
 				finalTransactionAmount = bitcoinsToSatoshis(transactionAmount).toNumber();
@@ -289,10 +322,10 @@
 		txOutputs = coinSelectResult.outputs;
 
 		if (useAllFunds) {
-			finalTransactionAmount = currentAvailableAmount - finalFee;
+			finalTransactionAmount = $configSelectedCurrentData.currentBalance - finalFee;
 		}
 
-		if (finalTransactionAmount + finalFee <= currentAvailableAmount) {
+		if (finalTransactionAmount + finalFee <= $configSelectedCurrentData.currentBalance) {
 			if (txInputs && txOutputs) {
 				createdPsbt = await window.api.ipcRenderer.invoke('psbt:create-psbt', {
 					txInputs: txInputs,
@@ -397,7 +430,16 @@
 						</div>
 					{:else}
 						<div class="tags">
-							<span class="tag has-text-weight-normal" on:click={handleSwitchRBF} title={$_('withdraw.main.rbf_title', { default: 'Replace by fee' })}
+							<div class="icon-centered">
+								<span
+									class="icon is-small mr-3 is-prussian-blue is-not has-no-hover"
+									data-tooltip={`${$_('withdraw.main.fee_error.purge_rbf_tooltips', {
+										default:
+											'Replace-by-fee (RBF) is a method that allows to replace an unconfirmed transaction with a the same transaction but with higher transaction fee',
+									})}.`}><img src={helpIcon} alt="help" /></span
+								>
+							</div>
+							<span class="tag has-text-weight-normal is-clickable" on:click={handleSwitchRBF} title={$_('withdraw.main.rbf_title', { default: 'Replace by fee' })}
 								>RBF = <span class="ml-1 has-text-weight-semibold is-uppercase" class:has-text-success={enableRBF} class:has-text-danger={!enableRBF}
 									>{enableRBF ? $_('withdraw.main.rbf_on', { default: 'ON' }) : $_('withdraw.main.rbf_off', { default: 'OFF' })}</span
 								></span
@@ -440,10 +482,9 @@
 							{#if !useAllFunds}
 								<span
 									class="is-size-7"
-									title={`${$_('withdraw.main.current_value_title_1', { default: 'Current' })} ${$selectedCurrency} ${$_(
-										'withdraw.main.current_value_title_2',
-										{ default: 'value' },
-									)}`}
+									title={`${$_('withdraw.main.current_value_title_1', { default: 'Current' })} ${$selectedCurrency} ${$_('withdraw.main.current_value_title_2', {
+										default: 'value',
+									})}`}
 								>
 									({amountConverted > 0 ? '≈' : ''}{formatNumberByThousands(
 										amountConverted,
@@ -456,9 +497,9 @@
 								</span>
 							{/if}
 
-							{#if notEnoughFunds && currentAvailableAmount !== -1}
+							{#if notEnoughFunds}
 								<span class="subtitle is-6 has-text-weight-normal is-danger is-family-primary ml-2"
-									>{$_('withdraw.main.not_enough_funds', { default: 'Not enough confirmed funds, please reduce desired fee or the desired amount' })}</span
+									>{$_('withdraw.main.not_enough_funds', { default: 'Not enough funds, please reduce desired fee or the desired amount' })}</span
 								>
 							{/if}
 						</h5>
@@ -510,7 +551,7 @@
 										disabled={craftingPSBT}
 									/>
 								{/if}
-								{#if currentAvailableAmount > 0}
+								{#if $configSelectedCurrentData.currentBalance > 0}
 									<span
 										class="is-link input-inner-text"
 										class:is-primary={useAllFunds}
@@ -560,16 +601,8 @@
 									})}.</span
 								>
 								{#if !enableRBF}
-									<div
-										class="subtitle is-6 has-text-weight-normal is-danger is-family-primary custom-width"
-										data-tooltip={`${$_('withdraw.main.fee_error.purge_rbf_tooltips', {
-											default:
-												'Replace-by-fee (RBF) is a method that allows to replace an unconfirmed transaction with a the same transaction but with higher transaction fee',
-										})}.`}
-									>
-										<u>
-											{$_('withdraw.main.fee_error.purge_rbf', { default: 'Activate Replace-by-fee (RBF) so you can bump your transaction later on' })}.
-										</u>
+									<div class="subtitle is-6 has-text-weight-normal is-danger is-family-primary custom-width">
+										{$_('withdraw.main.fee_error.purge_rbf', { default: 'Activate Replace-by-fee (RBF) so you can bump your transaction later on' })}.
 									</div>
 								{/if}
 							{/if}
@@ -583,18 +616,7 @@
 										on:dropdownSelected={handleFeeSelected}
 										dropdownDisabled={craftingPSBT}
 										fullWidth
-										options={[
-											{ name: $_('withdraw.main.fee_dropdown.slow', { default: 'Slow ~ 1 hour' }), selected: true },
-											{
-												name: $_('withdraw.main.fee_dropdown.medium', { default: 'Medium ~ 30 mins' }),
-												selected: false,
-											},
-											{
-												name: $_('withdraw.main.fee_dropdown.fast', { default: 'Fast ~ Next block' }),
-												selected: false,
-											},
-											{ name: $_('withdraw.main.fee_dropdown.custom', { default: 'Custom fee' }), selected: false },
-										]}
+										options={feedDropdownOptions}
 									/>
 								</div>
 							</div>
@@ -615,13 +637,17 @@
 								icon="arrowRight"
 								buttonClass="is-primary"
 								buttonDisabled={notEnoughFunds ||
+									!transactionDestinationAddress ||
 									!validTransactionAddress ||
 									!transactionAmount > 0 ||
-									!currentAvailableAmount > 0 ||
+									!$configSelectedCurrentData.currentBalance > 0 ||
 									!transactionAmount ||
 									!desiredFee >= 1 ||
 									!desiredFee}
 								loading={craftingPSBT}
+								title={!transactionAmount || !desiredFee >= 1 || !desiredFee || !transactionDestinationAddress || !validTransactionAddress
+									? $_('withdraw.main.preview_transaction_title', { default: 'Complete the transaction to continue' })
+									: ''}
 								on:buttonClicked={handleInitCreateTransaction}
 							/>
 						</div>
@@ -682,13 +708,13 @@
 		width: 555px;
 	}
 
-	[data-tooltip]::before {
-		width: 375px;
+	.icon-centered {
+		margin-bottom: 0.242rem;
 	}
 
-	// .icon.is-normal {
-	// 	position: absolute;
-	// }
+	[data-tooltip]::before {
+		width: 300px;
+	}
 
 	@media screen and (min-width: 1011px) {
 		.card.action {

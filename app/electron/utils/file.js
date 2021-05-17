@@ -13,13 +13,18 @@ ${importedDevices.map(device => `\n${device.parentFingerprint}: ${device.xpub}`)
 `;
 };
 
+const normalizeString = string => {
+	return string.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+};
+
 const formatFileName = (fileName, fileExtension = '', withNetwork = false, currentBitcoinNetwork = {}) =>
-	`${fileName}-${withNetwork ? getBitcoinNetworkType(currentBitcoinNetwork) + '-' : ''}${dayjs().format('DD[-]MMMM[-]YYYY[-]HHmmss').toLowerCase()}${fileExtension &&
+	`${normalizeString(fileName)}-${withNetwork ? `${getBitcoinNetworkType(currentBitcoinNetwork)}-` : ''}${dayjs().format('DD[-]MM[-]YY[-]HHmmss')}${fileExtension &&
 	fileExtension.length > 0
 		? `.${fileExtension}`
 		: ''}`;
 
 module.exports = {
 	createColdCardSetupFile,
+	normalizeString,
 	formatFileName,
 };

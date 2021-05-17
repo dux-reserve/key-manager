@@ -553,6 +553,7 @@
     "dropdown_details": {
       "choose": "Choose your device",
       "coldcard": "Coldcard - Recommended",
+      "coldcard_clean": "Coldcard",
       "trezor": "Trezor",
       "ledger": "Ledger"
     },
@@ -704,7 +705,7 @@
       "amount_title": "Click to change the transaction unit",
       "current_value_title_1": "Current",
       "current_value_title_2": "value",
-      "not_enough_funds": "Not enough confirmed funds, please reduce desired fee or the desired amount",
+      "not_enough_funds": "Not enough funds, please reduce desired fee or the desired amount",
       "scanning_for_confirmed_funds": "Scanning for confirmed funds",
       "no_fund_available": "No funds available",
       "withdraw_all_funds": "Withdraw all funds from this",
@@ -732,7 +733,8 @@
         "fast": "Fast ~ Next block",
         "custom": "Custom fee"
       },
-      "preview_transaction": "Preview transaction"
+      "preview_transaction": "Preview transaction",
+      "preview_transaction_title": "Complete the transaction to continue"
     },
     "steps": {
       "headline": "Withdraw from",

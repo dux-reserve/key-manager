@@ -3,7 +3,7 @@
 
 	export let dropdownClass = '';
 	export let dropdownDisabled = false;
-	export let dropdownText = 'Dropdown button';
+	export let dropdownText = 'Dropdown Selection';
 	export let fullWidth = false;
 	export let hideIfSelected = true;
 	export let title = '';

@@ -3,7 +3,7 @@
 </p>
 
 <h3 align="center">
-  Key Manager — 0.4.1-beta
+  Key Manager — 0.4.2-beta
 </h3>
 
 
@@ -15,7 +15,7 @@
 1. Use you use the proper node version (look at the end of package.json -> engines) We recommend [NVM](https://github.com/nvm-sh/nvm) to manage your node.js version.
    EXAMPLE run: `nvm install node && nvm use node`
 2. Install the dependencies `yarn install`
-3. Make sure the environments variable are sets: run `export $(cat .env | xargs)` and everytime you change the environment variables file (`.env`)
+3. Make sure the environments variable are sets: run `export $(cat .env | xargs)` (look at [.env.development](.env.development) for an example)
 4. To start the application: `yarn run dev-electron`
 
 #### TIPS: To refresh the UI click `CTRL + R` on Linux or Windows and `Command ⌘ + R` for MacOS

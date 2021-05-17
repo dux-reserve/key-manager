@@ -112,6 +112,10 @@ $navbar-colors: $colors !default
     display: flex
     min-height: $navbar-height
     width: 100%
+  &.with-border
+    border-bottom: $prussian-blue solid 1px
+    &.border-is-white
+      border-color: $white
   &.has-shadow
     box-shadow: $navbar-box-shadow-size $navbar-box-shadow-color
   &.is-fixed-bottom,

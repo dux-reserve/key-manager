@@ -115,7 +115,7 @@
 	.button {
 		.text {
 			width: 85%;
-			padding-left: 25px;
+			padding-left: 2px;
 			text-align: center;
 		}
 
@@ -152,7 +152,7 @@
 	}
 
 	.is-widther {
-		min-width: 270px;
+		min-width: 270px !important;
 	}
 
 	.is-fees-selector {

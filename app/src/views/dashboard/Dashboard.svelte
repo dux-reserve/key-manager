@@ -90,7 +90,7 @@
 		currentAvailableAmount = undefined;
 		currentPendingAmount = 0;
 		filterNetworkConfigData();
-		setTimeout(() => {
+		setTimeout(async () => {
 			handleConfigDropdown();
 			updateCurrentAccountData();
 			replace('/dashboard');
@@ -159,8 +159,8 @@
 					for (let i = 0; i < $configSelectedCurrentData.availableUtxos.length; i++) {
 						if (
 							($configSelectedCurrentData.availableUtxos[i].status && $configSelectedCurrentData.availableUtxos[i].status.confirmed) ||
-							$configSelectedCurrentData.changeAddresses.filter(change => change.address === $configSelectedCurrentData.availableUtxos[i].address.address)
-								.length >= 1
+							$configSelectedCurrentData.changeAddresses.filter(change => change.address === $configSelectedCurrentData.availableUtxos[i].address.address).length >=
+								1
 						) {
 							currentAvailableAmountCopy += $configSelectedCurrentData.availableUtxos[i].value;
 						}
@@ -429,6 +429,7 @@
 					$configsCurrentDataVaultsArray = configDatafromFile.config_data_vault;
 					$configsCurrentDataWalletsArray = configDatafromFile.config_data_wallet;
 
+					allArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
 					allConfigArray = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
 					allArrayForChangePage = [...$configsCurrentDataVaultsArray, ...$configsCurrentDataWalletsArray];
 
@@ -510,8 +511,8 @@
 					for (let i = 0; i < $configSelectedCurrentData.availableUtxos.length; i++) {
 						if (
 							($configSelectedCurrentData.availableUtxos[i].status && $configSelectedCurrentData.availableUtxos[i].status.confirmed) ||
-							$configSelectedCurrentData.changeAddresses.filter(change => change.address === $configSelectedCurrentData.availableUtxos[i].address.address)
-								.length >= 1
+							$configSelectedCurrentData.changeAddresses.filter(change => change.address === $configSelectedCurrentData.availableUtxos[i].address.address).length >=
+								1
 						) {
 							currentAvailableAmountCopy += $configSelectedCurrentData.availableUtxos[i].value;
 						}
@@ -672,53 +673,61 @@
 
 	const handleResetApp = () => {
 		dashboardLoaded = false;
-		clearInterval(accountDataInterval);
-		clearInterval(bitcoinPriceDataInterval);
 
-		$configData = {};
-		$configsCurrentDataWalletsArray = [];
-		$configsCurrentDataVaultsArray = [];
-		$configSelectedCurrentData = {};
-		$currentNetworkConfigData = {};
-		$withCustomUserPassword = false;
-		$bitcoinChartArrayData = [];
-		$bitcoinCurrentPrices = {};
-		$selectedCurrency = 'USD';
-		$bitcoinMarketData = {};
-		$bitcoinNetworkBlockHeight = 0;
-		$chartTimeScale = '186';
-		$chartLogarithmic = false;
-		$bitcoinTestnetNetwork = process.env.BITCOIN_NETWORK === 'testnet' ? true : false;
-		$timeNow = {};
-		$applicationSettings = {
-			advancedUserInterface: false,
-			askForPasswordAfterSleep: true,
-			autoRefresh: true,
-			autoRefreshTimeout: 60000,
-			darkTheme: false,
-			disabledAnimation: false,
-			discreetMode: false,
-			dontShowReuseAddressesAlert: false,
-			interfaceLanguage: 'en',
-			keepLocalData: true,
-			keepLocalEncryptedConfig: true,
-			notification: true,
-			notificationBlockfound: false,
-			notificationIncognito: false,
-			notificationReceive: true,
-			notificationReceiveConfirm: true,
-			notificationSound: true,
-			notificationWithdrawConfirm: true,
-			refreshDelay: true,
-			satoshiUnit: false,
-			showTooltips: true,
-			sleepInterface: true,
-			sleepMillisecondTimeout: 900000,
-			verifyForUpdate: true,
-			verifyForUpdateNotification: true,
-		};
+		try {
+			clearInterval(accountDataInterval);
+			clearInterval(bitcoinPriceDataInterval);
 
-		replace('/');
+			setTimeout(async () => {
+				$configData = {};
+				$configsCurrentDataWalletsArray = [];
+				$configsCurrentDataVaultsArray = [];
+				$configSelectedCurrentData = {};
+				$currentNetworkConfigData = {};
+				$withCustomUserPassword = false;
+				$bitcoinChartArrayData = [];
+				$bitcoinCurrentPrices = {};
+				$selectedCurrency = 'USD';
+				$bitcoinMarketData = {};
+				$bitcoinNetworkBlockHeight = 0;
+				$chartTimeScale = '186';
+				$chartLogarithmic = false;
+				$bitcoinTestnetNetwork = process.env.BITCOIN_NETWORK === 'testnet' ? true : false;
+				$timeNow = {};
+				$applicationSettings = {
+					advancedUserInterface: false,
+					askForPasswordAfterSleep: true,
+					autoRefresh: true,
+					autoRefreshTimeout: 60000,
+					darkTheme: false,
+					disabledAnimation: false,
+					discreetMode: false,
+					dontShowReuseAddressesAlert: false,
+					interfaceLanguage: 'en',
+					keepLocalData: true,
+					keepLocalEncryptedConfig: true,
+					notification: true,
+					notificationBlockfound: false,
+					notificationIncognito: false,
+					notificationReceive: true,
+					notificationReceiveConfirm: true,
+					notificationSound: true,
+					notificationWithdrawConfirm: true,
+					refreshDelay: true,
+					satoshiUnit: false,
+					showTooltips: true,
+					sleepInterface: true,
+					sleepMillisecondTimeout: 900000,
+					verifyForUpdate: true,
+					verifyForUpdateNotification: true,
+				};
+
+				await window.api.ipcRenderer.invoke('app:reset');
+				replace('/');
+			}, 0);
+		} catch (error) {
+			console.log('error when deleting current config file');
+		}
 	};
 
 	filterNetworkConfigData();
@@ -920,7 +929,7 @@
 			{#if $querystring.includes('view=settings')}
 				<div class="column">
 					<div class="buttons is-right">
-						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>{$_('settings.version', { default: 'Version' })}:</b> 0.4.1-beta</h6>
+						<h6 class="subtitle is-family-primary is-6 has-text-weight-normal mr-1"><b>{$_('settings.version', { default: 'Version' })}:</b> 0.4.2-beta</h6>
 					</div>
 				</div>
 			{/if}
@@ -1042,8 +1051,7 @@
 		overflow-x: hidden;
 		overflow-y: auto;
 		width: 202px;
-		// box-shadow: inset -1px 0 0 lighten(#23262e, 1%);
-		box-shadow: inset -1px 0 2px darken(#f8f7f6, 3%);
+		box-shadow: inset -1px 0 1px darken(#f8f7f6, 3.75%);
 
 		.menu-list {
 			padding-left: 0.9rem;
@@ -1051,7 +1059,6 @@
 			&.vaults {
 				padding-top: 0.5rem;
 				padding-bottom: 1rem;
-				// border-bottom: 1px solid #30333c;
 				border-bottom: 1px solid darken(#f8f7f6, 4.5%);
 			}
 
@@ -1070,7 +1077,6 @@
 
 		.menu-list.main {
 			padding-top: 1.3rem;
-			// border-bottom: 1px solid #30333c;
 			border-bottom: 1px solid darken(#f8f7f6, 4.5%);
 
 			li:last-child a {
