@@ -14,8 +14,8 @@
 0. Make sure the last dependencies is install `yarn install`
 1. Change the environment variables for what you want to deliver (e.i.: testnet vs mainnet) in environment variables file (`.env.production`), run `export $(cat .env.production | xargs)` to set the variables in your environment
 2. Make sure the configData workaround in [store.js](app/src/store.js) is an empty object {} for any production release (App or code source)
-3. Comment everything with "COMMENT FOR PRODUCTION" above it
-4. Hardcode every variable with "THIS_IS_NOT_FOR_PRODUCTION" (values are from .env file)
+3. Comment everything with `COMMENT FOR PRODUCTION` above it
+4. Hardcode every variable with `THIS_IS_NOT_FOR_PRODUCTION` (values are from `.env` file)
 5. On each different OS (Linux, MacOS, Windows) execute `yarn run build-electron` or `yarn run build && yarn run dist` (may need to type `CTRL + C` or `Command ⌘ + C` to [SIGINT](https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html) after the build-svelte is done)
 6. The installation file is outputted in `/dist/*`
 
@@ -43,16 +43,19 @@ BITCOIN_NETWORK=testnet
 ```
 NODE_ENV=development
 BITCOIN_NETWORK=mainnet
+BASE_KEY=8fc647dc8d3cefd30cfc21d2c26b54606df61fc84e897c4e005403ff09492d9e01032009FAKE
 NODE_OPTIONS=--trace-warnings
 ELECTRON_ENABLE_SECURITY_WARNINGS
 ELECTRON_ENABLE_LOGGING
 ELECTRON_ENABLE_STACK_DUMPING
+
 ```
 
 #### Development Testnet
 ```
 NODE_ENV=development
 BITCOIN_NETWORK=testnet
+BASE_KEY=8fc647dc8d3cefd30cfc21d2c26b54606df61fc84e897c4e005403ff09492d9e01032009FAKE
 NODE_OPTIONS=--trace-warnings
 ELECTRON_ENABLE_SECURITY_WARNINGS
 ELECTRON_ENABLE_LOGGING

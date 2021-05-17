@@ -12,6 +12,10 @@
 
 ----
 
+**Our Apple and Microsoft certificates are not yet approved** so you will see a warning message when you try to open the desktop app. This is totally normal and doesn't mean our software is less secure. If you are not comfortable, you can wait until we add the certificates in an upcoming release.
+
+Sources and executables are signed by [Alex Castlenine](publickeyforsignatures/AlexCastlenine.asc).
+
 
 ## Installation MacOS & Windows
 1. Download
