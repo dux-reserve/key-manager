@@ -1,5 +1,5 @@
 {
-  "name": "dux-reserve-key-manager-private",
+  "name": "dux-reserve-key-manager",
   "version": "0.4.2",
   "description": "Bitcoin Key Manager: Create wallets and multisig vaults. Have full control of your hardware devices. Easy and secure. Free and open-source. All your bitcoin in one place.",
   "homepage": "https://duxreserve.com",
